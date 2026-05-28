@@ -46,6 +46,8 @@ export const users = pgTable('users', {
   currentStreak: integer('current_streak').default(0).notNull(),
   isApproved: boolean('is_approved').default(false).notNull(),
   isBanned: boolean('is_banned').default(false).notNull(),
+  emailAlerts: boolean('email_alerts').default(true),
+  slackWebhooks: boolean('slack_webhooks').default(false),
   createdAt: timestamp('created_at').defaultNow().notNull(),
 })
 
