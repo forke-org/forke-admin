@@ -19,7 +19,6 @@ import {
   ChevronRight, 
   LogOut,
   X,
-  Plus,
   Wallet,
   User
 } from 'lucide-react'
@@ -135,9 +134,9 @@ export default function Sidebar({ user, pendingSubmissionsCount = 0, unreadMessa
                 href={link.href}
                 onClick={() => setIsMobileOpen(false)}
                 className={cn(
-                  "flex items-center justify-between px-3 py-3 rounded-xl transition-all duration-300 group relative overflow-hidden text-xs font-bold uppercase tracking-wider",
+                  "flex items-center justify-between px-3 py-3 rounded-xl transition-all duration-300 group relative overflow-hidden text-xs font-semibold uppercase tracking-[0.12em]",
                   isActive 
-                    ? "bg-gradient-to-r from-accent/15 to-accent/[0.01] text-accent border border-accent/15 shadow-[0_4px_20px_rgba(255,122,0,0.03)] pl-4 before:absolute before:left-0 before:top-2.5 before:bottom-2.5 before:w-[3px] before:bg-accent before:rounded-r-full" 
+                    ? "bg-gradient-to-r from-accent/20 to-accent/[0.03] text-[#ffb06a] border border-accent/25 shadow-[0_4px_20px_rgba(255,122,0,0.09)] pl-4 before:absolute before:left-0 before:top-2.5 before:bottom-2.5 before:w-[3px] before:bg-accent before:rounded-r-full" 
                     : "text-white/40 hover:bg-white/[0.02] hover:text-white pl-4",
                   isCollapsed ? "md:justify-center" : "justify-between"
                 )}
@@ -169,35 +168,17 @@ export default function Sidebar({ user, pendingSubmissionsCount = 0, unreadMessa
             )
           })}
 
-          {/* "Post New Task" prominent button for owners */}
-          {isOwner && (
-            <Link 
-              href="/post-task"
-              className={cn(
-                "mt-4 flex items-center gap-2 rounded-xl bg-gradient-to-b from-accent to-[#d97706] hover:translate-y-[1px] hover:shadow-[0_4px_15px_rgba(255,122,0,0.2)] transition-all text-[#050505] font-black uppercase tracking-widest text-[9px] cursor-pointer relative group",
-                isCollapsed ? "md:justify-center py-3 px-3" : "w-full justify-center py-3 px-4"
-              )}
-            >
-              <Plus className="w-4 h-4 stroke-[3px] shrink-0" />
-              <span className={cn("transition-all duration-300", isCollapsed ? "md:opacity-0 md:w-0 overflow-hidden" : "opacity-100")}>Post New Task</span>
-              {isCollapsed && (
-                <div className="hidden md:block absolute left-16 bg-[#0c0c0e] border border-accent/20 text-accent text-[9px] font-black tracking-widest uppercase px-3 py-1.5 rounded-lg opacity-0 group-hover:opacity-100 transition-all duration-300 translate-x-2 group-hover:translate-x-0 pointer-events-none z-50 shadow-xl whitespace-nowrap">
-                  Post New Task
-                </div>
-              )}
-            </Link>
-          )}
         </nav>
 
         {/* Support Section */}
         {!isCollapsed && (
           <div className="px-4 mb-4">
-            <div className="p-4 rounded-2xl bg-white/[0.01] border border-white/[0.03] text-left">
-              <h5 className="text-[10px] font-black text-white uppercase tracking-wider">Need help?</h5>
+            <div className="p-4 rounded-2xl ui-surface-soft text-left">
+              <h5 className="text-[10px] font-semibold text-white uppercase tracking-[0.12em]">Need help?</h5>
               <p className="text-[9px] text-white/40 mt-1 leading-relaxed">Our support team is available 24/7</p>
               <Link 
                 href="/support" 
-                className="mt-3 w-full flex items-center justify-center gap-2 py-2 px-3 rounded-lg border border-white/5 hover:border-accent/40 text-white/60 hover:text-white transition-all text-[9px] font-black uppercase tracking-widest bg-white/[0.01]"
+                className="mt-3 w-full flex items-center justify-center gap-2 py-2 px-3 rounded-lg ui-btn-secondary transition-all text-[9px] font-semibold uppercase tracking-[0.12em]"
               >
                 <Headphones className="w-3.5 h-3.5" /> Contact Support
               </Link>
@@ -207,7 +188,7 @@ export default function Sidebar({ user, pendingSubmissionsCount = 0, unreadMessa
 
         {/* Bottom: User Card & Toggle */}
         <div className="p-4 border-t border-white/[0.04] bg-white/[0.005] relative">
-          <div className="flex items-center gap-3.5 mb-3 min-h-[40px] p-2 rounded-2xl bg-white/[0.01] border border-white/[0.03]">
+          <div className="flex items-center gap-3.5 mb-3 min-h-[40px] p-2 rounded-2xl ui-surface-soft">
             {/* Avatar */}
             <div className={cn(
               "w-10 h-10 rounded-full overflow-hidden flex-shrink-0 bg-accent/10 flex items-center justify-center border border-accent/20 relative shadow-[0_0_12px_rgba(255,122,0,0.08)]",
