@@ -72,7 +72,7 @@ export default function ToastContainer() {
   }, [])
 
   return (
-    <div className="fixed top-6 left-1/2 -translate-x-1/2 z-[99999] flex flex-col items-center gap-3 w-full max-w-md pointer-events-none px-4">
+    <div className="fixed top-28 left-1/2 -translate-x-1/2 z-[99999] flex flex-col items-center gap-4 w-full max-w-lg pointer-events-none px-4">
       <Suspense fallback={null}>
         <QueryToastHandler />
       </Suspense>
@@ -81,24 +81,24 @@ export default function ToastContainer() {
         <div
           key={t.id}
           className={cn(
-            "pointer-events-auto flex items-center justify-between gap-3 px-4 py-3 rounded-2xl bg-[#0b0b0e]/90 backdrop-blur-xl border text-xs font-mono font-medium shadow-2xl animate-in fade-in slide-in-from-top-4 duration-500 w-full select-none",
-            t.type === 'success' && "border-emerald-500/30 text-emerald-450 shadow-emerald-500/[0.03]",
-            t.type === 'error' && "border-rose-500/30 text-rose-400 shadow-rose-500/[0.03]",
-            t.type === 'info' && "border-accent/30 text-accent shadow-accent/[0.03]"
+            "pointer-events-auto flex items-center justify-between gap-4 px-6 py-4 rounded-2xl backdrop-blur-xl border text-xs font-mono font-medium animate-in fade-in slide-in-from-top-8 zoom-in-95 duration-500 w-full select-none shadow-2xl transition-all duration-300",
+            t.type === 'success' && "border-emerald-500/30 bg-[#080f0c]/95 text-emerald-400 shadow-[0_12px_40px_rgba(16,185,129,0.08)]",
+            t.type === 'error' && "border-rose-500/30 bg-[#120709]/95 text-rose-400 shadow-[0_12px_40px_rgba(244,63,94,0.08)]",
+            t.type === 'info' && "border-accent/30 bg-[#0f0b07]/95 text-accent shadow-[0_12px_40px_rgba(255,122,0,0.08)]"
           )}
         >
-          <div className="flex items-center gap-2.5">
-            {t.type === 'success' && <CheckCircle2 className="w-4 h-4 text-emerald-450 shrink-0" />}
-            {t.type === 'error' && <AlertTriangle className="w-4 h-4 text-rose-400 shrink-0" />}
-            {t.type === 'info' && <CheckCircle2 className="w-4 h-4 text-accent shrink-0" />}
-            <span className="text-white leading-tight font-sans tracking-wide">{t.message}</span>
+          <div className="flex items-center gap-3.5">
+            {t.type === 'success' && <CheckCircle2 className="w-5 h-5 text-emerald-450 shrink-0" />}
+            {t.type === 'error' && <AlertTriangle className="w-5 h-5 text-rose-400 shrink-0" />}
+            {t.type === 'info' && <CheckCircle2 className="w-5 h-5 text-accent shrink-0" />}
+            <span className="text-white text-[13px] font-sans font-medium tracking-wide leading-normal">{t.message}</span>
           </div>
           <button
             onClick={() => setToasts((prev) => prev.filter((item) => item.id !== t.id))}
-            className="text-white/30 hover:text-white transition-colors p-0.5 rounded-lg hover:bg-white/5"
+            className="text-white/40 hover:text-white transition-colors p-1.5 rounded-lg hover:bg-white/5 shrink-0"
             aria-label="Close notification"
           >
-            <X className="w-3.5 h-3.5" />
+            <X className="w-4 h-4" />
           </button>
         </div>
       ))}
