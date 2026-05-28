@@ -6,16 +6,22 @@ import { usePathname } from 'next/navigation'
 import Image from 'next/image'
 import { 
   LayoutDashboard, 
-  PlusCircle,
-  Search, 
+  ClipboardList,
   FileCheck, 
-  Wallet, 
-  User, 
+  Users,
+  ShieldCheck,
+  BarChart3,
+  Mail,
+  Building2,
+  Settings,
+  Headphones,
   ChevronLeft, 
   ChevronRight, 
   LogOut,
   X,
-  ShieldCheck
+  Plus,
+  Wallet,
+  User
 } from 'lucide-react'
 import { cn } from '@/lib/utils/cn'
 import { signOut } from 'next-auth/react'
@@ -23,14 +29,19 @@ import { useDashboard } from '@/components/dashboard/DashboardContext'
 import { XpBar } from '@/components/ui/XpBar'
 import { getLevelTitle } from '@/lib/utils/xp'
 
-const NAV_LINKS = [
-  { label: 'Dashboard', href: '/dashboard', icon: LayoutDashboard },
-  { label: 'Post a Task', href: '/post-task', icon: PlusCircle },
-  { label: 'Browse Tasks', href: '/tasks', icon: Search },
-  { label: 'My Submissions', href: '/submissions', icon: FileCheck },
-  { label: 'Earnings', href: '/earnings', icon: Wallet },
-  { label: 'Profile', href: '/profile', icon: User },
-]
+interface SidebarProps {
+  user: {
+    name?: string | null
+    email?: string | null
+    image?: string | null
+    level?: number
+    xp?: number
+    currentStreak?: number
+    role?: 'developer' | 'owner'
+    companyName?: string
+  }
+  pendingSubmissionsCount?: number
+}
 
 const OWNER_LEVEL_TITLES: Record<number, string> = {
   1: 'Initiator',
@@ -44,25 +55,9 @@ const OWNER_LEVEL_TITLES: Record<number, string> = {
   9: 'Titan',
   10: 'Syndicate',
   11: 'Sovereign',
-  12: 'Sovereign',
-  13: 'Sovereign',
-  14: 'Sovereign',
-  15: 'Sovereign'
 }
 
-interface SidebarProps {
-  user: {
-    name?: string | null
-    email?: string | null
-    image?: string | null
-    level?: number
-    xp?: number
-    currentStreak?: number
-    role?: 'developer' | 'owner'
-  }
-}
-
-export default function Sidebar({ user }: SidebarProps) {
+export default function Sidebar({ user, pendingSubmissionsCount = 0 }: SidebarProps) {
   const pathname = usePathname()
   const { isMobileOpen, setIsMobileOpen, isCollapsed, setIsCollapsed } = useDashboard()
 
@@ -71,6 +66,25 @@ export default function Sidebar({ user }: SidebarProps) {
   const levelTitle = isOwner 
     ? (OWNER_LEVEL_TITLES[user.level || 1] ?? 'Owner') 
     : getLevelTitle(user.level || 1)
+
+  const links = isOwner ? [
+    { label: 'Overview', href: '/dashboard', icon: LayoutDashboard },
+    { label: 'Tasks', href: '/tasks', icon: ClipboardList },
+    { label: 'Submissions', href: '/submissions', icon: FileCheck, badge: pendingSubmissionsCount },
+    { label: 'Developers', href: '/developers', icon: Users },
+    { label: 'Escrow', href: '/escrow', icon: ShieldCheck },
+    { label: 'Analytics', href: '/analytics', icon: BarChart3 },
+    { label: 'Messages', href: '/messages', icon: Mail, badge: 1 },
+    { label: 'Company Profile', href: '/profile', icon: Building2 },
+    { label: 'Settings', href: '/settings', icon: Settings },
+  ] : [
+    { label: 'Overview', href: '/dashboard', icon: LayoutDashboard },
+    { label: 'Tasks', href: '/tasks', icon: ClipboardList },
+    { label: 'Submissions', href: '/submissions', icon: FileCheck },
+    { label: 'Earnings', href: '/earnings', icon: Wallet },
+    { label: 'Profile', href: '/profile', icon: User },
+    { label: 'Settings', href: '/settings', icon: Settings },
+  ]
 
   return (
     <>
@@ -109,8 +123,8 @@ export default function Sidebar({ user }: SidebarProps) {
         </div>
 
         {/* Middle: Navigation */}
-        <nav className="flex-grow py-8 px-4 space-y-2 overflow-y-auto">
-          {NAV_LINKS.map((link) => {
+        <nav className="flex-grow py-6 px-4 space-y-1.5 overflow-y-auto">
+          {links.map((link) => {
             const isActive = pathname === link.href
             const Icon = link.icon
             return (
@@ -119,21 +133,30 @@ export default function Sidebar({ user }: SidebarProps) {
                 href={link.href}
                 onClick={() => setIsMobileOpen(false)}
                 className={cn(
-                  "flex items-center gap-3 px-3 py-3 rounded-xl transition-all duration-300 group relative overflow-hidden text-xs font-bold uppercase tracking-wider",
+                  "flex items-center justify-between px-3 py-3 rounded-xl transition-all duration-300 group relative overflow-hidden text-xs font-bold uppercase tracking-wider",
                   isActive 
                     ? "bg-gradient-to-r from-accent/15 to-accent/[0.01] text-accent border border-accent/15 shadow-[0_4px_20px_rgba(255,122,0,0.03)] pl-4 before:absolute before:left-0 before:top-2.5 before:bottom-2.5 before:w-[3px] before:bg-accent before:rounded-r-full" 
                     : "text-white/40 hover:bg-white/[0.02] hover:text-white pl-4",
-                  isCollapsed ? "md:justify-center" : "justify-start"
+                  isCollapsed ? "md:justify-center" : "justify-between"
                 )}
               >
-                <Icon className={cn("w-4.5 h-4.5 shrink-0 transition-transform duration-300 group-hover:scale-105", isActive ? "text-accent" : "text-white/30 group-hover:text-accent")} />
-                <span className={cn(
-                  "transition-all duration-300",
-                  isCollapsed ? "md:opacity-0 md:w-0" : "opacity-100"
-                )}>
-                  {link.label}
-                </span>
-                
+                <div className="flex items-center gap-3">
+                  <Icon className={cn("w-4.5 h-4.5 shrink-0 transition-transform duration-300 group-hover:scale-105", isActive ? "text-accent" : "text-white/30 group-hover:text-accent")} />
+                  <span className={cn(
+                    "transition-all duration-300",
+                    isCollapsed ? "md:opacity-0 md:w-0" : "opacity-100"
+                  )}>
+                    {link.label}
+                  </span>
+                </div>
+
+                {/* Badge if present */}
+                {link.badge !== undefined && link.badge > 0 && !isCollapsed && (
+                  <span className="px-2 py-0.5 text-[8.5px] font-black font-mono rounded-full bg-accent/20 border border-accent/30 text-accent leading-none">
+                    {link.badge}
+                  </span>
+                )}
+
                 {/* Desktop Tooltip when collapsed */}
                 {isCollapsed && (
                   <div className="hidden md:block absolute left-16 bg-[#0c0c0e] border border-white/10 text-white text-[9px] font-black tracking-widest uppercase px-3 py-1.5 rounded-lg opacity-0 group-hover:opacity-100 transition-all duration-300 translate-x-2 group-hover:translate-x-0 pointer-events-none z-50 shadow-xl">
@@ -143,7 +166,33 @@ export default function Sidebar({ user }: SidebarProps) {
               </Link>
             )
           })}
+
+          {/* "+ Post New Task" prominent button for owners */}
+          {isOwner && !isCollapsed && (
+            <Link 
+              href="/post-task"
+              className="mt-4 w-full flex items-center justify-center gap-2 py-3 px-4 rounded-xl bg-gradient-to-b from-accent to-[#d97706] hover:translate-y-[1px] hover:shadow-[0_4px_15px_rgba(255,122,0,0.2)] transition-all text-[#050505] font-black uppercase tracking-widest text-[9px] cursor-pointer"
+            >
+              <Plus className="w-4 h-4 stroke-[3px]" /> Post New Task
+            </Link>
+          )}
         </nav>
+
+        {/* Support Section */}
+        {!isCollapsed && (
+          <div className="px-4 mb-4">
+            <div className="p-4 rounded-2xl bg-white/[0.01] border border-white/[0.03] text-left">
+              <h5 className="text-[10px] font-black text-white uppercase tracking-wider">Need help?</h5>
+              <p className="text-[9px] text-white/40 mt-1 leading-relaxed">Our support team is available 24/7</p>
+              <Link 
+                href="/support" 
+                className="mt-3 w-full flex items-center justify-center gap-2 py-2 px-3 rounded-lg border border-white/5 hover:border-accent/40 text-white/60 hover:text-white transition-all text-[9px] font-black uppercase tracking-widest bg-white/[0.01]"
+              >
+                <Headphones className="w-3.5 h-3.5" /> Contact Support
+              </Link>
+            </div>
+          </div>
+        )}
 
         {/* Bottom: User Card & Toggle */}
         <div className="p-4 border-t border-white/[0.04] bg-white/[0.005] relative">
@@ -165,28 +214,30 @@ export default function Sidebar({ user }: SidebarProps) {
             {/* Name + level (only show when expanded) */}
             {!isCollapsed && (
               <div className="flex-1 min-w-0 animate-in fade-in slide-in-from-left-2 duration-300 text-left">
-                {isOwner && (
-                  <span className="text-[7.5px] font-black uppercase tracking-[0.2em] px-1.5 py-0.5 rounded bg-accent/10 border border-accent/20 text-accent font-mono w-fit block mb-1">
-                    Founder
-                  </span>
-                )}
-                <p className="text-xs font-black text-white truncate leading-none mb-1.5">
-                  {user.name?.split(' ')[0]}
-                </p>
                 <div className="flex items-center gap-1.5">
-                  <span className="text-[8px] font-mono font-black px-1.5 py-0.5 rounded bg-accent text-[#050505] leading-none uppercase">
-                    Lvl {user.level}
-                  </span>
+                  <p className="text-xs font-black text-white truncate leading-none">
+                    {isOwner ? (user.companyName || 'Acme Labs') : user.name?.split(' ')[0]}
+                  </p>
+                  {isOwner && (
+                    <span className="inline-block w-3.5 h-3.5 rounded-full bg-accent/20 border border-accent/30 flex items-center justify-center text-[7px] text-accent font-bold">✓</span>
+                  )}
+                </div>
+                <div className="flex items-center justify-between mt-1">
                   <span className="text-[8.5px] text-white/40 truncate font-black uppercase tracking-wider">
-                    {levelTitle}
+                    {isOwner ? 'Starter Plan' : levelTitle}
                   </span>
+                  {!isOwner && (
+                    <span className="text-[8px] font-mono font-black px-1.5 py-0.5 rounded bg-accent text-[#050505] leading-none uppercase">
+                      Lvl {user.level}
+                    </span>
+                  )}
                 </div>
               </div>
             )}
           </div>
           
-          {/* XP bar — only show in expanded sidebar */}
-          {!isCollapsed && (
+          {/* XP bar — only show in expanded sidebar for developers */}
+          {!isCollapsed && !isOwner && (
             <div className="mb-4 px-2 animate-in fade-in slide-in-from-bottom-2 duration-500 delay-150">
               <XpBar totalXp={user.xp ?? 0} compact />
             </div>
