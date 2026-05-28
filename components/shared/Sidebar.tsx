@@ -109,7 +109,7 @@ export default function Sidebar({ user, pendingSubmissionsCount = 0, unreadMessa
         <div className="h-20 flex items-center justify-between px-6 border-b border-white/[0.04] relative">
           <Link href="/dashboard" className="flex items-center gap-2 overflow-hidden whitespace-nowrap">
             <span className="font-serif text-2xl text-white tracking-wide">
-              F<span className={cn("transition-all duration-300", isCollapsed ? "opacity-0 max-w-0" : "opacity-100 max-w-[200px]")}>ork<span className="text-accent italic">e</span></span>
+              F<span className={cn("transition-all duration-300", isCollapsed ? "opacity-0 max-w-0" : "opacity-100 max-w-[200px]")}>ork<span className="text-accent italic pr-1">e</span></span>
             </span>
           </Link>
           <button 
