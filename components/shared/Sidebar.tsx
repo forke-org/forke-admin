@@ -41,6 +41,7 @@ interface SidebarProps {
     companyName?: string
   }
   pendingSubmissionsCount?: number
+  unreadMessagesCount?: number
 }
 
 const OWNER_LEVEL_TITLES: Record<number, string> = {
@@ -57,7 +58,7 @@ const OWNER_LEVEL_TITLES: Record<number, string> = {
   11: 'Sovereign',
 }
 
-export default function Sidebar({ user, pendingSubmissionsCount = 0 }: SidebarProps) {
+export default function Sidebar({ user, pendingSubmissionsCount = 0, unreadMessagesCount = 0 }: SidebarProps) {
   const pathname = usePathname()
   const { isMobileOpen, setIsMobileOpen, isCollapsed, setIsCollapsed } = useDashboard()
 
@@ -74,7 +75,7 @@ export default function Sidebar({ user, pendingSubmissionsCount = 0 }: SidebarPr
     { label: 'Developers', href: '/developers', icon: Users },
     { label: 'Escrow', href: '/escrow', icon: ShieldCheck },
     { label: 'Analytics', href: '/analytics', icon: BarChart3 },
-    { label: 'Messages', href: '/messages', icon: Mail, badge: 1 },
+    { label: 'Messages', href: '/messages', icon: Mail, badge: unreadMessagesCount },
     { label: 'Company Profile', href: '/profile', icon: Building2 },
     { label: 'Settings', href: '/settings', icon: Settings },
   ] : [
@@ -82,6 +83,7 @@ export default function Sidebar({ user, pendingSubmissionsCount = 0 }: SidebarPr
     { label: 'Tasks', href: '/tasks', icon: ClipboardList },
     { label: 'Submissions', href: '/submissions', icon: FileCheck },
     { label: 'Earnings', href: '/earnings', icon: Wallet },
+    { label: 'Messages', href: '/messages', icon: Mail, badge: unreadMessagesCount },
     { label: 'Profile', href: '/profile', icon: User },
     { label: 'Settings', href: '/settings', icon: Settings },
   ]
