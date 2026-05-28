@@ -167,13 +167,22 @@ export default function Sidebar({ user, pendingSubmissionsCount = 0 }: SidebarPr
             )
           })}
 
-          {/* "+ Post New Task" prominent button for owners */}
-          {isOwner && !isCollapsed && (
+          {/* "Post New Task" prominent button for owners */}
+          {isOwner && (
             <Link 
               href="/post-task"
-              className="mt-4 w-full flex items-center justify-center gap-2 py-3 px-4 rounded-xl bg-gradient-to-b from-accent to-[#d97706] hover:translate-y-[1px] hover:shadow-[0_4px_15px_rgba(255,122,0,0.2)] transition-all text-[#050505] font-black uppercase tracking-widest text-[9px] cursor-pointer"
+              className={cn(
+                "mt-4 flex items-center gap-2 rounded-xl bg-gradient-to-b from-accent to-[#d97706] hover:translate-y-[1px] hover:shadow-[0_4px_15px_rgba(255,122,0,0.2)] transition-all text-[#050505] font-black uppercase tracking-widest text-[9px] cursor-pointer relative group",
+                isCollapsed ? "md:justify-center py-3 px-3" : "w-full justify-center py-3 px-4"
+              )}
             >
-              <Plus className="w-4 h-4 stroke-[3px]" /> Post New Task
+              <Plus className="w-4 h-4 stroke-[3px] shrink-0" />
+              <span className={cn("transition-all duration-300", isCollapsed ? "md:opacity-0 md:w-0 overflow-hidden" : "opacity-100")}>Post New Task</span>
+              {isCollapsed && (
+                <div className="hidden md:block absolute left-16 bg-[#0c0c0e] border border-accent/20 text-accent text-[9px] font-black tracking-widest uppercase px-3 py-1.5 rounded-lg opacity-0 group-hover:opacity-100 transition-all duration-300 translate-x-2 group-hover:translate-x-0 pointer-events-none z-50 shadow-xl whitespace-nowrap">
+                  Post New Task
+                </div>
+              )}
             </Link>
           )}
         </nav>
