@@ -184,34 +184,89 @@ img {
   font-family: var(--font-serif);
 }
 
-/* Custom Scrollbar */
+/* Custom Scrollbar - Positioned at extreme right edge */
 ::-webkit-scrollbar {
-  width: 8px;
-  height: 8px;
+  width: 12px;
+  height: 0;
+}
+
+::-webkit-scrollbar-button {
+  height: 0;
+  width: 0;
+}
+
+::-webkit-scrollbar-button:vertical:start {
+  height: 0;
+}
+
+::-webkit-scrollbar-button:vertical:end {
+  height: 0;
 }
 
 ::-webkit-scrollbar-track {
-  background: var(--color-bg);
+  background: transparent;
 }
 
 ::-webkit-scrollbar-thumb {
   background: var(--color-accent);
-  border-radius: 0; /* Solid rectangle */
+  border-radius: 0;
+  border: none;
+  min-height: 50px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
   background: var(--color-accent-hover);
 }
 
+::-webkit-scrollbar-corner {
+  background: transparent;
+  display: none;
+}
+
+/* Ensure scrollbar is at extreme right */
+html, body {
+  overflow-y: scroll;
+}
+
+/* Firefox scrollbar */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: var(--color-accent) transparent;
+}
+
 /* theme-ember scrollbar overrides */
+.theme-ember::-webkit-scrollbar {
+  width: 12px;
+  height: 0;
+}
+
+.theme-ember::-webkit-scrollbar-button,
+.theme-ember ::-webkit-scrollbar-button {
+  height: 0;
+  width: 0;
+}
+
+.theme-ember::-webkit-scrollbar-button:vertical:start,
+.theme-ember ::-webkit-scrollbar-button:vertical:start {
+  height: 0;
+}
+
+.theme-ember::-webkit-scrollbar-button:vertical:end,
+.theme-ember ::-webkit-scrollbar-button:vertical:end {
+  height: 0;
+}
+
 .theme-ember::-webkit-scrollbar-track,
 .theme-ember ::-webkit-scrollbar-track {
-  background: var(--color-bg-surface);
+  background: transparent;
 }
 
 .theme-ember::-webkit-scrollbar-thumb,
 .theme-ember ::-webkit-scrollbar-thumb {
   background: var(--color-accent);
+  border: none;
+  border-radius: 0;
+  min-height: 50px;
 }
 
 .theme-ember::-webkit-scrollbar-thumb:hover,
@@ -219,15 +274,9 @@ img {
   background: var(--color-accent-hover);
 }
 
-/* For Firefox */
-* {
-  scrollbar-width: thin;
-  scrollbar-color: var(--color-accent) var(--color-bg);
-}
-
 .theme-ember,
 .theme-ember * {
-  scrollbar-color: var(--color-accent) var(--color-bg-surface);
+  scrollbar-color: var(--color-accent) transparent;
 }
 
 /* Selection overrides */
