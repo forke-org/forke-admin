@@ -143,6 +143,7 @@ export const tasks = pgTable('tasks', {
     .references(() => users.id)
     .notNull(),
   claimantId: uuid('claimant_id').references(() => users.id),
+  claimedAt: timestamp('claimed_at'),
   deadline: timestamp('deadline'),
   createdAt: timestamp('created_at').defaultNow().notNull(),
 })
