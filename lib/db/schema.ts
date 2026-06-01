@@ -48,6 +48,7 @@ export const users = pgTable('users', {
   isBanned: boolean('is_banned').default(false).notNull(),
   emailAlerts: boolean('email_alerts').default(true),
   slackWebhooks: boolean('slack_webhooks').default(false),
+  lastActiveAt: timestamp('last_active_at').defaultNow().notNull(),
   createdAt: timestamp('created_at').defaultNow().notNull(),
 })
 
@@ -234,6 +235,10 @@ export const messages = pgTable('messages', {
   senderId: uuid('sender_id').references(() => users.id, { onDelete: 'cascade' }).notNull(),
   receiverId: uuid('receiver_id').references(() => users.id, { onDelete: 'cascade' }).notNull(),
   content: text('content').notNull(),
+  isReceived: boolean('is_received').default(false).notNull(),
+  isSeen: boolean('is_seen').default(false).notNull(),
+  fileUrl: text('file_url'),
+  fileName: text('file_name'),
   createdAt: timestamp('created_at').defaultNow().notNull(),
 })
 
