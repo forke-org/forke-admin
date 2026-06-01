@@ -1,10 +1,10 @@
 import { db } from '@/lib/db'
 import { tasks, users, submissions, revisionRequests } from '@/lib/db/schema'
-import { eq, and, desc, lte, sql } from 'drizzle-orm'
+import { eq, and, or, desc, lte, ilike, sql } from 'drizzle-orm'
 import { alias } from 'drizzle-orm/pg-core'
 
-export async function getOpenTasks(filters: { skillTags?: string[]; maxBudget?: number } = {}) {
-  const { skillTags, maxBudget } = filters
+export async function getOpenTasks(filters: { skillTags?: string[]; maxBudget?: number; q?: string } = {}) {
+  const { skillTags, maxBudget, q } = filters
 
   const conditions = [eq(tasks.status, 'open')]
 
@@ -16,6 +16,17 @@ export async function getOpenTasks(filters: { skillTags?: string[]; maxBudget?: 
     // Correctly format the array overlap operator for PostgreSQL using native ARRAY[...] syntax
     const arrayElements = skillTags.map(t => sql`${t}`)
     conditions.push(sql`${tasks.skillTags} && ARRAY[${sql.join(arrayElements, sql`, `)}]::text[]`)
+  }
+
+  if (q) {
+    const searchPattern = `%${q}%`
+    const searchCondition = or(
+      ilike(tasks.title, searchPattern),
+      ilike(tasks.description, searchPattern)
+    )
+    if (searchCondition) {
+      conditions.push(searchCondition)
+    }
   }
 
   const result = await db
