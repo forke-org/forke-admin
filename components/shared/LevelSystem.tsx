@@ -62,6 +62,7 @@ export default function LevelSystem() {
   const containerRef = useRef<HTMLDivElement>(null)
   const cardsRef = useRef<(HTMLDivElement | null)[]>([])
   const router = useRouter()
+  const isFirstRender = useRef(true)
   
   const [activeIndex, setActiveIndex] = useState(0)
   const [isPaused, setIsPaused] = useState(false)
@@ -72,9 +73,9 @@ export default function LevelSystem() {
     if (isPaused) return
     const interval = setInterval(() => {
       handleNext()
-    }, 3000)
+    }, 4000)
     return () => clearInterval(interval)
-  }, [isPaused, activeIndex]) // added activeIndex to reset interval properly
+  }, [isPaused, activeIndex])
 
   // Resume autoplay after inactivity
   useEffect(() => {
@@ -125,6 +126,26 @@ export default function LevelSystem() {
 
   // Stack Animation using GSAP
   useGSAP(() => {
+    if (isFirstRender.current) {
+       // Just set positions instantly on mount
+       LEVELS.forEach((_, i) => {
+         const card = cardsRef.current[i]
+         if (!card) return
+         const diff = (i - activeIndex + LEVELS.length) % LEVELS.length
+         const isFront = diff === 0
+         const isVisible = diff < 3
+         
+         const scale = isFront ? 1 : 1 - (diff * 0.05)
+         const y = isFront ? 0 : diff * 20
+         const opacity = isFront ? 1 : isVisible ? 1 - (diff * 0.4) : 0
+         const zIndex = LEVELS.length - diff
+
+         gsap.set(card, { y, scale, opacity, rotationZ: 0, zIndex })
+       })
+       isFirstRender.current = false
+       return
+    }
+
     setIsAnimating(true)
     
     LEVELS.forEach((_, i) => {
@@ -134,31 +155,46 @@ export default function LevelSystem() {
       const diff = (i - activeIndex + LEVELS.length) % LEVELS.length
       const isFront = diff === 0
       const isVisible = diff < 3
+      const isDropping = diff === LEVELS.length - 1 // The card that just moved to the back
 
-      // Target properties
-      const scale = isFront ? 1 : 1 - (diff * 0.06)
-      const y = isFront ? 0 : diff * 20
-      const opacity = isFront ? 1 : isVisible ? 1 - (diff * 0.4) : 0
+      // Target properties for the "Reveal" phase
+      const targetScale = isFront ? 1 : 1 - (diff * 0.05)
+      const targetY = isFront ? 0 : diff * 20
+      const targetOpacity = isFront ? 1 : isVisible ? 1 - (diff * 0.4) : 0
       const zIndex = LEVELS.length - diff
 
       // Apply zIndex immediately so the cards order correctly before animating
       gsap.set(card, { zIndex })
 
-      // Animate to new position with spring-like ease
-      gsap.to(card, {
-        y: diff === LEVELS.length - 1 ? 60 : y, // if it was just pushed to back, animate it dropping down
-        scale: scale,
-        opacity: diff === LEVELS.length - 1 ? 0 : opacity, // force fade out if it's the one moving to back
-        duration: 0.8,
-        ease: 'back.out(1.2)',
-        onComplete: () => {
-          // If this is the card that just animated to the back, snap it to the actual back position
-          if (diff === LEVELS.length - 1) {
-             gsap.set(card, { y, scale, opacity })
+      if (isDropping) {
+        // Phase 1 - Drop: Front card animates down with rotation, fade, and scale down.
+        gsap.to(card, {
+          y: 120, // drop down significantly
+          scale: 0.95, // shrink a little
+          opacity: 0, // fade to 0
+          rotationZ: -4, // slight rotation for realism
+          duration: 0.4, // faster drop
+          ease: 'power2.in',
+          onComplete: () => {
+            // Reset to the very back of the stack invisibly
+            gsap.set(card, { y: 60, scale: 0.85, opacity: 0, rotationZ: 0 })
           }
-          if (isFront) setIsAnimating(false)
-        }
-      })
+        })
+      } else {
+        // Phase 2 - Reveal: Next cards wait until drop phase begins, then slide up and scale into place.
+        gsap.to(card, {
+          y: targetY,
+          scale: targetScale,
+          opacity: targetOpacity,
+          rotationZ: 0,
+          duration: 0.6,
+          delay: 0.2, // wait for drop to get out of the way
+          ease: 'back.out(1.2)',
+          onComplete: () => {
+            if (isFront) setIsAnimating(false)
+          }
+        })
+      }
     })
   }, { dependencies: [activeIndex], scope: containerRef })
 
@@ -191,14 +227,14 @@ export default function LevelSystem() {
             </Button>
           </div>
 
-          {/* Progress Indicator Row */}
+          {/* Progress Indicator Row - Option A (Glowing Progress Rail) */}
           <div className="pt-12 relative flex items-center justify-between w-full max-w-md">
-            {/* Base Connecting Line */}
-            <div className="absolute top-1/2 left-4 right-4 h-[2px] bg-white/10 -translate-y-1/2" />
+            {/* Base Connecting Line (Muted) */}
+            <div className="absolute top-1/2 left-4 right-4 h-[2px] bg-white/5 -translate-y-1/2" />
             
-            {/* Active Connecting Line - animates based on activeIndex */}
+            {/* Active Connecting Line (Glowing Orange) */}
             <div 
-              className="absolute top-1/2 left-4 h-[2px] bg-accent -translate-y-1/2 transition-all duration-[800ms] ease-[cubic-bezier(0.16,1,0.3,1)] shadow-[0_0_10px_rgba(255,122,0,0.5)] origin-left" 
+              className="absolute top-1/2 left-4 h-[2px] bg-[#FF7A00] -translate-y-1/2 transition-all duration-[600ms] delay-200 ease-[cubic-bezier(0.16,1,0.3,1)] shadow-[0_0_15px_rgba(255,122,0,0.8)] origin-left z-0" 
               style={{ width: `calc(${activeIndex * (100 / (LEVELS.length - 1))}% - 16px)` }}
             />
             
@@ -213,15 +249,15 @@ export default function LevelSystem() {
                   className={cn(
                     "relative z-10 w-10 h-10 rounded-full flex items-center justify-center font-mono font-bold text-[9px] tracking-tighter transition-all duration-500 cursor-pointer hover:scale-110",
                     isActive 
-                      ? "bg-accent text-bg w-12 h-12 shadow-[0_0_20px_rgba(255,122,0,0.6)] border-2 border-accent text-xs scale-110" 
+                      ? "bg-[#FF7A00] text-black w-12 h-12 shadow-[0_0_25px_rgba(255,122,0,0.8)] border-2 border-[#FF7A00] text-xs scale-110" 
                       : isPast
-                        ? "bg-accent/20 text-accent border border-accent/40"
+                        ? "bg-[#FF7A00] text-black border border-[#FF7A00] shadow-[0_0_10px_rgba(255,122,0,0.3)]"
                         : "bg-[#1a1a1a] text-white/40 border border-white/10 hover:border-white/30"
                   )}
                 >
                   {item.lvl}
                   {isActive && (
-                    <div className="absolute inset-0 rounded-full bg-accent/20 blur-md -z-10 animate-pulse" />
+                    <div className="absolute inset-0 rounded-full bg-[#FF7A00]/20 blur-md -z-10 animate-pulse" />
                   )}
                 </div>
               )
@@ -242,7 +278,7 @@ export default function LevelSystem() {
                 <div
                   key={item.lvl}
                   ref={(el) => { cardsRef.current[i] = el }}
-                  className="absolute top-0 left-0 w-full pointer-events-none opacity-0"
+                  className="absolute top-0 left-0 w-full pointer-events-none origin-bottom"
                 >
                   <div 
                     className={cn(
