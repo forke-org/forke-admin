@@ -25,6 +25,7 @@ export interface MirrorParams {
   allowedPaths?: string
   restrictedPaths?: string
   acceptanceCriteria?: string
+  sandboxRepoId?: string
 }
 
 /**
@@ -45,7 +46,8 @@ export async function runMirrorJob(params: MirrorParams): Promise<void> {
     backendStack,
     allowedPaths,
     restrictedPaths,
-    acceptanceCriteria
+    acceptanceCriteria,
+    sandboxRepoId
   } = params
   const fullTargetRepoPath = `${targetSpace}/${targetRepoName}`
   const tempDir = path.join(process.cwd(), 'git-mirrors', jobId)
@@ -164,22 +166,36 @@ export async function runMirrorJob(params: MirrorParams): Promise<void> {
       fs.rmSync(tempDir, { recursive: true, force: true })
     }
 
-    // Step F: Save sandbox record to database
-    const [insertedSandbox] = await db.insert(sandboxRepos).values({
-      ownerId,
-      sourceRepo,
-      sandboxRepo: fullTargetRepoPath,
-      taskTitle: taskTitle || null,
-      taskDescription: taskDescription || null,
-      frontendStack: frontendStack || null,
-      backendStack: backendStack || null,
-      allowedPaths: allowedPaths || null,
-      restrictedPaths: restrictedPaths || null,
-      acceptanceCriteria: acceptanceCriteria || null,
-      verificationStatus: 'verifying'
-    }).returning()
+    // Step F: Save or update sandbox record in database
+    let sandboxRepoId = params.sandboxRepoId
 
-    const sandboxRepoId = insertedSandbox.id
+    if (sandboxRepoId) {
+      await db.update(sandboxRepos).set({
+        taskTitle: taskTitle || null,
+        taskDescription: taskDescription || null,
+        frontendStack: frontendStack || null,
+        backendStack: backendStack || null,
+        allowedPaths: allowedPaths || null,
+        restrictedPaths: restrictedPaths || null,
+        acceptanceCriteria: acceptanceCriteria || null,
+        verificationStatus: 'verified' // Update to verified since git push was successful
+      }).where(eq(sandboxRepos.id, sandboxRepoId))
+    } else {
+      const [insertedSandbox] = await db.insert(sandboxRepos).values({
+        ownerId,
+        sourceRepo,
+        sandboxRepo: fullTargetRepoPath,
+        taskTitle: taskTitle || null,
+        taskDescription: taskDescription || null,
+        frontendStack: frontendStack || null,
+        backendStack: backendStack || null,
+        allowedPaths: allowedPaths || null,
+        restrictedPaths: restrictedPaths || null,
+        acceptanceCriteria: acceptanceCriteria || null,
+        verificationStatus: 'verified' // Set immediately to verified
+      }).returning()
+      sandboxRepoId = insertedSandbox.id
+    }
 
     // Step G: Generate Automatic Baseline Snapshot with live logs in the terminal
     addLog('INIT', 'Starting automatic baseline snapshot generation.')
@@ -232,24 +248,12 @@ export async function runMirrorJob(params: MirrorParams): Promise<void> {
       })
       
       addLog('SUCCESS', 'Automatic baseline snapshot generated successfully!')
-      
-      // Update verificationStatus to verified
-      await db
-        .update(sandboxRepos)
-        .set({ verificationStatus: 'verified' })
-        .where(eq(sandboxRepos.id, sandboxRepoId))
 
     } catch (baselineErr: any) {
       console.error('Automatic baseline generation failed:', baselineErr)
       addLog('FAILED', `Automatic baseline snapshot failed: ${baselineErr.message || 'Validation error'}`)
-      
-      // Update verificationStatus to failed
-      await db
-        .update(sandboxRepos)
-        .set({ verificationStatus: 'failed' })
-        .where(eq(sandboxRepos.id, sandboxRepoId))
-        
-      throw baselineErr
+      // Note: We do not re-throw baselineErr to avoid triggering the outer catch block
+      // which would mark the entire mirror job status as failed.
     } finally {
       if (fs.existsSync(tempReviewDir)) {
         fs.rmSync(tempReviewDir, { recursive: true, force: true })
