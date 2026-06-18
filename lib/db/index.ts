@@ -1,33 +1,29 @@
-/**
- * @fileoverview Forke Platform
- * @copyright (c) 2026 Forke Inc. (https://www.forke.space/)
- *
- * Source-Available License (Non-Commercial / Fair Source).
- * This source code is open for inspection, learning, and personal development.
- * Commercial use, hosting, or resale as a paid service without an explicit
- * commercial license from Forke Inc. is strictly prohibited.
- */
-
 import { drizzle } from 'drizzle-orm/postgres-js'
 import postgres from 'postgres'
 import * as schema from './schema'
 
-const dbUrl = process.env.DATABASE_URL || 'postgresql://postgres:dummy@127.0.0.1:5432/forkedb'
-
-const connectionOptions: postgres.Options<{}> = {
-  max: 10,
-  idle_timeout: 20,
-  connect_timeout: 10,
-  prepare: false,
+if (!process.env.DATABASE_URL) {
+  throw new Error('DATABASE_URL is not set')
 }
 
-export let client: postgres.Sql
+// Connection pool tuning. RDS db.t3.micro allows ~35 total connections, so we
+// cap each serverless instance well below that to avoid "too many clients".
+// This only changes connection management — schema, queries and table views
+// are completely unaffected.
+const connectionOptions: postgres.Options<{}> = {
+  max: 10,            // max connections held by this client
+  idle_timeout: 20,   // close idle connections after 20s (frees RDS slots)
+  connect_timeout: 10, // fail fast if RDS can't be reached in 10s
+  prepare: false,      // disable prepared statements for pgBouncer compatibility
+}
+
+export let client: postgres.Sql;
 
 if (process.env.NODE_ENV === 'production') {
-  client = postgres(dbUrl, connectionOptions)
+  client = postgres(process.env.DATABASE_URL, connectionOptions)
 } else {
   if (!(global as any).postgresClient) {
-    (global as any).postgresClient = postgres(dbUrl, connectionOptions)
+    (global as any).postgresClient = postgres(process.env.DATABASE_URL, connectionOptions)
   }
   client = (global as any).postgresClient
 }

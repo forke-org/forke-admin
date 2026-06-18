@@ -118,8 +118,8 @@ export async function GET(request: Request) {
       dbSaved = true
     }
 
-    // Redirect to home page with success status
-    const targetUrl = new URL('/', request.url)
+    // Redirect to respective page with success status
+    const targetUrl = new URL(role === 'owner' ? '/post-task' : '/dashboard', request.url)
     targetUrl.searchParams.set('success', 'true')
     targetUrl.searchParams.set('github_id', githubUsername)
     targetUrl.searchParams.set('role', role)
