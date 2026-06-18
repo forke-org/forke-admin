@@ -26,6 +26,39 @@ export async function GET(request: Request) {
     }
   }
 
+  // Auto-heal if token is present in cookie but owner is not registered in the database
+  if (token && username) {
+    try {
+      const existing = await db
+        .select()
+        .from(sandboxOwners)
+        .where(eq(sandboxOwners.username, username))
+      if (existing.length === 0) {
+        const userRes = await fetch('https://api.github.com/user', {
+          headers: {
+            Authorization: `Bearer ${token}`,
+            'User-Agent': 'Forke-Sandbox-AutoHeal/1.0',
+            Accept: 'application/vnd.github+json',
+          },
+        })
+        if (userRes.ok) {
+          const userData = await userRes.json()
+          if (userData && userData.id && userData.login && userData.login.toLowerCase() === username.toLowerCase()) {
+            await db
+              .insert(sandboxOwners)
+              .values({
+                githubId: userData.id,
+                username: userData.login,
+                accessToken: token,
+              })
+          }
+        }
+      }
+    } catch (dbError) {
+      console.error('Failed to auto-heal owner in repos fetch:', dbError)
+    }
+  }
+
   if (!token) {
     return NextResponse.json({ error: 'GitHub access token not found. Please log in again.' }, { status: 401 })
   }

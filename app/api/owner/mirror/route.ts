@@ -31,7 +31,7 @@ export async function POST(request: Request) {
     let ownerId: string | null = null
 
     // 1. Fetch token & database ID for owner
-    const existing = await db
+    let existing = await db
       .select()
       .from(sandboxOwners)
       .where(eq(sandboxOwners.username, username))
@@ -47,8 +47,42 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'GitHub access token not found. Please log in again.' }, { status: 401 })
     }
 
+    // Auto-heal if database was reset but user session is still alive in cookies
     if (!ownerId) {
-      return NextResponse.json({ error: 'Owner record not found in database.' }, { status: 404 })
+      try {
+        const userRes = await fetch('https://api.github.com/user', {
+          headers: {
+            Authorization: `Bearer ${token}`,
+            'User-Agent': 'Forke-Sandbox-AutoHeal/1.0',
+            Accept: 'application/vnd.github+json',
+          },
+        })
+        if (userRes.ok) {
+          const userData = await userRes.json()
+          if (userData && userData.id && userData.login) {
+            // Verify that the token matches the requested username
+            if (userData.login.toLowerCase() === username.toLowerCase()) {
+              const inserted = await db
+                .insert(sandboxOwners)
+                .values({
+                  githubId: userData.id,
+                  username: userData.login,
+                  accessToken: token,
+                })
+                .returning()
+              if (inserted.length > 0) {
+                ownerId = inserted[0].id
+              }
+            }
+          }
+        }
+      } catch (err) {
+        console.error('Failed to auto-heal owner session in DB:', err)
+      }
+    }
+
+    if (!ownerId) {
+      return NextResponse.json({ error: 'Owner record not found in database. Please log in again.' }, { status: 404 })
     }
 
     // 2. Determine target space (defaults to targetOrg or always forke-sandbox)

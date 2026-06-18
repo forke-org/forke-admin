@@ -4,6 +4,14 @@
     "label": "jun 18, 2026",
     "entries": [
       {
+        "shortHash": "a672fd7",
+        "author": "Sudhanshub27",
+        "date": "2026-06-18T22:30:27+05:30",
+        "kind": "feature",
+        "scope": null,
+        "title": "Implement sandbox workspace with OAuth callback and repository mirroring capabilities"
+      },
+      {
         "shortHash": "ce816b0",
         "author": "Sudhanshub27",
         "date": "2026-06-18T22:05:04+05:30",
