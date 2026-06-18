@@ -4,6 +4,14 @@
     "label": "jun 18, 2026",
     "entries": [
       {
+        "shortHash": "3478535",
+        "author": "Sudhanshub27",
+        "date": "2026-06-18T21:03:18+05:30",
+        "kind": "feature",
+        "scope": null,
+        "title": "Implement GitHub OAuth authentication flow and initialize sandbox dashboard and task posting workspaces"
+      },
+      {
         "shortHash": "582b6d7",
         "author": "Sudhanshub27",
         "date": "2026-06-18T20:37:35+05:30",

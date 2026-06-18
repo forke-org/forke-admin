@@ -5,7 +5,7 @@ export async function GET(request: Request) {
   const role = searchParams.get('role') || 'developer'
 
   const clientId = process.env.GITHUB_CLIENT_ID
-  const redirectUri = process.env.GITHUB_REDIRECT_URI
+  const redirectUri = process.env.GITHUB_SANDBOX_REDIRECT_URI
 
   if (!clientId) {
     return NextResponse.json(
@@ -14,9 +14,14 @@ export async function GET(request: Request) {
     )
   }
 
-  const githubAuthUrl = `https://github.com/login/oauth/authorize?client_id=${clientId}&redirect_uri=${encodeURIComponent(
-    redirectUri || ''
-  )}&scope=repo,read:org,read:user,delete_repo&state=${role}`
+  if (!redirectUri) {
+    return NextResponse.json(
+      { error: 'GITHUB_SANDBOX_REDIRECT_URI is not configured in environment variables' },
+      { status: 500 }
+    )
+  }
+
+  const githubAuthUrl = `https://github.com/login/oauth/authorize?client_id=${clientId}&redirect_uri=${encodeURIComponent(redirectUri)}&scope=repo,read:org,read:user,delete_repo&state=${role}`
 
   return NextResponse.redirect(githubAuthUrl)
 }
