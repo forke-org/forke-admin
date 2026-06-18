@@ -1,7 +1,7 @@
-import { NextResponse } from 'next/server'
+import { NextRequest, NextResponse } from 'next/server'
 import { handlers } from '@/auth'
 
-export async function GET(request: Request) {
+export async function GET(request: NextRequest) {
   const { searchParams } = new URL(request.url)
   const state = searchParams.get('state') || ''
 
@@ -14,7 +14,7 @@ export async function GET(request: Request) {
   return handlers.GET(request)
 }
 
-async function handleSandboxCallback(request: Request, role: string) {
+async function handleSandboxCallback(request: NextRequest, role: string) {
   const { searchParams } = new URL(request.url)
   const code = searchParams.get('code')
 
@@ -88,8 +88,8 @@ async function handleSandboxCallback(request: Request, role: string) {
       console.warn('[Sandbox OAuth] DB save skipped (DB unavailable):', dbErr)
     }
 
-    // 4. Redirect to sandbox page with session info in URL params
-    const targetPath = role === 'owner' ? '/sandbox-post-task' : '/sandbox-dashboard'
+    // 4. Redirect to workspace page with session info in URL params
+    const targetPath = role === 'owner' ? '/owner' : '/developer'
     const targetUrl = new URL(targetPath, request.url)
     targetUrl.searchParams.set('success', 'true')
     targetUrl.searchParams.set('github_id', githubUsername)
