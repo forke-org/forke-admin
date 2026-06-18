@@ -4,6 +4,22 @@
     "label": "jun 18, 2026",
     "entries": [
       {
+        "shortHash": "ca9fada",
+        "author": "Sudhanshub27",
+        "date": "2026-06-18T21:15:54+05:30",
+        "kind": "feature",
+        "scope": null,
+        "title": "Implement initial SandboxWorkspace component for developer and owner dashboards"
+      },
+      {
+        "shortHash": "b828f4f",
+        "author": "Sudhanshub27",
+        "date": "2026-06-18T21:14:48+05:30",
+        "kind": "feature",
+        "scope": null,
+        "title": "Implement GitHub OAuth authentication flow and initialize sandbox dashboard and task workspaces"
+      },
+      {
         "shortHash": "3478535",
         "author": "Sudhanshub27",
         "date": "2026-06-18T21:03:18+05:30",
