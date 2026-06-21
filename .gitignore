@@ -54,3 +54,6 @@ package-lock.json
 WORKING
 
 git-mirrors/
+
+.config.kiro
+.kiro/
