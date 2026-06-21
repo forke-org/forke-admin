@@ -2,7 +2,7 @@ import { NextResponse } from 'next/server'
 import { cookies } from 'next/headers'
 import { db } from '@/lib/db'
 import { sandboxOwners, sandboxRepos, baselineSnapshots } from '@/lib/db/schema'
-import { eq } from 'drizzle-orm'
+import { eq, desc } from 'drizzle-orm'
 import { runReviewPipeline } from '@/lib/review/runner'
 import { analyzeBaselineWithAI } from '@/lib/review/gemini'
 import { exec } from 'child_process'
@@ -44,6 +44,7 @@ export async function POST(request: Request) {
       .select()
       .from(sandboxRepos)
       .where(eq(sandboxRepos.sandboxRepo, sandboxRepo))
+      .orderBy(desc(sandboxRepos.createdAt))
       .limit(1)
 
     if (repoInfo.length === 0) {
@@ -128,6 +129,7 @@ export async function POST(request: Request) {
           .select()
           .from(baselineSnapshots)
           .where(eq(baselineSnapshots.sandboxRepoId, sandboxRepoId))
+          .orderBy(desc(baselineSnapshots.createdAt))
           .limit(1)
 
         if (existing.length > 0) {
@@ -193,6 +195,7 @@ export async function GET(request: Request) {
       .select()
       .from(sandboxRepos)
       .where(eq(sandboxRepos.sandboxRepo, sandboxRepo))
+      .orderBy(desc(sandboxRepos.createdAt))
       .limit(1)
 
     if (repoInfo.length === 0) {
@@ -203,6 +206,7 @@ export async function GET(request: Request) {
       .select()
       .from(baselineSnapshots)
       .where(eq(baselineSnapshots.sandboxRepoId, repoInfo[0].id))
+      .orderBy(desc(baselineSnapshots.createdAt))
       .limit(1)
 
     if (snapshot.length === 0) {
