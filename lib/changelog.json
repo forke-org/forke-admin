@@ -1,5 +1,27 @@
 [
   {
+    "date": "2026-06-22",
+    "label": "jun 22, 2026",
+    "entries": [
+      {
+        "shortHash": "c4e41e9",
+        "author": "Sudhanshub27",
+        "date": "2026-06-22T01:20:09+05:30",
+        "kind": "feature",
+        "scope": null,
+        "title": "Implemented file tree in tasks"
+      },
+      {
+        "shortHash": "41e7593",
+        "author": "Sudhanshub27",
+        "date": "2026-06-22T00:16:18+05:30",
+        "kind": "feature",
+        "scope": "sandbox",
+        "title": "Add task publishing workflow, feed integration, task status navigation, and Kiro config ignores"
+      }
+    ]
+  },
+  {
     "date": "2026-06-21",
     "label": "jun 21, 2026",
     "entries": [
