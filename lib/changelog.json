@@ -4,6 +4,22 @@
     "label": "jun 22, 2026",
     "entries": [
       {
+        "shortHash": "88016f3",
+        "author": "Sudhanshub27",
+        "date": "2026-06-22T17:54:03+05:30",
+        "kind": "chore",
+        "scope": null,
+        "title": "Deleted redundant files"
+      },
+      {
+        "shortHash": "e453d9d",
+        "author": "Sudhanshub27",
+        "date": "2026-06-22T02:49:41+05:30",
+        "kind": "feature",
+        "scope": "ai-review",
+        "title": "Add unified AI review report UI and replace legacy review views"
+      },
+      {
         "shortHash": "c4e41e9",
         "author": "Sudhanshub27",
         "date": "2026-06-22T01:20:09+05:30",
