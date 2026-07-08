@@ -132,12 +132,15 @@ export async function POST(req: NextRequest) {
 
     const hasSavedReview = existingReviews.length > 0
 
+    // Bypassed check to allow manual verification report generation
+    /*
     if (isCompleted && hasSavedReview) {
       return NextResponse.json({
         triggered: false,
         message: 'Review already complete for this commit SHA.',
       })
     }
+    */
 
     if (isPending) {
       return NextResponse.json({

@@ -172,14 +172,60 @@ export function parseAIResponse(rawText: string): AIReviewResult {
  */
 function normalizeAIResult(raw: Record<string, unknown>): AIReviewResult {
   const verdict = validateVerdict(raw.verdict)
-  const score = typeof raw.score === 'number' ? Math.max(0, Math.min(100, Math.round(raw.score))) : 50
+  
+  let scoreValue = 50
+  let scoreBreakdown: AIReviewResult['scoreBreakdown'] | undefined = undefined
+
+  const parseBreakdown = (b: any) => {
+    const parseSubScore = (sub: any, defaultMax: number) => {
+      if (!sub || typeof sub !== 'object') {
+        return { score: defaultMax, deductions: [] }
+      }
+      const score = typeof sub.score === 'number' ? sub.score : defaultMax
+      const deductions = Array.isArray(sub.deductions)
+        ? sub.deductions.map((d: any) => ({
+            points: typeof d.points === 'number' ? d.points : 0,
+            reason: typeof d.reason === 'string' ? d.reason : 'Unspecified deduction'
+          }))
+        : []
+      return { score, deductions }
+    }
+
+    return {
+      requirementFulfillment: parseSubScore(b.requirementFulfillment, 40),
+      techStackAdherence: parseSubScore(b.techStackAdherence, 20),
+      codeCleanliness: parseSubScore(b.codeCleanliness, 15),
+      executionSafety: parseSubScore(b.executionSafety, 25)
+    }
+  }
+
+  if (raw.score && typeof raw.score === 'object') {
+    const rawScoreObj = raw.score as Record<string, any>
+    scoreValue = typeof rawScoreObj.value === 'number' ? Math.max(0, Math.min(100, Math.round(rawScoreObj.value))) : 50
+    if (rawScoreObj.breakdown && typeof rawScoreObj.breakdown === 'object') {
+      scoreBreakdown = parseBreakdown(rawScoreObj.breakdown)
+    }
+  } else if (typeof raw.score === 'number') {
+    scoreValue = Math.max(0, Math.min(100, Math.round(raw.score)))
+  }
+
+  // Fallback for baseline prompt reviewScore format
+  if (raw.reviewScore && typeof raw.reviewScore === 'object') {
+    const rawScoreObj = raw.reviewScore as Record<string, any>
+    scoreValue = typeof rawScoreObj.value === 'number' ? Math.max(0, Math.min(100, Math.round(rawScoreObj.value))) : scoreValue
+    if (rawScoreObj.breakdown && typeof rawScoreObj.breakdown === 'object') {
+      scoreBreakdown = parseBreakdown(rawScoreObj.breakdown)
+    }
+  }
+
   const requirementMatch = typeof raw.requirement_match === 'number'
     ? Math.max(0, Math.min(1, raw.requirement_match))
     : 0.5
 
   return {
     verdict,
-    score,
+    score: scoreValue,
+    scoreBreakdown,
     requirement_match: requirementMatch,
     summary: typeof raw.summary === 'string' ? raw.summary : 'No summary provided.',
     strengths: Array.isArray(raw.strengths) ? raw.strengths.filter(s => typeof s === 'string') : [],

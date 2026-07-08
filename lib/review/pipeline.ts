@@ -1,5 +1,5 @@
 import { db } from '../db'
-import { sandboxRepos, baselineSnapshots, reviewResults, aiReviews, developerForks } from '../db/schema'
+import { sandboxRepos, baselineSnapshots, codeReviews, developerForks } from '../db/schema'
 import { eq, and, desc, isNull } from 'drizzle-orm'
 import { runReviewPipeline } from './runner'
 import { compareToBaseline } from './comparison'
@@ -10,7 +10,7 @@ import {
   validateForkeSubmission, 
   parsePathList 
 } from './scopeValidator'
-import { buildReviewContext, truncateDiff } from './contextBuilder'
+import { buildReviewContext, truncateDiff, PreviousReviewData } from './contextBuilder'
 import { runAIReview } from './gemini'
 import { calculateFinalScore } from './scoreEngine'
 import { updateCommitStatus } from '../github/commitStatus'
@@ -212,21 +212,6 @@ export async function runFullPRPipeline(params: PipelineParams) {
     }
     updateProgress(80)
 
-    // Save Deterministic PR Review Result to database
-    addLog('CHECKING', 'Saving deterministic verification results to database.')
-    const [reviewResultRecord] = await db
-      .insert(reviewResults)
-      .values({
-        prNumber,
-        sandboxRepoId: sandboxId,
-        commitSha: headSha,
-        baselineSnapshotId: baseline ? baseline.id : null,
-        results: JSON.stringify(deterministicResults),
-        comparison: comparisonReport ? JSON.stringify(comparisonReport) : '{}',
-        verdict: finalDeterministicVerdict,
-        reportHtml
-      })
-      .returning()
     updateProgress(83)
 
     // ─────────────────────────────────────────────────────────────────────────
@@ -240,29 +225,36 @@ export async function runFullPRPipeline(params: PipelineParams) {
     const repoStructure = await fetchRepoTree(repoFullName, headSha, ownerToken)
 
     // Retrieve previous PR review if incremental review is occurring
-    let previousReviewData = undefined
+    let previousReviewData: PreviousReviewData | undefined = undefined
     try {
       const query = db
         .select({
-          score: aiReviews.score,
-          verdict: aiReviews.verdict,
-          summary: aiReviews.summary,
-          issues: aiReviews.issues,
-          risks: aiReviews.risks,
+          score: codeReviews.aiScore,
+          verdict: codeReviews.aiVerdict,
+          summary: codeReviews.aiSummary,
+          issues: codeReviews.aiIssues,
+          risks: codeReviews.aiRisks,
         })
-        .from(aiReviews)
+        .from(codeReviews)
         .where(
           and(
-            eq(aiReviews.sandboxRepoId, sandboxId),
-            eq(aiReviews.prNumber, prNumber)
+            eq(codeReviews.sandboxRepoId, sandboxId),
+            eq(codeReviews.prNumber, prNumber)
           )
         )
-        .orderBy(desc(aiReviews.createdAt))
+        .orderBy(desc(codeReviews.createdAt))
         .limit(1)
 
       const previousReviews = await query
       if (previousReviews.length > 0) {
-        previousReviewData = previousReviews[0]
+        const first = previousReviews[0]
+        previousReviewData = {
+          score: first.score ?? 100,
+          verdict: first.verdict ?? 'pass',
+          summary: first.summary ?? '',
+          issues: first.issues,
+          risks: first.risks,
+        }
         addLog('CHECKING', 'Incremental review context: Found previous review findings.')
       } else if (baseline) {
         // Fall back to comparing against the original baseline snapshot findings
@@ -373,25 +365,36 @@ export async function runFullPRPipeline(params: PipelineParams) {
       riskRouting = 'reviewer_queue'
     }
 
-    // Persist AI review result in database
-    addLog('CHECKING', 'Saving AI review metrics to database...')
-    await db.insert(aiReviews).values({
-      developerForkId: developerForkId || null,
-      sandboxRepoId: sandboxId,
+    // Save Unified PR Review Result to database (both deterministic and AI metrics)
+    addLog('CHECKING', 'Saving unified verification and AI review results to database...')
+    await db.insert(codeReviews).values({
       prNumber,
-      verdict: finalVerdict,
-      score: finalScore,
+      sandboxRepoId: sandboxId,
+      developerForkId: developerForkId || null,
+      commitSha: headSha,
+      baselineSnapshotId: baseline ? baseline.id : null,
+      // Deterministic Results
+      results: JSON.stringify({
+        ...deterministicResults,
+        scoreBreakdown: aiResult.scoreBreakdown
+      }),
+      comparison: comparisonReport ? JSON.stringify(comparisonReport) : '{}',
+      verdict: finalDeterministicVerdict,
+      reportHtml,
+      // AI Review Metrics
+      aiVerdict: finalVerdict,
+      aiScore: finalScore,
       requirementMatch: String(aiResult.requirement_match),
-      summary: aiResult.summary,
-      strengths: aiResult.strengths.length > 0 ? JSON.stringify(aiResult.strengths) : null,
-      issues: aiResult.issues.length > 0 ? JSON.stringify(aiResult.issues) : null,
-      risks: aiResult.risks.length > 0 ? JSON.stringify(aiResult.risks) : null,
+      aiSummary: aiResult.summary,
+      aiStrengths: aiResult.strengths.length > 0 ? JSON.stringify(aiResult.strengths) : null,
+      aiIssues: aiResult.issues.length > 0 ? JSON.stringify(aiResult.issues) : null,
+      aiRisks: aiResult.risks.length > 0 ? JSON.stringify(aiResult.risks) : null,
       unauthorizedEdits: aiResult.unauthorized_file_edits.length > 0 ? JSON.stringify(aiResult.unauthorized_file_edits) : null,
       resolvedIssues: aiResult.resolved_issues && aiResult.resolved_issues.length > 0 ? JSON.stringify(aiResult.resolved_issues) : null,
       resolvedRisks: aiResult.resolved_risks && aiResult.resolved_risks.length > 0 ? JSON.stringify(aiResult.resolved_risks) : null,
       riskScore: compositeRisk,
       riskRouting,
-      model: 'gemini-2.5-flash'
+      aiModel: 'gemini-2.5-flash'
     })
 
     // Update the commit check status inside the GitHub PR UI

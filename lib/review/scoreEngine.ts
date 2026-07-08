@@ -42,6 +42,24 @@ export interface AIResolvedRisk {
 export interface AIReviewResult {
   verdict: Verdict
   score: number
+  scoreBreakdown?: {
+    requirementFulfillment: {
+      score: number
+      deductions: { points: number; reason: string }[]
+    }
+    techStackAdherence: {
+      score: number
+      deductions: { points: number; reason: string }[]
+    }
+    codeCleanliness: {
+      score: number
+      deductions: { points: number; reason: string }[]
+    }
+    executionSafety: {
+      score: number
+      deductions: { points: number; reason: string }[]
+    }
+  }
   requirement_match: number // 0.0 to 1.0
   summary: string
   strengths: string[]
@@ -61,45 +79,14 @@ export interface ScoredReview extends AIReviewResult {
 /**
  * Calculates the final weighted score and verdict.
  *
- * Penalty rules:
- * - Base score: AI's raw 0-100 score
- * - If requirement_match < 0.80: multiply score by 0.75 (-25%)
- * - If unauthorized file edits exist: multiply score by 0.50 (-50%)
- * - Each critical/high severity issue: -15 points
- * - Each medium severity issue: -5 points
- * - Score is clamped to [0, 100]
+ * Directly returns the AI's calculated score and verdict.
  */
 export function calculateFinalScore(
   rawResult: AIReviewResult,
   unauthorizedFiles: string[]
 ): { finalScore: number; finalVerdict: Verdict } {
-  let score = rawResult.score
-
-  // Penalty 1: Low requirement match
-  if (rawResult.requirement_match < 0.8) {
-    score = Math.floor(score * 0.75)
-  }
-
-  // Penalty 2: Unauthorized file edits (immediate heavy penalty)
-  if (unauthorizedFiles.length > 0) {
-    score = Math.floor(score * 0.5)
-  }
-
-  // Penalty 3: Issue severity penalties
-  for (const issue of rawResult.issues || []) {
-    if (issue.severity === 'critical' || issue.severity === 'high') {
-      score -= 15
-    } else if (issue.severity === 'medium') {
-      score -= 5
-    }
-  }
-
-  // Clamp to valid range
-  const finalScore = Math.max(0, Math.min(100, score))
-
-  // Determine verdict
-  const finalVerdict = determineVerdict(finalScore, unauthorizedFiles, rawResult.risks || [])
-
+  const finalScore = rawResult.score
+  const finalVerdict = rawResult.verdict
   return { finalScore, finalVerdict }
 }
 

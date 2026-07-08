@@ -1,3 +1,4 @@
+import { REVIEW_SYSTEM_PROMPT } from './prompt'
 /**
  * PR Context Builder
  * Assembles the full structured prompt payload to send to the AI model.
@@ -41,75 +42,7 @@ export function buildReviewContext(
   task: TaskMetadata,
   previousReview?: PreviousReviewData
 ): { systemPrompt: string; userMessage: string } {
-  const systemPrompt = `You are an expert, objective AI Code Review Engine for the Forke platform. Your task is to analyze a developer's Pull Request and evaluate it against a specific Task Description, allowed path constraints, and optionally a previous AI review of this PR.
-
-Evaluate the PR across FIVE dimensions:
-1. Requirement Validation — Did the developer solve the requested task?
-2. File Rule Validation — Did the developer only edit allowed files?
-3. Code Quality & Architecture — Is the code clean, robust, and maintainable?
-4. Security & Safety — Does the PR introduce vulnerabilities or dangerous patterns?
-5. Final Verdict — Aggregate all findings into a final decision.
-
-INCREMENTAL REVIEW INSTRUCTIONS:
-If a "PREVIOUS AI REVIEW" is provided in the user message, a new commit has been pushed. Compare the cumulative changes in the git diff with the previous review findings:
-1. Identify which previously reported issues or risks are now CORRECTED/FIXED. Move these to the "resolved_issues" or "resolved_risks" arrays. For each, describe how it was resolved.
-2. Identify which previously reported issues still persist. Keep them in the active "issues" or "risks" list and set their "status" to "unresolved".
-3. Identify any newly introduced flaws. Set their "status" to "new".
-4. Update the overall summary to mention progress made (what was fixed and what remains).
-    If no previous review is provided, resolved arrays will be empty, and all active issues and risks should have "status": "new".
-
-CRITICAL SIZE LIMIT: Be extremely concise. Limit "strengths", "issues", "risks", "resolved_issues", and "resolved_risks" to a maximum of 5 items each (focusing only on the most critical/severe findings). Keep messages, descriptions, suggestions, and summaries brief. This is strictly required to prevent token limit output truncation.
-
-IMPORTANT: Return your ENTIRE analysis as a single valid JSON object. Do NOT include any text before or after the JSON. The JSON must strictly follow this schema:
-
-{
-  "verdict": "pass" | "needs_changes" | "high_risk",
-  "score": <integer 0 to 100>,
-  "requirement_match": <float 0.0 to 1.0>,
-  "summary": "<concise overall summary string of the review, mentioning previous resolution progress if applicable>",
-  "strengths": ["<positive observation>", ...],
-  "issues": [
-    {
-      "file": "<filename>",
-      "line": <integer line number or 0 if unknown>,
-      "severity": "critical" | "high" | "medium" | "low",
-      "message": "<description of the issue>",
-      "suggestion": "<how to fix it>",
-      "status": "new" | "unresolved"
-    }
-  ],
-  "risks": [
-    {
-      "category": "security" | "safety" | "credential",
-      "message": "<description of the risk>",
-      "severity": "high" | "medium" | "low",
-      "status": "new" | "unresolved"
-    }
-  ],
-  "resolved_issues": [
-    {
-      "file": "<filename>",
-      "line": <integer>,
-      "severity": "critical" | "high" | "medium" | "low",
-      "message": "<original message>",
-      "resolution": "<brief explanation of how the developer fixed this issue>"
-    }
-  ],
-  "resolved_risks": [
-    {
-      "category": "security" | "safety" | "credential",
-      "message": "<original message>",
-      "severity": "high" | "medium" | "low",
-      "resolution": "<brief explanation of how the developer resolved this security concern>"
-    }
-  ],
-  "unauthorized_file_edits": ["<file path>", ...]
-}
-
-Verdict guide:
-- "pass": Requirements met well, no critical/high issues, good quality (score >= 75)
-- "needs_changes": Minor/major issues found, improvements needed (score 40-74)
-- "high_risk": Critical security issues, credential leaks, unauthorized file edits, or severe bugs (score < 40 or blocking issues)`
+  const systemPrompt = REVIEW_SYSTEM_PROMPT
 
   const allowedPathsSection = task.allowedPaths.length > 0
     ? `ALLOWED FILE PATHS (developer MUST only modify these):
