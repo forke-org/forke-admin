@@ -1,8 +1,430 @@
 [
   {
+    "date": "2026-07-08",
+    "label": "jul 8, 2026",
+    "entries": [
+      {
+        "shortHash": "e0303d4",
+        "author": "Sudhanshub27",
+        "date": "2026-07-08T11:04:16+05:30",
+        "kind": "fix",
+        "scope": "types",
+        "title": "Type header parameter explicitly in db-client-actions"
+      }
+    ]
+  },
+  {
+    "date": "2026-07-07",
+    "label": "jul 7, 2026",
+    "entries": [
+      {
+        "shortHash": "a8aa6a6",
+        "author": "Sudhanshub27",
+        "date": "2026-07-07T12:07:40+05:30",
+        "kind": "update",
+        "scope": null,
+        "title": "Update owner application submission and check role"
+      }
+    ]
+  },
+  {
+    "date": "2026-07-06",
+    "label": "jul 6, 2026",
+    "entries": [
+      {
+        "shortHash": "f72a5c0",
+        "author": "Ayushman Mohapatra",
+        "date": "2026-07-06T11:07:57+05:30",
+        "kind": "fix",
+        "scope": null,
+        "title": "Remove the isolated subdomains to prevent domain conflict"
+      },
+      {
+        "shortHash": "03a73fd",
+        "author": "Ayushman Mohapatra",
+        "date": "2026-07-06T11:00:38+05:30",
+        "kind": "feature",
+        "scope": null,
+        "title": "Implement dynamic subdomain routing and prevent infinite rewrite loops in middleware"
+      },
+      {
+        "shortHash": "c413ec8",
+        "author": "Ayushman Mohapatra",
+        "date": "2026-07-06T10:01:16+05:30",
+        "kind": "feature",
+        "scope": null,
+        "title": "Implement dynamic subdomain routing for local development"
+      },
+      {
+        "shortHash": "52c9ef2",
+        "author": "Ayushman Mohapatra",
+        "date": "2026-07-06T09:57:23+05:30",
+        "kind": "feature",
+        "scope": null,
+        "title": "Add SupportedBy component to landing page and configure cross-subdomain session cookies"
+      }
+    ]
+  },
+  {
+    "date": "2026-07-05",
+    "label": "jul 5, 2026",
+    "entries": [
+      {
+        "shortHash": "915db8f",
+        "author": "Ayushman Mohapatra",
+        "date": "2026-07-05T22:21:29+05:30",
+        "kind": "feature",
+        "scope": null,
+        "title": "Implement automated database backup cleanup with R2 integration and daily cron schedule"
+      },
+      {
+        "shortHash": "2b2da1b",
+        "author": "Ayushman Mohapatra",
+        "date": "2026-07-05T22:10:13+05:30",
+        "kind": "feature",
+        "scope": null,
+        "title": "Implement automated database backup and cleanup system with R2 storage and admin notifications"
+      }
+    ]
+  },
+  {
+    "date": "2026-06-29",
+    "label": "jun 29, 2026",
+    "entries": [
+      {
+        "shortHash": "479f183",
+        "author": "Ayushman Mohapatra",
+        "date": "2026-06-29T13:56:20+05:30",
+        "kind": "fix",
+        "scope": null,
+        "title": "Improve table layout responsiveness and prevent button wrapping in BucketsPanel"
+      },
+      {
+        "shortHash": "15f8f98",
+        "author": "Ayushman Mohapatra",
+        "date": "2026-06-29T13:53:23+05:30",
+        "kind": "feature",
+        "scope": null,
+        "title": "Paginate country list, add funnel show-all, fix mobile bucket actions"
+      },
+      {
+        "shortHash": "7f2861c",
+        "author": "Ayushman Mohapatra",
+        "date": "2026-06-29T13:16:23+05:30",
+        "kind": "feature",
+        "scope": null,
+        "title": "Implement PortalDropdown component to allow toolbar dropdowns to escape overflow boundaries in DatabaseConsole"
+      },
+      {
+        "shortHash": "345f78c",
+        "author": "Ayushman Mohapatra",
+        "date": "2026-06-29T12:42:55+05:30",
+        "kind": "feature",
+        "scope": null,
+        "title": "Paginate tracker lists and add bucket page size selector"
+      },
+      {
+        "shortHash": "b85fb4d",
+        "author": "Ayushman Mohapatra",
+        "date": "2026-06-29T12:11:58+05:30",
+        "kind": "fix",
+        "scope": null,
+        "title": "Use subscriber attribution country for tracker conversions instead of page_visits geo"
+      },
+      {
+        "shortHash": "269d178",
+        "author": "Ayushman Mohapatra",
+        "date": "2026-06-29T12:11:58+05:30",
+        "kind": "fix",
+        "scope": null,
+        "title": "Use subscriber attribution country for tracker conversions instead of page_visits geo"
+      },
+      {
+        "shortHash": "db5f3dd",
+        "author": "Ayushman Mohapatra",
+        "date": "2026-06-29T11:43:44+05:30",
+        "kind": "fix",
+        "scope": null,
+        "title": "Ensure country is stored in subscriber attribution and skip null JSONB fields"
+      },
+      {
+        "shortHash": "6b48755",
+        "author": "Ayushman Mohapatra",
+        "date": "2026-06-29T11:43:44+05:30",
+        "kind": "fix",
+        "scope": null,
+        "title": "Ensure country is stored in subscriber attribution and skip null JSONB fields"
+      },
+      {
+        "shortHash": "bd55a2d",
+        "author": "Ayushman Mohapatra",
+        "date": "2026-06-29T11:12:23+05:30",
+        "kind": "feature",
+        "scope": null,
+        "title": "Add blog view tracking system and enhance admin subscriber dashboard with country data and filtering"
+      }
+    ]
+  },
+  {
+    "date": "2026-06-26",
+    "label": "jun 26, 2026",
+    "entries": [
+      {
+        "shortHash": "c99d11b",
+        "author": "Ayushman Mohapatra",
+        "date": "2026-06-26T14:32:24+05:30",
+        "kind": "refactor",
+        "scope": null,
+        "title": "Abstract OpenGraph and Twitter metadata generation into utility helpers and update marketing page configurations"
+      },
+      {
+        "shortHash": "4e03122",
+        "author": "Ayushman Mohapatra",
+        "date": "2026-06-26T12:32:22+05:30",
+        "kind": "feature",
+        "scope": null,
+        "title": "Truncate blog meta descriptions and improve open graph image metadata"
+      }
+    ]
+  },
+  {
+    "date": "2026-06-25",
+    "label": "jun 25, 2026",
+    "entries": [
+      {
+        "shortHash": "5d586b3",
+        "author": "Ayushman Mohapatra",
+        "date": "2026-06-25T16:23:21+05:30",
+        "kind": "fix",
+        "scope": null,
+        "title": "Implement retry logic for Resend blog broadcasts and improve audit logging for failures"
+      },
+      {
+        "shortHash": "a6d85fc",
+        "author": "Ayushman Mohapatra",
+        "date": "2026-06-25T16:06:40+05:30",
+        "kind": "feature",
+        "scope": null,
+        "title": "Implement direct R2 upload via presigned URLs to bypass Vercel request body limits"
+      },
+      {
+        "shortHash": "935de50",
+        "author": "Ayushman Mohapatra",
+        "date": "2026-06-25T15:45:49+05:30",
+        "kind": "feature",
+        "scope": null,
+        "title": "Add GIF upload support to blog editor slash menu"
+      },
+      {
+        "shortHash": "a6a1ef3",
+        "author": "Ayushman Mohapatra",
+        "date": "2026-06-25T14:33:39+05:30",
+        "kind": "perf",
+        "scope": null,
+        "title": "Migrate assets to WebP, optimize image loading with sizes, and configure Next.js image caching headers"
+      },
+      {
+        "shortHash": "544b2f7",
+        "author": "Ayushman Mohapatra",
+        "date": "2026-06-25T14:12:57+05:30",
+        "kind": "feature",
+        "scope": null,
+        "title": "Add all-time data support and enhance UI typography and text contrast across components"
+      },
+      {
+        "shortHash": "38f62d4",
+        "author": "Ayushman Mohapatra",
+        "date": "2026-06-25T13:57:04+05:30",
+        "kind": "feature",
+        "scope": null,
+        "title": "Add all-time data support to tracker panel and admin dashboard queries"
+      },
+      {
+        "shortHash": "547e210",
+        "author": "Ayushman Mohapatra",
+        "date": "2026-06-25T13:44:13+05:30",
+        "kind": "refactor",
+        "scope": null,
+        "title": "Remove TableOfContents component and consolidate privacy, refund, and terms page layouts"
+      },
+      {
+        "shortHash": "a49e01e",
+        "author": "Ayushman Mohapatra",
+        "date": "2026-06-25T13:22:02+05:30",
+        "kind": "feature",
+        "scope": null,
+        "title": "Implement cookie consent management, Google Analytics integration, and privacy policy table of contents navigation"
+      },
+      {
+        "shortHash": "7f2fec0",
+        "author": "Ayushman Mohapatra",
+        "date": "2026-06-25T12:41:46+05:30",
+        "kind": "feature",
+        "scope": null,
+        "title": "Implement cookie consent management, Google Analytics integration, and privacy policy updates"
+      },
+      {
+        "shortHash": "73998b1",
+        "author": "Ayushman Mohapatra",
+        "date": "2026-06-25T11:59:51+05:30",
+        "kind": "feature",
+        "scope": null,
+        "title": "Add 3D globe visualization to admin dashboard using GeoJSON data"
+      },
+      {
+        "shortHash": "85789a5",
+        "author": "Ayushman Mohapatra",
+        "date": "2026-06-25T11:32:32+05:30",
+        "kind": "feature",
+        "scope": null,
+        "title": "Add interactive world heatmap and custom hover tooltips to admin dashboard"
+      },
+      {
+        "shortHash": "5575b33",
+        "author": "Ayushman Mohapatra",
+        "date": "2026-06-25T11:05:34+05:30",
+        "kind": "feature",
+        "scope": null,
+        "title": "Add site_access cookie bypass for sign-in and improve TrackerPanel with pagination and UI refinements"
+      },
+      {
+        "shortHash": "a45006a",
+        "author": "Ayushman Mohapatra",
+        "date": "2026-06-25T10:40:17+05:30",
+        "kind": "feature",
+        "scope": null,
+        "title": "Add comprehensive admin analytics tracker panel and consolidated data fetching interface"
+      },
+      {
+        "shortHash": "6545884",
+        "author": "Ayushman Mohapatra",
+        "date": "2026-06-25T10:18:43+05:30",
+        "kind": "feature",
+        "scope": null,
+        "title": "Implement session-based visit tracking and audit logging for conversions"
+      }
+    ]
+  },
+  {
+    "date": "2026-06-24",
+    "label": "jun 24, 2026",
+    "entries": [
+      {
+        "shortHash": "e88a220",
+        "author": "Ayushman Mohapatra",
+        "date": "2026-06-24T14:57:45+05:30",
+        "kind": "polish",
+        "scope": null,
+        "title": "Update Threads icon to filled variant in email footer"
+      },
+      {
+        "shortHash": "6d385cd",
+        "author": "Ayushman Mohapatra",
+        "date": "2026-06-24T14:39:34+05:30",
+        "kind": "feature",
+        "scope": null,
+        "title": "Update contact page socials, add GitHub integration, and refresh footer branding assets"
+      }
+    ]
+  },
+  {
+    "date": "2026-06-23",
+    "label": "jun 23, 2026",
+    "entries": [
+      {
+        "shortHash": "5505fad",
+        "author": "Ayushman Mohapatra",
+        "date": "2026-06-23T18:18:03+05:30",
+        "kind": "feature",
+        "scope": null,
+        "title": "Add blog post section to email templates and update base URL to www.forke.space"
+      },
+      {
+        "shortHash": "8e93e8c",
+        "author": "Ayushman Mohapatra",
+        "date": "2026-06-23T17:32:03+05:30",
+        "kind": "chore",
+        "scope": null,
+        "title": "Update email templates with new branding, blog components, and redesigned layout"
+      },
+      {
+        "shortHash": "9cca4d9",
+        "author": "Ayushman Mohapatra",
+        "date": "2026-06-23T16:05:25+05:30",
+        "kind": "chore",
+        "scope": null,
+        "title": "Update email banners and social media assets"
+      },
+      {
+        "shortHash": "89ad071",
+        "author": "Ayushman Mohapatra",
+        "date": "2026-06-23T14:16:27+05:30",
+        "kind": "chore",
+        "scope": null,
+        "title": "Update Open Graph image asset"
+      },
+      {
+        "shortHash": "d8f14f2",
+        "author": "Ayushman Mohapatra",
+        "date": "2026-06-23T14:13:15+05:30",
+        "kind": "feature",
+        "scope": null,
+        "title": "Update Open Graph metadata with new banner image"
+      },
+      {
+        "shortHash": "ea1d891",
+        "author": "Ayushman Mohapatra",
+        "date": "2026-06-23T13:41:50+05:30",
+        "kind": "feature",
+        "scope": null,
+        "title": "Restrict registration and sign-in access via waitlist lock and update CTAs and sitemap accordingly"
+      },
+      {
+        "shortHash": "2a39610",
+        "author": "Ayushman Mohapatra",
+        "date": "2026-06-23T13:26:10+05:30",
+        "kind": "feature",
+        "scope": null,
+        "title": "Conditionally include waitlist in sitemap based on database setting"
+      },
+      {
+        "shortHash": "e091034",
+        "author": "Ayushman Mohapatra",
+        "date": "2026-06-23T13:16:26+05:30",
+        "kind": "feature",
+        "scope": null,
+        "title": "Implement waitlist access control and update call-to-action buttons to redirect to the new waitlist route."
+      },
+      {
+        "shortHash": "8a6d0e1",
+        "author": "Ayushman Mohapatra",
+        "date": "2026-06-23T12:42:09+05:30",
+        "kind": "feature",
+        "scope": null,
+        "title": "Add inline image previews in buckets, optimize blog grid pagination, and implement swipeable related articles carousel"
+      }
+    ]
+  },
+  {
     "date": "2026-06-22",
     "label": "jun 22, 2026",
     "entries": [
+      {
+        "shortHash": "1d67b7f",
+        "author": "Sudhanshub27",
+        "date": "2026-06-22T23:54:38+05:30",
+        "kind": "feature",
+        "scope": null,
+        "title": "Ai report improved"
+      },
+      {
+        "shortHash": "bcc4b65",
+        "author": "Sudhanshub27",
+        "date": "2026-06-22T19:58:46+05:30",
+        "kind": "feature",
+        "scope": null,
+        "title": "Corrected ui fixes and import errors"
+      },
       {
         "shortHash": "88016f3",
         "author": "Sudhanshub27",
@@ -68,9 +490,39 @@
     ]
   },
   {
+    "date": "2026-06-19",
+    "label": "jun 19, 2026",
+    "entries": [
+      {
+        "shortHash": "8a31725",
+        "author": "Ayushman Mohapatra",
+        "date": "2026-06-19T13:42:50+05:30",
+        "kind": "feature",
+        "scope": null,
+        "title": "Add RelatedArticles component to blog post pages"
+      },
+      {
+        "shortHash": "132c412",
+        "author": "Ayushman Mohapatra",
+        "date": "2026-06-19T10:39:28+05:30",
+        "kind": "feature",
+        "scope": null,
+        "title": "Add image link support to BlogEditor and display profile card on all screen sizes"
+      }
+    ]
+  },
+  {
     "date": "2026-06-18",
     "label": "jun 18, 2026",
     "entries": [
+      {
+        "shortHash": "8320b47",
+        "author": "Ayushman Mohapatra",
+        "date": "2026-06-18T23:22:32+05:30",
+        "kind": "fix",
+        "scope": null,
+        "title": "Prevent Tiptap JSON data loss by stringifying content during server action transition"
+      },
       {
         "shortHash": "be025d7",
         "author": "Sudhanshub27",
