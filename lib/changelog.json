@@ -4,6 +4,14 @@
     "label": "jul 8, 2026",
     "entries": [
       {
+        "shortHash": "cfe8df3",
+        "author": "Sudhanshub27",
+        "date": "2026-07-08T11:06:25+05:30",
+        "kind": "chore",
+        "scope": null,
+        "title": "Update migration script with IF NOT EXISTS, update packages, and regenerate changelog"
+      },
+      {
         "shortHash": "e0303d4",
         "author": "Sudhanshub27",
         "date": "2026-07-08T11:04:16+05:30",
