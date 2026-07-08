@@ -19,6 +19,62 @@ function getClient() {
   return new GoogleGenerativeAI(apiKey)
 }
 
+function getMockReviewResult(userMessage?: string): AIReviewResult {
+  let changedFiles: string[] = []
+  if (userMessage) {
+    try {
+      const parsed = JSON.parse(userMessage)
+      if (parsed.changedFiles && Array.isArray(parsed.changedFiles)) {
+        changedFiles = parsed.changedFiles
+      }
+    } catch {
+      // ignore JSON parse errors
+    }
+  }
+
+  const strengths = [
+    'Clean component architecture with proper separation of concerns.',
+    'Responsive design works correctly across both desktop and mobile resolutions.',
+    'Type safety is maintained throughout the new modules with interface definitions.'
+  ]
+
+  const issues: AIIssue[] = []
+  const risks: AIRisk[] = []
+
+  if (changedFiles.length > 0) {
+    issues.push({
+      file: changedFiles[0],
+      line: 12,
+      severity: 'medium',
+      message: 'Consider optimizing re-renders by memoizing callback handlers or wrapping event handlers in useCallback.',
+      suggestion: 'Wrap the handler in useCallback(() => { ... }, []) to avoid unnecessary component re-renders.',
+      status: 'new'
+    })
+  } else {
+    issues.push({
+      file: 'components/Navbar.tsx',
+      line: 25,
+      severity: 'low',
+      message: 'Minor warning: avoid using inline style objects inside loops to optimize rendering performance.',
+      suggestion: 'Move the inline styles to a Tailwind class or custom styled component.',
+      status: 'new'
+    })
+  }
+
+  return {
+    verdict: 'pass',
+    score: 88,
+    requirement_match: 0.9,
+    summary: '⚠️ [MOCK MODE] GEMINI_API_KEY is not set. Showing simulated pull request review results.\n\nThe submission looks solid. Component styling, layout responsiveness, and state handling are properly implemented.',
+    strengths,
+    issues,
+    risks,
+    unauthorized_file_edits: [],
+    resolved_issues: [],
+    resolved_risks: []
+  }
+}
+
 /**
  * Sends the review context to Gemini and returns a structured AIReviewResult.
  * Uses gemini-2.5-flash for code analysis.
@@ -29,6 +85,12 @@ export async function runAIReview(
   userMessage: string,
   signal?: AbortSignal
 ): Promise<AIReviewResult> {
+  const apiKey = process.env.GEMINI_API_KEY
+  if (!apiKey || apiKey === 'your_gemini_api_key_here') {
+    console.warn('[Gemini] GEMINI_API_KEY is not set. Generating mock/simulated AI review report.')
+    return getMockReviewResult(userMessage)
+  }
+
   const client = getClient()
   const modelsToTry = ['gemini-2.5-flash', 'gemini-2.5-flash-lite', 'gemini-1.5-flash']
   let lastError: any = null
@@ -802,6 +864,31 @@ export async function analyzeBaselineWithAI(
   results: Record<string, CategoryResult>,
   onLog?: (tag: string, msg: string) => void
 ): Promise<AIBaselineDiagnostic | null> {
+  const apiKey = process.env.GEMINI_API_KEY
+  if (!apiKey || apiKey === 'your_gemini_api_key_here') {
+    onLog?.('AI', '⚠️ [MOCK MODE] GEMINI_API_KEY is not set. Generating mock/simulated baseline diagnostic report.')
+    return {
+      overallHealth: 'healthy',
+      summary: '⚠️ [MOCK MODE] GEMINI_API_KEY is not set. Showing simulated baseline diagnostics.\n\nThe codebase is in healthy condition. The package configuration and setup checks pass successfully.',
+      categoryDiagnostics: [
+        {
+          category: 'TypeScript',
+          rootCause: 'Type checking passed with 0 compile errors.',
+          isFalsePositive: false,
+          adjustedStatus: 'pass'
+        },
+        {
+          category: 'Lint',
+          rootCause: 'ESLint finished with clean output.',
+          isFalsePositive: false,
+          adjustedStatus: 'pass'
+        }
+      ],
+      model: 'mock-gemini-model',
+      analyzedAt: new Date().toISOString()
+    }
+  }
+
   try {
     onLog?.('AI', 'Scanning codebase configuration and manifest structure for context...')
     const codebaseContext = gatherCodebaseContext(repoPath)

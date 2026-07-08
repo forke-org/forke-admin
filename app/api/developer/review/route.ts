@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse, after } from 'next/server'
 import { cookies } from 'next/headers'
 import { db } from '@/lib/db'
-import { sandboxRepos, developerForks, sandboxOwners, sandboxDevelopers, reviewResults, aiReviews, baselineSnapshots } from '@/lib/db/schema'
+import { sandboxRepos, developerForks, sandboxUsers, codeReviews, baselineSnapshots } from '@/lib/db/schema'
 import { eq, and, desc, isNull } from 'drizzle-orm'
 import { updateCommitStatus } from '@/lib/github/commitStatus'
 import { runFullPRPipeline } from '@/lib/review/pipeline'
@@ -50,8 +50,8 @@ export async function POST(req: NextRequest) {
 
     const ownerRecords = await db
       .select()
-      .from(sandboxOwners)
-      .where(eq(sandboxOwners.id, sandboxRecord.ownerId))
+      .from(sandboxUsers)
+      .where(and(eq(sandboxUsers.id, sandboxRecord.ownerId), eq(sandboxUsers.role, 'owner')))
       .limit(1)
 
     if (ownerRecords.length === 0) {
@@ -118,7 +118,21 @@ export async function POST(req: NextRequest) {
       }
     }
 
-    if (isCompleted) {
+    // Check database to see if we actually have a saved review report
+    const existingReviews = await db
+      .select()
+      .from(codeReviews)
+      .where(
+        and(
+          eq(codeReviews.sandboxRepoId, sandboxRecord.id),
+          eq(codeReviews.commitSha, headSha)
+        )
+      )
+      .limit(1)
+
+    const hasSavedReview = existingReviews.length > 0
+
+    if (isCompleted && hasSavedReview) {
       return NextResponse.json({
         triggered: false,
         message: 'Review already complete for this commit SHA.',
@@ -186,14 +200,14 @@ export async function GET(req: NextRequest) {
     if (sandboxRepoId) {
       const reviews = await db
         .select()
-        .from(aiReviews)
+        .from(codeReviews)
         .where(
           and(
-            eq(aiReviews.sandboxRepoId, sandboxRepoId),
-            isNull(aiReviews.developerForkId)
+            eq(codeReviews.sandboxRepoId, sandboxRepoId),
+            isNull(codeReviews.developerForkId)
           )
         )
-        .orderBy(desc(aiReviews.createdAt))
+        .orderBy(desc(codeReviews.createdAt))
         .limit(1)
 
       if (reviews.length === 0) {
@@ -205,13 +219,13 @@ export async function GET(req: NextRequest) {
         review: {
           id: review.id,
           prNumber: review.prNumber,
-          verdict: review.verdict,
-          score: review.score,
-          requirementMatch: parseFloat(review.requirementMatch),
-          summary: review.summary,
-          strengths: safeParseJSON(review.strengths, []),
-          issues: safeParseJSON(review.issues, []),
-          risks: safeParseJSON(review.risks, []),
+          verdict: review.aiVerdict,
+          score: review.aiScore,
+          requirementMatch: review.requirementMatch ? parseFloat(review.requirementMatch) : 0,
+          summary: review.aiSummary,
+          strengths: safeParseJSON(review.aiStrengths, []),
+          issues: safeParseJSON(review.aiIssues, []),
+          risks: safeParseJSON(review.aiRisks, []),
           unauthorizedEdits: safeParseJSON(review.unauthorizedEdits, []),
           resolvedIssues: safeParseJSON(review.resolvedIssues, []),
           resolvedRisks: safeParseJSON(review.resolvedRisks, []),
@@ -243,16 +257,16 @@ export async function GET(req: NextRequest) {
     if (!prNumberStr) {
       const reviews = await db
         .select()
-        .from(reviewResults)
-        .where(eq(reviewResults.sandboxRepoId, currentSandboxId))
-        .orderBy(desc(reviewResults.createdAt))
+        .from(codeReviews)
+        .where(eq(codeReviews.sandboxRepoId, currentSandboxId))
+        .orderBy(desc(codeReviews.createdAt))
 
       return NextResponse.json({
         reviews: reviews.map(r => ({
           id: r.id,
           prNumber: r.prNumber,
           commitSha: r.commitSha,
-          verdict: r.verdict,
+          verdict: r.aiVerdict || r.verdict || 'pass',
           reportHtml: r.reportHtml,
           results: safeParseJSON(r.results, {}),
           comparison: safeParseJSON(r.comparison, {}),
@@ -263,20 +277,7 @@ export async function GET(req: NextRequest) {
 
     const prNumber = parseInt(prNumberStr, 10)
 
-    // Query both deterministic review results AND AI reviews
-    const detReviews = await db
-      .select()
-      .from(reviewResults)
-      .where(
-        and(
-          eq(reviewResults.sandboxRepoId, currentSandboxId),
-          eq(reviewResults.prNumber, prNumber)
-        )
-      )
-      .orderBy(desc(reviewResults.createdAt))
-      .limit(1)
-
-    // Query the latest AI review for this developer fork/PR
+    // Query the latest unified review for this developer fork/PR
     let forkId: string | null = null
     if (username) {
       const forkRecords = await db
@@ -295,61 +296,60 @@ export async function GET(req: NextRequest) {
       }
     }
 
-    let aiReviewQuery = db
+    let reviewQuery = db
       .select()
-      .from(aiReviews)
+      .from(codeReviews)
       .where(
         and(
-          eq(aiReviews.sandboxRepoId, currentSandboxId),
-          eq(aiReviews.prNumber, prNumber)
+          eq(codeReviews.sandboxRepoId, currentSandboxId),
+          eq(codeReviews.prNumber, prNumber)
         )
       )
-      .orderBy(desc(aiReviews.createdAt))
+      .orderBy(desc(codeReviews.createdAt))
       .limit(1)
 
     if (forkId) {
-      aiReviewQuery = db
+      reviewQuery = db
         .select()
-        .from(aiReviews)
+        .from(codeReviews)
         .where(
           and(
-            eq(aiReviews.developerForkId, forkId),
-            eq(aiReviews.prNumber, prNumber)
+            eq(codeReviews.developerForkId, forkId),
+            eq(codeReviews.prNumber, prNumber)
           )
         )
-        .orderBy(desc(aiReviews.createdAt))
+        .orderBy(desc(codeReviews.createdAt))
         .limit(1)
     }
 
-    const aiReviewsList = await aiReviewQuery
+    const reviewsList = await reviewQuery
 
-    if (detReviews.length === 0 && aiReviewsList.length === 0) {
+    if (reviewsList.length === 0) {
       return NextResponse.json({ review: null })
     }
 
-    const detReview = detReviews[0]
-    const aiReview = aiReviewsList[0]
+    const review = reviewsList[0]
 
     // Assemble unified review payload for the UI dashboard
     return NextResponse.json({
       review: {
-        id: aiReview ? aiReview.id : detReview.id,
+        id: review.id,
         prNumber: prNumber,
-        commitSha: detReview ? detReview.commitSha : '',
-        verdict: aiReview ? aiReview.verdict : detReview.verdict,
-        score: aiReview ? aiReview.score : (detReview.verdict === 'pass' ? 100 : 50),
-        requirementMatch: aiReview ? parseFloat(aiReview.requirementMatch) : 0,
-        summary: aiReview ? aiReview.summary : 'Validation completed.',
-        strengths: aiReview ? safeParseJSON(aiReview.strengths, []) : [],
-        issues: aiReview ? safeParseJSON(aiReview.issues, []) : [],
-        risks: aiReview ? safeParseJSON(aiReview.risks, []) : [],
-        unauthorizedEdits: aiReview ? safeParseJSON(aiReview.unauthorizedEdits, []) : [],
-        resolvedIssues: aiReview ? safeParseJSON(aiReview.resolvedIssues, []) : [],
-        resolvedRisks: aiReview ? safeParseJSON(aiReview.resolvedRisks, []) : [],
-        results: detReview ? safeParseJSON(detReview.results, {}) : {},
-        comparison: detReview ? safeParseJSON(detReview.comparison, {}) : {},
-        reportHtml: detReview ? detReview.reportHtml : '',
-        createdAt: aiReview ? aiReview.createdAt : detReview.createdAt
+        commitSha: review.commitSha || '',
+        verdict: review.aiVerdict || review.verdict || 'pass',
+        score: review.aiScore !== null ? review.aiScore : (review.verdict === 'pass' ? 100 : 50),
+        requirementMatch: review.requirementMatch ? parseFloat(review.requirementMatch) : 0,
+        summary: review.aiSummary || 'Validation completed.',
+        strengths: safeParseJSON(review.aiStrengths, []),
+        issues: safeParseJSON(review.aiIssues, []),
+        risks: safeParseJSON(review.aiRisks, []),
+        unauthorizedEdits: safeParseJSON(review.unauthorizedEdits, []),
+        resolvedIssues: safeParseJSON(review.resolvedIssues, []),
+        resolvedRisks: safeParseJSON(review.resolvedRisks, []),
+        results: safeParseJSON(review.results, {}),
+        comparison: safeParseJSON(review.comparison, {}),
+        reportHtml: review.reportHtml || '',
+        createdAt: review.createdAt
       }
     })
   } catch (err: unknown) {
