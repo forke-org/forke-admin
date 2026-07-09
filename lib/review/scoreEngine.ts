@@ -109,7 +109,8 @@ export function calculateCategoryQuality(status: string, issuesCount: number, is
 
   if (status === 'warn') {
     const penaltyPerIssue = isBlocking ? 0.15 : 0.05
-    const count = Math.max(1, issuesCount) // ensure at least 1 issue counts if it's warn status
+    const safeIssuesCount = typeof issuesCount === 'number' && !isNaN(issuesCount) ? issuesCount : 1
+    const count = Math.max(1, safeIssuesCount) // ensure at least 1 issue counts if it's warn status
     return Math.max(0.1, 1.0 - count * penaltyPerIssue)
   }
 
