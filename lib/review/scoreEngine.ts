@@ -93,11 +93,27 @@ const CATEGORY_WEIGHTS: Record<string, { weight: number; isBlocking: boolean }> 
   performance:       { weight: 0.25, isBlocking: false },
 }
 
-/** Quality factor per run status */
-const STATUS_QUALITY: Record<string, number> = {
-  pass: 1.0,
-  warn: 0.6, // warn = 60% quality
-  fail: 0.0,
+/**
+ * Calculates a dynamic quality factor (0.0 to 1.0) based on category status and issue counts.
+ *
+ * - status === 'pass': quality = 1.0
+ * - status === 'fail': quality = 0.0
+ * - status === 'warn':
+ *   - Quality scales down with issue count so that 1 warning is penalized less than 10 warnings.
+ *   - For non-blocking categories (lint, format, etc.): loses 5% quality per issue, floor of 10% (0.1).
+ *   - For blocking categories (unit tests, etc.): loses 15% quality per issue, floor of 10% (0.1).
+ */
+export function calculateCategoryQuality(status: string, issuesCount: number, isBlocking: boolean): number {
+  if (status === 'pass') return 1.0
+  if (status === 'fail') return 0.0
+
+  if (status === 'warn') {
+    const penaltyPerIssue = isBlocking ? 0.15 : 0.05
+    const count = Math.max(1, issuesCount) // ensure at least 1 issue counts if it's warn status
+    return Math.max(0.1, 1.0 - count * penaltyPerIssue)
+  }
+
+  return 0.0
 }
 
 /**
@@ -113,7 +129,7 @@ export interface TestScoreCategoryRow {
   name: string
   status: string
   weight: number          // relative importance multiplier
-  quality: number         // 0.0, 0.6, or 1.0
+  quality: number         // 0.0 to 1.0
   contribution: number    // weight × quality (earned)
   maxContribution: number // weight × 1.0 (maximum possible)
   isBlocking: boolean
@@ -158,7 +174,7 @@ export function computeTestScore(
     const result = runnerResults[name]
     if (!result || result.status === 'skip') continue // skipped = not counted
 
-    const quality = STATUS_QUALITY[result.status] ?? 0
+    const quality = calculateCategoryQuality(result.status, result.issuesCount, cfg.isBlocking)
     const contribution = cfg.weight * quality
 
     earned += contribution
