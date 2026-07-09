@@ -169,63 +169,31 @@ export function parseAIResponse(rawText: string): AIReviewResult {
 
 /**
  * Normalizes and validates the parsed JSON to ensure all required fields exist.
+ * The AI no longer generates a score — only requirement_match (0-1 float).
+ * Score is computed deterministically by computeTestScore() in scoreEngine.ts.
  */
 function normalizeAIResult(raw: Record<string, unknown>): AIReviewResult {
   const verdict = validateVerdict(raw.verdict)
-  
-  let scoreValue = 50
-  let scoreBreakdown: AIReviewResult['scoreBreakdown'] | undefined = undefined
 
-  const parseBreakdown = (b: any) => {
-    const parseSubScore = (sub: any, defaultMax: number) => {
-      if (!sub || typeof sub !== 'object') {
-        return { score: defaultMax, deductions: [] }
-      }
-      const score = typeof sub.score === 'number' ? sub.score : defaultMax
-      const deductions = Array.isArray(sub.deductions)
-        ? sub.deductions.map((d: any) => ({
-            points: typeof d.points === 'number' ? d.points : 0,
-            reason: typeof d.reason === 'string' ? d.reason : 'Unspecified deduction'
-          }))
-        : []
-      return { score, deductions }
-    }
-
-    return {
-      requirementFulfillment: parseSubScore(b.requirementFulfillment, 40),
-      techStackAdherence: parseSubScore(b.techStackAdherence, 20),
-      codeCleanliness: parseSubScore(b.codeCleanliness, 15),
-      executionSafety: parseSubScore(b.executionSafety, 25)
-    }
-  }
-
-  if (raw.score && typeof raw.score === 'object') {
-    const rawScoreObj = raw.score as Record<string, any>
-    scoreValue = typeof rawScoreObj.value === 'number' ? Math.max(0, Math.min(100, Math.round(rawScoreObj.value))) : 50
-    if (rawScoreObj.breakdown && typeof rawScoreObj.breakdown === 'object') {
-      scoreBreakdown = parseBreakdown(rawScoreObj.breakdown)
-    }
-  } else if (typeof raw.score === 'number') {
-    scoreValue = Math.max(0, Math.min(100, Math.round(raw.score)))
-  }
-
-  // Fallback for baseline prompt reviewScore format
-  if (raw.reviewScore && typeof raw.reviewScore === 'object') {
-    const rawScoreObj = raw.reviewScore as Record<string, any>
-    scoreValue = typeof rawScoreObj.value === 'number' ? Math.max(0, Math.min(100, Math.round(rawScoreObj.value))) : scoreValue
-    if (rawScoreObj.breakdown && typeof rawScoreObj.breakdown === 'object') {
-      scoreBreakdown = parseBreakdown(rawScoreObj.breakdown)
-    }
-  }
-
+  // requirement_match is the ONLY numeric contribution from the AI (0.0 to 1.0)
   const requirementMatch = typeof raw.requirement_match === 'number'
     ? Math.max(0, Math.min(1, raw.requirement_match))
     : 0.5
 
+  // score field kept for legacy fallback only (won't be used if testScoreResult is present)
+  let scoreValue = 50
+  if (typeof raw.score === 'number') {
+    scoreValue = Math.max(0, Math.min(100, Math.round(raw.score)))
+  } else if (raw.score && typeof raw.score === 'object') {
+    const obj = raw.score as Record<string, any>
+    if (typeof obj.value === 'number') {
+      scoreValue = Math.max(0, Math.min(100, Math.round(obj.value)))
+    }
+  }
+
   return {
     verdict,
     score: scoreValue,
-    scoreBreakdown,
     requirement_match: requirementMatch,
     summary: typeof raw.summary === 'string' ? raw.summary : 'No summary provided.',
     strengths: Array.isArray(raw.strengths) ? raw.strengths.filter(s => typeof s === 'string') : [],
@@ -238,6 +206,7 @@ function normalizeAIResult(raw: Record<string, unknown>): AIReviewResult {
     resolved_risks: Array.isArray(raw.resolved_risks) ? raw.resolved_risks.map(normalizeResolvedRisk) : [],
   }
 }
+
 
 function validateVerdict(v: unknown): AIReviewResult['verdict'] {
   if (v === 'pass' || v === 'needs_changes' || v === 'high_risk') return v

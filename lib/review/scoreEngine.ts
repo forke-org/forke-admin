@@ -1,7 +1,14 @@
 /**
- * Risk & Score Engine
- * Deterministic scoring from real test results + AI requirement match.
- * AI does NOT generate the score — only requirement_match (0-1 float).
+ * Score Engine
+ * Deterministic scoring from real test execution results + AI requirement match.
+ *
+ * Key design principles:
+ *  - NO fixed point allocations per category (no "build = 20 pts")
+ *  - Relative weights: a build failure hurts proportionally more than a format failure
+ *  - Score emerges from what actually ran — skipped categories don't penalise
+ *  - Build failure is a hard gate (score capped, verdict can never be 'pass')
+ *  - AI only contributes requirement_match (0-1 float), not the score number
+ *  - Final score = test execution quality (70%) + requirement fulfillment (30%)
  */
 
 import type { CategoryResult } from './runner'
@@ -44,25 +51,7 @@ export interface AIResolvedRisk {
 export interface AIReviewResult {
   verdict: Verdict
   score: number
-  scoreBreakdown?: {
-    requirementFulfillment: {
-      score: number
-      deductions: { points: number; reason: string }[]
-    }
-    techStackAdherence: {
-      score: number
-      deductions: { points: number; reason: string }[]
-    }
-    codeCleanliness: {
-      score: number
-      deductions: { points: number; reason: string }[]
-    }
-    executionSafety: {
-      score: number
-      deductions: { points: number; reason: string }[]
-    }
-  }
-  requirement_match: number // 0.0 to 1.0
+  requirement_match: number // 0.0 to 1.0 — the ONLY number the AI contributes
   summary: string
   strengths: string[]
   issues: AIIssue[]
@@ -78,50 +67,79 @@ export interface ScoredReview extends AIReviewResult {
   unauthorizedFiles: string[]
 }
 
-// ─── Deterministic Test Score ─────────────────────────────────────────────────
+// ─── Relative Weight Model ────────────────────────────────────────────────────
 
-/** Per-category scoring weights. Total = 115, normalized to 70 points max. */
+/**
+ * Relative importance weights — NOT fixed point allocations.
+ *
+ * These are multipliers expressing how much a failure in each category hurts
+ * relative to other categories. The actual score emerges proportionally from
+ * whatever categories ran. Skipped categories are fully excluded.
+ *
+ * A build failure (weight 3.0) hurts 12× more than a format failure (0.25).
+ */
 const CATEGORY_WEIGHTS: Record<string, { weight: number; isBlocking: boolean }> = {
-  build:             { weight: 20, isBlocking: true },
-  unit_tests:        { weight: 15, isBlocking: true },
-  type_checks:       { weight: 15, isBlocking: true },
-  security:          { weight: 15, isBlocking: false },
-  integration_tests: { weight: 10, isBlocking: true },
-  e2e_tests:         { weight: 10, isBlocking: true },
-  lint:              { weight: 8,  isBlocking: false },
-  sast:              { weight: 7,  isBlocking: false },
-  dependencies:      { weight: 5,  isBlocking: false },
-  code_quality:      { weight: 5,  isBlocking: false },
-  format:            { weight: 3,  isBlocking: false },
-  performance:       { weight: 2,  isBlocking: false },
+  build:             { weight: 3.0,  isBlocking: true  },
+  unit_tests:        { weight: 2.5,  isBlocking: true  },
+  type_checks:       { weight: 2.0,  isBlocking: true  },
+  security:          { weight: 2.0,  isBlocking: false },
+  integration_tests: { weight: 1.5,  isBlocking: true  },
+  e2e_tests:         { weight: 1.5,  isBlocking: true  },
+  lint:              { weight: 1.0,  isBlocking: false },
+  sast:              { weight: 1.0,  isBlocking: false },
+  dependencies:      { weight: 0.75, isBlocking: false },
+  code_quality:      { weight: 0.5,  isBlocking: false },
+  format:            { weight: 0.5,  isBlocking: false },
+  performance:       { weight: 0.25, isBlocking: false },
 }
 
-const WARN_FACTOR = 0.55 // warn = 55% of full points
+/** Quality factor per run status */
+const STATUS_QUALITY: Record<string, number> = {
+  pass: 1.0,
+  warn: 0.6, // warn = 60% quality
+  fail: 0.0,
+}
+
+/**
+ * If build fails, raw execution score is capped here.
+ * This means even if everything else passes, a broken build
+ * can never push the final score above ~(40×0.7 + 30) = 58, landing in needs_changes.
+ */
+const BUILD_FAIL_SCORE_CAP = 40
+
+// ─── Interfaces ───────────────────────────────────────────────────────────────
 
 export interface TestScoreCategoryRow {
   name: string
   status: string
-  pointsEarned: number
-  pointsMax: number
+  weight: number          // relative importance multiplier
+  quality: number         // 0.0, 0.6, or 1.0
+  contribution: number    // weight × quality (earned)
+  maxContribution: number // weight × 1.0 (maximum possible)
   isBlocking: boolean
   issuesCount: number
 }
 
 export interface TestScoreResult {
-  /** 0-70: score from test results (30 remaining come from AI requirement_match) */
+  /** Raw execution quality score 0-100, before build cap and penalties */
+  rawScore: number
+  /** Execution quality score 0-100, after build cap and penalties applied */
   testScore: number
+  /** Whether build failed (used to block 'pass' verdict) */
+  buildFailed: boolean
   categories: TestScoreCategoryRow[]
   penalties: { reason: string; points: number }[]
 }
 
+// ─── Main Scoring Function ────────────────────────────────────────────────────
+
 /**
- * Deterministically computes the "reliability" portion of the score (0-70).
- * Based entirely on real runner.ts execution results — no AI involved.
+ * Computes execution quality score (0-100) from real runner.ts results.
  *
- * @param runnerResults  Output of runReviewPipeline().results
- * @param unauthorizedFiles  Files edited outside allowed paths
- * @param secretCount  Number of detected secret/credential leaks
- * @param hasSubmission  Whether FORKE_SUBMISSION.md is present and valid
+ * Score = (sum of weight×quality for ran categories) / (sum of weights) × 100
+ *
+ * No category has a pre-allocated point budget. The score is purely proportional
+ * to how well each category performed relative to its importance weight.
  */
 export function computeTestScore(
   runnerResults: Record<string, CategoryResult>,
@@ -130,40 +148,46 @@ export function computeTestScore(
   hasSubmission: boolean
 ): TestScoreResult {
   const categories: TestScoreCategoryRow[] = []
-  let totalWeight = 0
-  let earnedWeight = 0
+  let earned = 0
+  let possible = 0
+
+  const buildResult = runnerResults['build']
+  const buildFailed = !!buildResult && buildResult.status === 'fail'
 
   for (const [name, cfg] of Object.entries(CATEGORY_WEIGHTS)) {
     const result = runnerResults[name]
-    if (!result || result.status === 'skip') continue
+    if (!result || result.status === 'skip') continue // skipped = not counted
 
-    totalWeight += cfg.weight
+    const quality = STATUS_QUALITY[result.status] ?? 0
+    const contribution = cfg.weight * quality
 
-    let factor = 0
-    if (result.status === 'pass') factor = 1.0
-    else if (result.status === 'warn') factor = WARN_FACTOR
-    // 'fail' → 0
-
-    const pointsEarned = cfg.weight * factor
-    earnedWeight += pointsEarned
+    earned += contribution
+    possible += cfg.weight
 
     categories.push({
       name,
       status: result.status,
-      pointsEarned: Math.round(pointsEarned * 10) / 10,
-      pointsMax: cfg.weight,
+      weight: cfg.weight,
+      quality,
+      contribution: Math.round(contribution * 100) / 100,
+      maxContribution: cfg.weight,
       isBlocking: cfg.isBlocking,
       issuesCount: result.issuesCount,
     })
   }
 
-  // Normalize earned score to 0-70 scale
-  const normalizedScore = totalWeight > 0 ? (earnedWeight / totalWeight) * 70 : 35
+  // Score emerges purely from proportion of what ran
+  let rawScore = possible > 0 ? Math.round((earned / possible) * 100) : 50
 
-  // Deterministic penalties on top of normalized score
+  // Hard gate: build failure caps execution score
+  if (buildFailed) {
+    rawScore = Math.min(rawScore, BUILD_FAIL_SCORE_CAP)
+  }
+
+  // Deterministic penalties (applied after proportional score)
   const penalties: { reason: string; points: number }[] = []
 
-  const unauthorizedPenalty = Math.min(unauthorizedFiles.length * 10, 30)
+  const unauthorizedPenalty = Math.min(unauthorizedFiles.length * 10, 20)
   if (unauthorizedPenalty > 0) {
     penalties.push({
       reason: `${unauthorizedFiles.length} unauthorized file edit(s) detected`,
@@ -171,31 +195,35 @@ export function computeTestScore(
     })
   }
 
-  const secretPenalty = Math.min(secretCount * 15, 25)
+  const secretPenalty = Math.min(secretCount * 15, 20)
   if (secretPenalty > 0) {
     penalties.push({
-      reason: `${secretCount} hardcoded secret/credential leak(s) detected`,
+      reason: `${secretCount} hardcoded secret/credential leak(s)`,
       points: secretPenalty,
     })
   }
 
   if (!hasSubmission) {
-    penalties.push({ reason: 'Missing or incomplete FORKE_SUBMISSION.md', points: 5 })
+    penalties.push({ reason: 'Missing FORKE_SUBMISSION.md', points: 5 })
   }
 
   const totalPenalty = penalties.reduce((sum, p) => sum + p.points, 0)
-  const testScore = Math.max(0, Math.min(70, Math.round(normalizedScore - totalPenalty)))
+  const testScore = Math.max(0, Math.min(100, rawScore - totalPenalty))
 
-  return { testScore, categories, penalties }
+  return { rawScore, testScore, buildFailed, categories, penalties }
 }
 
-// ─── Final Score Computation ──────────────────────────────────────────────────
+// ─── Final Score ──────────────────────────────────────────────────────────────
 
 /**
- * Combines:
- *   - testScore (0-70): deterministic, from computeTestScore()
- *   - requirementScore (0-30): from AI's requirement_match float (0-1)
- * into a final 0-100 score.
+ * Blends execution quality (70%) + requirement fulfillment (30%) into final score.
+ *
+ * final_score = round(testScore × 0.7 + requirement_match × 100 × 0.3)
+ *
+ * Why 70/30?
+ *   70% = "Did the code actually work?" — answered by real test execution
+ *   30% = "Did it solve the right problem?" — answered by AI reading task + diff
+ *   These are two genuinely different dimensions that can't measure each other.
  */
 export function calculateFinalScore(
   rawResult: AIReviewResult,
@@ -205,48 +233,44 @@ export function calculateFinalScore(
   let finalScore: number
 
   if (testScoreResult !== undefined) {
-    // Deterministic path: combine test score + AI requirement_match
-    const requirementScore = Math.round((rawResult.requirement_match ?? 0.5) * 30)
-    finalScore = Math.min(100, testScoreResult.testScore + requirementScore)
+    const testPortion = testScoreResult.testScore * 0.7
+    const requirementPortion = (rawResult.requirement_match ?? 0.5) * 100 * 0.3
+    finalScore = Math.min(100, Math.round(testPortion + requirementPortion))
   } else {
-    // Fallback: use AI's own score (old behaviour)
+    // Legacy fallback: use AI's own score
     finalScore = rawResult.score
   }
 
-  const finalVerdict = determineVerdict(finalScore, unauthorizedFiles, rawResult.risks || [])
+  let finalVerdict = determineVerdict(finalScore, unauthorizedFiles, rawResult.risks || [])
+
+  // Build failure must never produce a 'pass' verdict — override if needed
+  if (testScoreResult?.buildFailed && finalVerdict === 'pass') {
+    finalVerdict = 'needs_changes'
+  }
+
   return { finalScore, finalVerdict }
 }
 
+// ─── Verdict Rules ────────────────────────────────────────────────────────────
+
 /**
- * Determines the final verdict based on score and risk factors.
+ * Determines the final verdict from score + risk signals.
  *
- * HIGH_RISK if any of:
- * - Unauthorized file edits exist
- * - Any critical/high severity risk
- * - Score < 40
- *
- * NEEDS_CHANGES if any of:
- * - Score between 40-74
- * - Any medium severity risk
- * - Any high/critical severity issues
- *
- * PASS if:
- * - Score >= 75, no critical risks, no unauthorized edits
+ * high_risk  : unauthorized edits | high-severity risk | score < 40
+ * needs_changes: score 40–74 | medium-severity risk
+ * pass       : score ≥ 75, no critical risks, no unauthorized edits
  */
 export function determineVerdict(
   score: number,
   unauthorizedFiles: string[],
   risks: AIRisk[]
 ): Verdict {
-  // Immediate HIGH_RISK conditions
   if (unauthorizedFiles.length > 0) return 'high_risk'
 
   const hasCriticalRisk = risks.some(r => r.severity === 'high')
   if (hasCriticalRisk) return 'high_risk'
 
   if (score < 40) return 'high_risk'
-
-  // NEEDS_CHANGES conditions
   if (score < 75) return 'needs_changes'
 
   const hasMediumRisk = risks.some(r => r.severity === 'medium')

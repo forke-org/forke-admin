@@ -122,28 +122,47 @@ Check these previous issues and risks against the current git diff to see which 
 `
   }
 
-  // Build the test score table section
+  // Build the test score table for the AI (so it can reference real data in its narrative)
   let testScoreSection = ''
   if (prData.testScoreResult) {
-    const { testScore, categories, penalties } = prData.testScoreResult
-    const rows = categories.map(c =>
-      `| ${c.name.replace(/_/g, ' ').padEnd(20)} | ${c.status.toUpperCase().padEnd(6)} | ${String(c.pointsEarned).padStart(5)} / ${String(c.pointsMax).padEnd(2)} | ${c.isBlocking ? 'YES' : 'no '} | ${c.issuesCount} issues |`
-    ).join('\n')
-    const penaltyRows = penalties.length > 0
+    const { testScore, rawScore, buildFailed, categories, penalties } = prData.testScoreResult
+
+    const header = `| ${'Category'.padEnd(20)} | Status | Weight | Quality | Earned  | Max  |`
+    const divider = `|${''.padEnd(22, '-')}|--------|--------|---------|---------|------|`
+    const rows = categories.map(c => {
+      const name = c.name.replace(/_/g, ' ').padEnd(20)
+      const status = c.status.toUpperCase().padEnd(6)
+      const weight = String(c.weight).padEnd(6)
+      const quality = `${Math.round(c.quality * 100)}%`.padEnd(7)
+      const earned = String(c.contribution).padEnd(7)
+      const max = String(c.maxContribution)
+      return `| ${name} | ${status} | ${weight} | ${quality} | ${earned} | ${max}  |`
+    }).join('\n')
+
+    const penaltyText = penalties.length > 0
       ? '\nPENALTIES:\n' + penalties.map(p => `  - ${p.reason}: -${p.points} pts`).join('\n')
       : ''
+
+    const buildAlert = buildFailed
+      ? '\n⚠️  BUILD FAILURE DETECTED — execution score is capped. Code does not compile.\n'
+      : ''
+
     testScoreSection = `
-=== DETERMINISTIC TEST SCORE (computed by Forke engine — DO NOT change these numbers) ===
-Test Suite Score: ${testScore} / 70 pts
+=== DETERMINISTIC EXECUTION SCORE (computed by Forke engine — do NOT modify these numbers) ===
+${buildAlert}
+Execution Quality Score: ${testScore} / 100 (raw: ${rawScore}/100 before penalties)
+Score formula: (sum of weight×quality for ran categories) / (sum of weights) × 100
+Skipped categories are fully excluded from both numerator and denominator.
 
-| Category             | Status | Score     | Blocking | Details   |
-|----------------------|--------|-----------|----------|-----------|
+${header}
+${divider}
 ${rows}
-${penaltyRows}
+${penaltyText}
 
-The remaining 30 points come from your assessment of REQUIREMENT FULFILLMENT.
-Output a "requirement_match" float between 0.0 and 1.0 based on how well the developer met the task requirements.
-Final score = ${testScore} + round(requirement_match × 30). DO NOT output a score — only output requirement_match.
+The remaining 30% of the FINAL SCORE comes from your REQUIREMENT FULFILLMENT assessment.
+Output "requirement_match" as a float 0.0–1.0 based on how well the developer met the task.
+Final score = round(${testScore} × 0.7 + requirement_match × 100 × 0.3)
+DO NOT output a score field — only output requirement_match and the narrative fields.
 `
   }
 

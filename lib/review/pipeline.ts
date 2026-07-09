@@ -386,7 +386,7 @@ export async function runFullPRPipeline(params: PipelineParams) {
       // Deterministic Results
       results: JSON.stringify({
         ...deterministicResults,
-        scoreBreakdown: aiResult.scoreBreakdown
+        testScoreResult, // deterministic weight-based score breakdown
       }),
       comparison: comparisonReport ? JSON.stringify(comparisonReport) : '{}',
       verdict: finalDeterministicVerdict,
