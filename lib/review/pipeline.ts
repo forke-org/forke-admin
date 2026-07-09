@@ -176,16 +176,17 @@ export async function runFullPRPipeline(params: PipelineParams) {
     addLog('SUCCESS', 'Layer 1 deterministic tests complete.')
     updateProgress(75)
 
-    // Compute deterministic test score from real runner results
-    const testScoreResult: TestScoreResult = computeTestScore(
+    // Compute raw deterministic test score from real runner results
+    const rawTestScoreResult: TestScoreResult = computeTestScore(
       deterministicResults.results,
       unauthorizedFiles,
       secretFindings.length,
       submissionValidation.valid
     )
-    addLog('CHECKING', `Deterministic test score: ${testScoreResult.testScore}/70 (before requirement match)`)
 
-    // H. Execute Baseline Comparison
+    let testScoreResult = rawTestScoreResult
+
+    // H. Execute Baseline Comparison & Score Adjustment
     addLog('CHECKING', 'Comparing PR verification results against repository baseline...')
     let comparisonReport = null
     let finalDeterministicVerdict: 'pass' | 'warn' | 'fail' = 'pass'
@@ -194,6 +195,62 @@ export async function runFullPRPipeline(params: PipelineParams) {
     if (baseline && baseline.results) {
       try {
         const parsedBaselineResults = JSON.parse(baseline.results)
+        
+        // Retrieve or dynamically calculate baseline score result
+        let baselineScoreResult = parsedBaselineResults.testScoreResult
+        if (!baselineScoreResult) {
+          baselineScoreResult = computeTestScore(parsedBaselineResults, [], 0, true)
+        }
+
+        // Adjust category qualities to only penalize for new regressions
+        const adjustedCategories = rawTestScoreResult.categories.map(prCat => {
+          const baseCat = baselineScoreResult.categories.find((c: any) => c.name === prCat.name)
+          if (!baseCat) {
+            // Category wasn't in baseline, any quality less than 1.0 is a regression
+            return prCat
+          }
+
+          if (prCat.quality < baseCat.quality) {
+            // Regression detected! Quality drop is the delta of base quality - PR quality
+            const regressionQuality = 1.0 - (baseCat.quality - prCat.quality)
+            return {
+              ...prCat,
+              quality: regressionQuality,
+              contribution: Math.round(prCat.weight * regressionQuality * 100) / 100
+            }
+          }
+
+          // No regression: treat as pass (100% quality) to prevent point deduction
+          return {
+            ...prCat,
+            status: 'pass',
+            quality: 1.0,
+            contribution: prCat.weight
+          }
+        })
+
+        // Recalculate score based on adjusted category qualities
+        let earned = 0
+        let possible = 0
+        for (const c of adjustedCategories) {
+          earned += c.contribution
+          possible += c.weight
+        }
+        let adjustedRawScore = possible > 0 ? Math.round((earned / possible) * 100) : 100
+        if (rawTestScoreResult.buildFailed) {
+          adjustedRawScore = Math.min(adjustedRawScore, 40)
+        }
+
+        const totalPenalty = rawTestScoreResult.penalties.reduce((sum, p) => sum + p.points, 0)
+        const adjustedTestScore = Math.max(0, Math.min(100, adjustedRawScore - totalPenalty))
+
+        testScoreResult = {
+          ...rawTestScoreResult,
+          rawScore: adjustedRawScore,
+          testScore: adjustedTestScore,
+          categories: adjustedCategories
+        }
+
         comparisonReport = compareToBaseline(parsedBaselineResults, deterministicResults.results)
         
         // Map comparison findings to verdict

@@ -1,10 +1,11 @@
 import { NextResponse } from 'next/server'
 import { cookies } from 'next/headers'
 import { db } from '@/lib/db'
-import { sandboxOwners, sandboxRepos, baselineSnapshots } from '@/lib/db/schema'
-import { eq, desc } from 'drizzle-orm'
+import { sandboxUsers, sandboxRepos, baselineSnapshots } from '@/lib/db/schema'
+import { eq, desc, and } from 'drizzle-orm'
 import { runReviewPipeline } from '@/lib/review/runner'
 import { analyzeBaselineWithAI } from '@/lib/review/gemini'
+import { computeTestScore } from '@/lib/review/scoreEngine'
 import { exec } from 'child_process'
 import { promisify } from 'util'
 import path from 'path'
@@ -27,8 +28,8 @@ export async function POST(request: Request) {
 
     const ownerRecord = await db
       .select()
-      .from(sandboxOwners)
-      .where(eq(sandboxOwners.username, username))
+      .from(sandboxUsers)
+      .where(and(eq(sandboxUsers.username, username), eq(sandboxUsers.role, 'owner')))
       .limit(1)
 
     if (ownerRecord.length > 0 && !token) {
@@ -102,6 +103,9 @@ export async function POST(request: Request) {
           addLog(tag, msg)
         })
 
+        // Compute baseline test score (unauthorizedFiles = [], secrets = 0, hasSubmission = true)
+        const testScoreResult = computeTestScore(runResults.results, [], 0, true)
+
         // Run AI diagnostics on baseline
         let aiSummaryStr: string | null = null
         try {
@@ -138,7 +142,10 @@ export async function POST(request: Request) {
             .set({
               commitSha,
               techStack: JSON.stringify(runResults.techStack),
-              results: JSON.stringify(runResults.results),
+              results: JSON.stringify({
+                ...runResults.results,
+                testScoreResult
+              }),
               aiSummary: aiSummaryStr,
               createdAt: new Date()
             })
@@ -149,7 +156,10 @@ export async function POST(request: Request) {
             branch: 'main',
             commitSha,
             techStack: JSON.stringify(runResults.techStack),
-            results: JSON.stringify(runResults.results),
+            results: JSON.stringify({
+              ...runResults.results,
+              testScoreResult
+            }),
             aiSummary: aiSummaryStr
           })
         }
