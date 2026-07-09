@@ -53,5 +53,7 @@ package-lock.json
 
 git-mirrors/
 
-.config.kiro
-.kiro/
+# vscode
+.vscode/
+
+.check.txt
