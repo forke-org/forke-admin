@@ -1,4 +1,5 @@
 import { REVIEW_SYSTEM_PROMPT } from './prompt'
+import type { TestScoreResult } from './scoreEngine'
 /**
  * PR Context Builder
  * Assembles the full structured prompt payload to send to the AI model.
@@ -21,7 +22,9 @@ export interface PRData {
   developerUsername: string
   changedFiles: string[]
   gitDiff: string
-  repoStructure?: string // optional directory tree
+  repoStructure?: string
+  /** Pre-computed deterministic test score — AI does NOT change these numbers */
+  testScoreResult?: TestScoreResult
 }
 
 export interface PreviousReviewData {
@@ -119,6 +122,31 @@ Check these previous issues and risks against the current git diff to see which 
 `
   }
 
+  // Build the test score table section
+  let testScoreSection = ''
+  if (prData.testScoreResult) {
+    const { testScore, categories, penalties } = prData.testScoreResult
+    const rows = categories.map(c =>
+      `| ${c.name.replace(/_/g, ' ').padEnd(20)} | ${c.status.toUpperCase().padEnd(6)} | ${String(c.pointsEarned).padStart(5)} / ${String(c.pointsMax).padEnd(2)} | ${c.isBlocking ? 'YES' : 'no '} | ${c.issuesCount} issues |`
+    ).join('\n')
+    const penaltyRows = penalties.length > 0
+      ? '\nPENALTIES:\n' + penalties.map(p => `  - ${p.reason}: -${p.points} pts`).join('\n')
+      : ''
+    testScoreSection = `
+=== DETERMINISTIC TEST SCORE (computed by Forke engine — DO NOT change these numbers) ===
+Test Suite Score: ${testScore} / 70 pts
+
+| Category             | Status | Score     | Blocking | Details   |
+|----------------------|--------|-----------|----------|-----------|
+${rows}
+${penaltyRows}
+
+The remaining 30 points come from your assessment of REQUIREMENT FULFILLMENT.
+Output a "requirement_match" float between 0.0 and 1.0 based on how well the developer met the task requirements.
+Final score = ${testScore} + round(requirement_match × 30). DO NOT output a score — only output requirement_match.
+`
+  }
+
   const userMessage = `=== TASK DEFINITION ===
 Title: ${task.taskTitle}
 Description: ${task.taskDescription}
@@ -131,7 +159,7 @@ ${acceptanceCriteriaSection}
 ${allowedPathsSection}
 ${restrictedPathsSection}
 
-${previousReviewSection ? `\n${previousReviewSection}\n` : ''}=== PULL REQUEST DETAILS ===
+${testScoreSection}${previousReviewSection ? `\n${previousReviewSection}\n` : ''}=== PULL REQUEST DETAILS ===
 PR #${prData.prNumber}: "${prData.prTitle}"
 Developer: ${prData.developerUsername}
 PR Description: ${prData.prDescription || '(no description provided)'}
@@ -145,7 +173,7 @@ ${repoStructureSection}
 ${prData.gitDiff || '(no diff available)'}
 \`\`\`
 
-Please analyze the above PR against the task requirements and previous feedback, and provide your structured JSON review.`
+Please analyze the above PR. Output only requirement_match (0.0-1.0), summary, strengths, issues, risks, resolved_issues, resolved_risks, and unauthorized_file_edits. Do NOT output a score value.`
 
   return { systemPrompt, userMessage }
 }

@@ -12,7 +12,7 @@ import {
 } from './scopeValidator'
 import { buildReviewContext, truncateDiff, PreviousReviewData } from './contextBuilder'
 import { runAIReview } from './gemini'
-import { calculateFinalScore } from './scoreEngine'
+import { calculateFinalScore, computeTestScore, TestScoreResult } from './scoreEngine'
 import { updateCommitStatus } from '../github/commitStatus'
 import { fetchPRFiles, fetchRepoTree, buildGitDiff } from '../github/prFetcher'
 import { registerReviewJob, unregisterReviewJob } from '../activeReviews'
@@ -176,6 +176,15 @@ export async function runFullPRPipeline(params: PipelineParams) {
     addLog('SUCCESS', 'Layer 1 deterministic tests complete.')
     updateProgress(75)
 
+    // Compute deterministic test score from real runner results
+    const testScoreResult: TestScoreResult = computeTestScore(
+      deterministicResults.results,
+      unauthorizedFiles,
+      secretFindings.length,
+      submissionValidation.valid
+    )
+    addLog('CHECKING', `Deterministic test score: ${testScoreResult.testScore}/70 (before requirement match)`)
+
     // H. Execute Baseline Comparison
     addLog('CHECKING', 'Comparing PR verification results against repository baseline...')
     let comparisonReport = null
@@ -270,7 +279,7 @@ export async function runFullPRPipeline(params: PipelineParams) {
       addLog('WARN', `Error reading history context: ${e}`)
     }
 
-    // Build LLM prompts
+    // Build LLM prompts (pass test score table so AI can reference it in narrative)
     const { systemPrompt, userMessage } = buildReviewContext(
       {
         prNumber,
@@ -279,7 +288,8 @@ export async function runFullPRPipeline(params: PipelineParams) {
         developerUsername,
         changedFiles: changedFileNames,
         gitDiff,
-        repoStructure
+        repoStructure,
+        testScoreResult,
       },
       {
         taskTitle: sandbox.taskTitle || 'Coding Task',
@@ -340,8 +350,8 @@ export async function runFullPRPipeline(params: PipelineParams) {
       })
     }
 
-    // Run the scoring algorithms
-    const { finalScore, finalVerdict } = calculateFinalScore(aiResult, unauthorizedFiles)
+    // Run the scoring algorithms — deterministic test score + AI requirement_match
+    const { finalScore, finalVerdict } = calculateFinalScore(aiResult, unauthorizedFiles, testScoreResult)
 
     // Compute composite risk score (Layer 4)
     // 0-100 where higher is riskier
