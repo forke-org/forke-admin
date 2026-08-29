@@ -1,0 +1,2396 @@
+[
+  {
+    "date": "2026-08-08",
+    "label": "aug 8, 2026",
+    "entries": [
+      {
+        "shortHash": "97795b6",
+        "author": "Sudhanshu Batra",
+        "date": "2026-08-08T23:16:18+05:30",
+        "kind": "update",
+        "scope": null,
+        "title": "Docs/update (#43)"
+      },
+      {
+        "shortHash": "c1c0efa",
+        "author": "Ayushman Mohapatra",
+        "date": "2026-08-08T22:16:09+05:30",
+        "kind": "refactor",
+        "scope": null,
+        "title": "Clean up Drizzle migration files and snapshots to reset database schema state"
+      }
+    ]
+  },
+  {
+    "date": "2026-08-04",
+    "label": "aug 4, 2026",
+    "entries": [
+      {
+        "shortHash": "9c575e9",
+        "author": "Ayushman Mohapatra",
+        "date": "2026-08-04T19:51:30+05:30",
+        "kind": "update",
+        "scope": null,
+        "title": "Revert \"chore: update database connection pool configuration for Supavisor compatibility\""
+      },
+      {
+        "shortHash": "a28ef68",
+        "author": "Ayushman Mohapatra",
+        "date": "2026-08-04T19:51:30+05:30",
+        "kind": "update",
+        "scope": null,
+        "title": "Revert \"refactor: memoize runtime table creation and optimize connection pool settings for serverless performance\""
+      },
+      {
+        "shortHash": "8ab7179",
+        "author": "Ayushman Mohapatra",
+        "date": "2026-08-04T19:43:20+05:30",
+        "kind": "refactor",
+        "scope": null,
+        "title": "Memoize runtime table creation and optimize connection pool settings for serverless performance"
+      },
+      {
+        "shortHash": "6426aa7",
+        "author": "Ayushman Mohapatra",
+        "date": "2026-08-04T19:22:37+05:30",
+        "kind": "chore",
+        "scope": null,
+        "title": "Update database connection pool configuration for Supavisor compatibility"
+      }
+    ]
+  },
+  {
+    "date": "2026-08-01",
+    "label": "aug 1, 2026",
+    "entries": [
+      {
+        "shortHash": "3f75c45",
+        "author": "Ayushman Mohapatra",
+        "date": "2026-08-01T22:18:45+05:30",
+        "kind": "feature",
+        "scope": null,
+        "title": "Add organic referrer detection and improve source metadata display in admin dashboard"
+      }
+    ]
+  },
+  {
+    "date": "2026-07-30",
+    "label": "jul 30, 2026",
+    "entries": [
+      {
+        "shortHash": "55eb8e1",
+        "author": "Ayushman Mohapatra",
+        "date": "2026-07-30T21:52:25+05:30",
+        "kind": "feature",
+        "scope": null,
+        "title": "Enhance tracking with organic referrer detection, geo-resolution in middleware, and codespace schema fields"
+      }
+    ]
+  },
+  {
+    "date": "2026-07-09",
+    "label": "jul 9, 2026",
+    "entries": [
+      {
+        "shortHash": "7cb77ef",
+        "author": "Sudhanshub27",
+        "date": "2026-07-09T23:29:08+05:30",
+        "kind": "feature",
+        "scope": null,
+        "title": "Integrate baseline score computation into pipeline and display scorecard breakdown in workspace UI"
+      },
+      {
+        "shortHash": "63d8052",
+        "author": "Sudhanshub27",
+        "date": "2026-07-09T20:49:41+05:30",
+        "kind": "fix",
+        "scope": null,
+        "title": "Add input validation for issuesCount to prevent NaN errors in UI and score calculation"
+      },
+      {
+        "shortHash": "ae67040",
+        "author": "Sudhanshub27",
+        "date": "2026-07-09T20:46:12+05:30",
+        "kind": "feature",
+        "scope": null,
+        "title": "Replace static status quality mapping with dynamic calculation function considering issue count and blocking status"
+      },
+      {
+        "shortHash": "43933c7",
+        "author": "Sudhanshub27",
+        "date": "2026-07-09T20:38:40+05:30",
+        "kind": "feature",
+        "scope": null,
+        "title": "Implement detailed score deduction audit trail in ScorecardBreakdown component"
+      },
+      {
+        "shortHash": "6b0f60c",
+        "author": "Sudhanshub27",
+        "date": "2026-07-09T20:12:41+05:30",
+        "kind": "refactor",
+        "scope": null,
+        "title": "Overhaul execution score UI and data structure to support detailed quality metrics, category weights, and build failure alerts"
+      },
+      {
+        "shortHash": "d9b2c18",
+        "author": "Sudhanshub27",
+        "date": "2026-07-09T19:43:13+05:30",
+        "kind": "feature",
+        "scope": null,
+        "title": "Integrate deterministic test scores into review context and refactor AI agent to focus on requirement validation"
+      },
+      {
+        "shortHash": "b9d1f3f",
+        "author": "Sudhanshub27",
+        "date": "2026-07-09T19:09:55+05:30",
+        "kind": "update",
+        "scope": null,
+        "title": "Check"
+      },
+      {
+        "shortHash": "9099b23",
+        "author": "Ayushman Mohapatra",
+        "date": "2026-07-09T17:05:50+05:30",
+        "kind": "fix",
+        "scope": null,
+        "title": "Resolve duplicate else block syntax error in auth.ts and regenerate changelog"
+      },
+      {
+        "shortHash": "cd452ca",
+        "author": "Ayushman Mohapatra",
+        "date": "2026-07-09T02:43:48+05:30",
+        "kind": "feature",
+        "scope": null,
+        "title": "Implement secure owner session management with OAuth state validation and server-side logout functionality"
+      },
+      {
+        "shortHash": "c074efc",
+        "author": "Sudhanshub27",
+        "date": "2026-07-09T00:05:50+05:30",
+        "kind": "refactor",
+        "scope": null,
+        "title": "Update AI review scoring to use a qualitative, evidence-driven multi-dimensional assessment model"
+      }
+    ]
+  },
+  {
+    "date": "2026-07-08",
+    "label": "jul 8, 2026",
+    "entries": [
+      {
+        "shortHash": "5212825",
+        "author": "Sudhanshub27",
+        "date": "2026-07-08T22:34:03+05:30",
+        "kind": "refactor",
+        "scope": null,
+        "title": "Move BASELINE_SYSTEM_PROMPT to a dedicated file and update scoring logic"
+      },
+      {
+        "shortHash": "c289955",
+        "author": "Sudhanshub27",
+        "date": "2026-07-08T21:53:15+05:30",
+        "kind": "feature",
+        "scope": null,
+        "title": "Add mock Gemini responses and improve review completion checks to verify database entries"
+      },
+      {
+        "shortHash": "a6c47ab",
+        "author": "Ayushman Mohapatra",
+        "date": "2026-07-08T15:33:30+05:30",
+        "kind": "feature",
+        "scope": null,
+        "title": "Redirect Get Started buttons to signin and rename migration to 0000_forke_db"
+      },
+      {
+        "shortHash": "6150bf6",
+        "author": "Ayushman Mohapatra",
+        "date": "2026-07-08T14:29:51+05:30",
+        "kind": "chore",
+        "scope": null,
+        "title": "Add .vscode to gitignore"
+      },
+      {
+        "shortHash": "2239652",
+        "author": "Ayushman Mohapatra",
+        "date": "2026-07-08T14:21:55+05:30",
+        "kind": "chore",
+        "scope": null,
+        "title": "Remove kiro references from .gitignore"
+      },
+      {
+        "shortHash": "3395128",
+        "author": "Ayushman Mohapatra",
+        "date": "2026-07-08T12:38:32+05:30",
+        "kind": "update",
+        "scope": null,
+        "title": "Merge sandbox users and review tables, verify compilation"
+      },
+      {
+        "shortHash": "5191d1f",
+        "author": "Ayushman Mohapatra",
+        "date": "2026-07-08T12:12:16+05:30",
+        "kind": "polish",
+        "scope": null,
+        "title": "Fix double scrollbars and apply sleek opaque branding custom scrollbars"
+      },
+      {
+        "shortHash": "2d43ea5",
+        "author": "Ayushman Mohapatra",
+        "date": "2026-07-08T12:00:04+05:30",
+        "kind": "polish",
+        "scope": null,
+        "title": "Update scrollbar aesthetics to use theme-aware accent colors and record changes in changelog"
+      },
+      {
+        "shortHash": "9f2b625",
+        "author": "Ayushman Mohapatra",
+        "date": "2026-07-08T11:57:47+05:30",
+        "kind": "polish",
+        "scope": null,
+        "title": "Modernize scrollbar design with sleek macOS-inspired aesthetics and remove redundant theme overrides"
+      },
+      {
+        "shortHash": "36fd3fd",
+        "author": "Sudhanshub27",
+        "date": "2026-07-08T11:28:13+05:30",
+        "kind": "feature",
+        "scope": null,
+        "title": "Add audit log, AI review, auth event, and baseline snapshot tables to database schema"
+      },
+      {
+        "shortHash": "cfe8df3",
+        "author": "Sudhanshub27",
+        "date": "2026-07-08T11:06:25+05:30",
+        "kind": "chore",
+        "scope": null,
+        "title": "Update migration script with IF NOT EXISTS, update packages, and regenerate changelog"
+      },
+      {
+        "shortHash": "e0303d4",
+        "author": "Sudhanshub27",
+        "date": "2026-07-08T11:04:16+05:30",
+        "kind": "fix",
+        "scope": "types",
+        "title": "Type header parameter explicitly in db-client-actions"
+      }
+    ]
+  },
+  {
+    "date": "2026-07-07",
+    "label": "jul 7, 2026",
+    "entries": [
+      {
+        "shortHash": "a8aa6a6",
+        "author": "Sudhanshub27",
+        "date": "2026-07-07T12:07:40+05:30",
+        "kind": "update",
+        "scope": null,
+        "title": "Update owner application submission and check role"
+      }
+    ]
+  },
+  {
+    "date": "2026-07-06",
+    "label": "jul 6, 2026",
+    "entries": [
+      {
+        "shortHash": "f72a5c0",
+        "author": "Ayushman Mohapatra",
+        "date": "2026-07-06T11:07:57+05:30",
+        "kind": "fix",
+        "scope": null,
+        "title": "Remove the isolated subdomains to prevent domain conflict"
+      },
+      {
+        "shortHash": "03a73fd",
+        "author": "Ayushman Mohapatra",
+        "date": "2026-07-06T11:00:38+05:30",
+        "kind": "feature",
+        "scope": null,
+        "title": "Implement dynamic subdomain routing and prevent infinite rewrite loops in middleware"
+      },
+      {
+        "shortHash": "c413ec8",
+        "author": "Ayushman Mohapatra",
+        "date": "2026-07-06T10:01:16+05:30",
+        "kind": "feature",
+        "scope": null,
+        "title": "Implement dynamic subdomain routing for local development"
+      },
+      {
+        "shortHash": "52c9ef2",
+        "author": "Ayushman Mohapatra",
+        "date": "2026-07-06T09:57:23+05:30",
+        "kind": "feature",
+        "scope": null,
+        "title": "Add SupportedBy component to landing page and configure cross-subdomain session cookies"
+      }
+    ]
+  },
+  {
+    "date": "2026-07-05",
+    "label": "jul 5, 2026",
+    "entries": [
+      {
+        "shortHash": "915db8f",
+        "author": "Ayushman Mohapatra",
+        "date": "2026-07-05T22:21:29+05:30",
+        "kind": "feature",
+        "scope": null,
+        "title": "Implement automated database backup cleanup with R2 integration and daily cron schedule"
+      },
+      {
+        "shortHash": "2b2da1b",
+        "author": "Ayushman Mohapatra",
+        "date": "2026-07-05T22:10:13+05:30",
+        "kind": "feature",
+        "scope": null,
+        "title": "Implement automated database backup and cleanup system with R2 storage and admin notifications"
+      }
+    ]
+  },
+  {
+    "date": "2026-06-29",
+    "label": "jun 29, 2026",
+    "entries": [
+      {
+        "shortHash": "479f183",
+        "author": "Ayushman Mohapatra",
+        "date": "2026-06-29T13:56:20+05:30",
+        "kind": "fix",
+        "scope": null,
+        "title": "Improve table layout responsiveness and prevent button wrapping in BucketsPanel"
+      },
+      {
+        "shortHash": "15f8f98",
+        "author": "Ayushman Mohapatra",
+        "date": "2026-06-29T13:53:23+05:30",
+        "kind": "feature",
+        "scope": null,
+        "title": "Paginate country list, add funnel show-all, fix mobile bucket actions"
+      },
+      {
+        "shortHash": "7f2861c",
+        "author": "Ayushman Mohapatra",
+        "date": "2026-06-29T13:16:23+05:30",
+        "kind": "feature",
+        "scope": null,
+        "title": "Implement PortalDropdown component to allow toolbar dropdowns to escape overflow boundaries in DatabaseConsole"
+      },
+      {
+        "shortHash": "345f78c",
+        "author": "Ayushman Mohapatra",
+        "date": "2026-06-29T12:42:55+05:30",
+        "kind": "feature",
+        "scope": null,
+        "title": "Paginate tracker lists and add bucket page size selector"
+      },
+      {
+        "shortHash": "b85fb4d",
+        "author": "Ayushman Mohapatra",
+        "date": "2026-06-29T12:11:58+05:30",
+        "kind": "fix",
+        "scope": null,
+        "title": "Use subscriber attribution country for tracker conversions instead of page_visits geo"
+      },
+      {
+        "shortHash": "269d178",
+        "author": "Ayushman Mohapatra",
+        "date": "2026-06-29T12:11:58+05:30",
+        "kind": "fix",
+        "scope": null,
+        "title": "Use subscriber attribution country for tracker conversions instead of page_visits geo"
+      },
+      {
+        "shortHash": "db5f3dd",
+        "author": "Ayushman Mohapatra",
+        "date": "2026-06-29T11:43:44+05:30",
+        "kind": "fix",
+        "scope": null,
+        "title": "Ensure country is stored in subscriber attribution and skip null JSONB fields"
+      },
+      {
+        "shortHash": "6b48755",
+        "author": "Ayushman Mohapatra",
+        "date": "2026-06-29T11:43:44+05:30",
+        "kind": "fix",
+        "scope": null,
+        "title": "Ensure country is stored in subscriber attribution and skip null JSONB fields"
+      },
+      {
+        "shortHash": "bd55a2d",
+        "author": "Ayushman Mohapatra",
+        "date": "2026-06-29T11:12:23+05:30",
+        "kind": "feature",
+        "scope": null,
+        "title": "Add blog view tracking system and enhance admin subscriber dashboard with country data and filtering"
+      }
+    ]
+  },
+  {
+    "date": "2026-06-26",
+    "label": "jun 26, 2026",
+    "entries": [
+      {
+        "shortHash": "c99d11b",
+        "author": "Ayushman Mohapatra",
+        "date": "2026-06-26T14:32:24+05:30",
+        "kind": "refactor",
+        "scope": null,
+        "title": "Abstract OpenGraph and Twitter metadata generation into utility helpers and update marketing page configurations"
+      },
+      {
+        "shortHash": "4e03122",
+        "author": "Ayushman Mohapatra",
+        "date": "2026-06-26T12:32:22+05:30",
+        "kind": "feature",
+        "scope": null,
+        "title": "Truncate blog meta descriptions and improve open graph image metadata"
+      }
+    ]
+  },
+  {
+    "date": "2026-06-25",
+    "label": "jun 25, 2026",
+    "entries": [
+      {
+        "shortHash": "5d586b3",
+        "author": "Ayushman Mohapatra",
+        "date": "2026-06-25T16:23:21+05:30",
+        "kind": "fix",
+        "scope": null,
+        "title": "Implement retry logic for Resend blog broadcasts and improve audit logging for failures"
+      },
+      {
+        "shortHash": "a6d85fc",
+        "author": "Ayushman Mohapatra",
+        "date": "2026-06-25T16:06:40+05:30",
+        "kind": "feature",
+        "scope": null,
+        "title": "Implement direct R2 upload via presigned URLs to bypass Vercel request body limits"
+      },
+      {
+        "shortHash": "935de50",
+        "author": "Ayushman Mohapatra",
+        "date": "2026-06-25T15:45:49+05:30",
+        "kind": "feature",
+        "scope": null,
+        "title": "Add GIF upload support to blog editor slash menu"
+      },
+      {
+        "shortHash": "a6a1ef3",
+        "author": "Ayushman Mohapatra",
+        "date": "2026-06-25T14:33:39+05:30",
+        "kind": "perf",
+        "scope": null,
+        "title": "Migrate assets to WebP, optimize image loading with sizes, and configure Next.js image caching headers"
+      },
+      {
+        "shortHash": "544b2f7",
+        "author": "Ayushman Mohapatra",
+        "date": "2026-06-25T14:12:57+05:30",
+        "kind": "feature",
+        "scope": null,
+        "title": "Add all-time data support and enhance UI typography and text contrast across components"
+      },
+      {
+        "shortHash": "38f62d4",
+        "author": "Ayushman Mohapatra",
+        "date": "2026-06-25T13:57:04+05:30",
+        "kind": "feature",
+        "scope": null,
+        "title": "Add all-time data support to tracker panel and admin dashboard queries"
+      },
+      {
+        "shortHash": "547e210",
+        "author": "Ayushman Mohapatra",
+        "date": "2026-06-25T13:44:13+05:30",
+        "kind": "refactor",
+        "scope": null,
+        "title": "Remove TableOfContents component and consolidate privacy, refund, and terms page layouts"
+      },
+      {
+        "shortHash": "a49e01e",
+        "author": "Ayushman Mohapatra",
+        "date": "2026-06-25T13:22:02+05:30",
+        "kind": "feature",
+        "scope": null,
+        "title": "Implement cookie consent management, Google Analytics integration, and privacy policy table of contents navigation"
+      },
+      {
+        "shortHash": "7f2fec0",
+        "author": "Ayushman Mohapatra",
+        "date": "2026-06-25T12:41:46+05:30",
+        "kind": "feature",
+        "scope": null,
+        "title": "Implement cookie consent management, Google Analytics integration, and privacy policy updates"
+      },
+      {
+        "shortHash": "73998b1",
+        "author": "Ayushman Mohapatra",
+        "date": "2026-06-25T11:59:51+05:30",
+        "kind": "feature",
+        "scope": null,
+        "title": "Add 3D globe visualization to admin dashboard using GeoJSON data"
+      },
+      {
+        "shortHash": "85789a5",
+        "author": "Ayushman Mohapatra",
+        "date": "2026-06-25T11:32:32+05:30",
+        "kind": "feature",
+        "scope": null,
+        "title": "Add interactive world heatmap and custom hover tooltips to admin dashboard"
+      },
+      {
+        "shortHash": "5575b33",
+        "author": "Ayushman Mohapatra",
+        "date": "2026-06-25T11:05:34+05:30",
+        "kind": "feature",
+        "scope": null,
+        "title": "Add site_access cookie bypass for sign-in and improve TrackerPanel with pagination and UI refinements"
+      },
+      {
+        "shortHash": "a45006a",
+        "author": "Ayushman Mohapatra",
+        "date": "2026-06-25T10:40:17+05:30",
+        "kind": "feature",
+        "scope": null,
+        "title": "Add comprehensive admin analytics tracker panel and consolidated data fetching interface"
+      },
+      {
+        "shortHash": "6545884",
+        "author": "Ayushman Mohapatra",
+        "date": "2026-06-25T10:18:43+05:30",
+        "kind": "feature",
+        "scope": null,
+        "title": "Implement session-based visit tracking and audit logging for conversions"
+      }
+    ]
+  },
+  {
+    "date": "2026-06-24",
+    "label": "jun 24, 2026",
+    "entries": [
+      {
+        "shortHash": "e88a220",
+        "author": "Ayushman Mohapatra",
+        "date": "2026-06-24T14:57:45+05:30",
+        "kind": "polish",
+        "scope": null,
+        "title": "Update Threads icon to filled variant in email footer"
+      },
+      {
+        "shortHash": "6d385cd",
+        "author": "Ayushman Mohapatra",
+        "date": "2026-06-24T14:39:34+05:30",
+        "kind": "feature",
+        "scope": null,
+        "title": "Update contact page socials, add GitHub integration, and refresh footer branding assets"
+      }
+    ]
+  },
+  {
+    "date": "2026-06-23",
+    "label": "jun 23, 2026",
+    "entries": [
+      {
+        "shortHash": "5505fad",
+        "author": "Ayushman Mohapatra",
+        "date": "2026-06-23T18:18:03+05:30",
+        "kind": "feature",
+        "scope": null,
+        "title": "Add blog post section to email templates and update base URL to www.forke.space"
+      },
+      {
+        "shortHash": "8e93e8c",
+        "author": "Ayushman Mohapatra",
+        "date": "2026-06-23T17:32:03+05:30",
+        "kind": "chore",
+        "scope": null,
+        "title": "Update email templates with new branding, blog components, and redesigned layout"
+      },
+      {
+        "shortHash": "9cca4d9",
+        "author": "Ayushman Mohapatra",
+        "date": "2026-06-23T16:05:25+05:30",
+        "kind": "chore",
+        "scope": null,
+        "title": "Update email banners and social media assets"
+      },
+      {
+        "shortHash": "89ad071",
+        "author": "Ayushman Mohapatra",
+        "date": "2026-06-23T14:16:27+05:30",
+        "kind": "chore",
+        "scope": null,
+        "title": "Update Open Graph image asset"
+      },
+      {
+        "shortHash": "d8f14f2",
+        "author": "Ayushman Mohapatra",
+        "date": "2026-06-23T14:13:15+05:30",
+        "kind": "feature",
+        "scope": null,
+        "title": "Update Open Graph metadata with new banner image"
+      },
+      {
+        "shortHash": "ea1d891",
+        "author": "Ayushman Mohapatra",
+        "date": "2026-06-23T13:41:50+05:30",
+        "kind": "feature",
+        "scope": null,
+        "title": "Restrict registration and sign-in access via waitlist lock and update CTAs and sitemap accordingly"
+      },
+      {
+        "shortHash": "2a39610",
+        "author": "Ayushman Mohapatra",
+        "date": "2026-06-23T13:26:10+05:30",
+        "kind": "feature",
+        "scope": null,
+        "title": "Conditionally include waitlist in sitemap based on database setting"
+      },
+      {
+        "shortHash": "e091034",
+        "author": "Ayushman Mohapatra",
+        "date": "2026-06-23T13:16:26+05:30",
+        "kind": "feature",
+        "scope": null,
+        "title": "Implement waitlist access control and update call-to-action buttons to redirect to the new waitlist route."
+      },
+      {
+        "shortHash": "8a6d0e1",
+        "author": "Ayushman Mohapatra",
+        "date": "2026-06-23T12:42:09+05:30",
+        "kind": "feature",
+        "scope": null,
+        "title": "Add inline image previews in buckets, optimize blog grid pagination, and implement swipeable related articles carousel"
+      }
+    ]
+  },
+  {
+    "date": "2026-06-22",
+    "label": "jun 22, 2026",
+    "entries": [
+      {
+        "shortHash": "1d67b7f",
+        "author": "Sudhanshub27",
+        "date": "2026-06-22T23:54:38+05:30",
+        "kind": "feature",
+        "scope": null,
+        "title": "Ai report improved"
+      },
+      {
+        "shortHash": "bcc4b65",
+        "author": "Sudhanshub27",
+        "date": "2026-06-22T19:58:46+05:30",
+        "kind": "feature",
+        "scope": null,
+        "title": "Corrected ui fixes and import errors"
+      },
+      {
+        "shortHash": "88016f3",
+        "author": "Sudhanshub27",
+        "date": "2026-06-22T17:54:03+05:30",
+        "kind": "chore",
+        "scope": null,
+        "title": "Deleted redundant files"
+      },
+      {
+        "shortHash": "e453d9d",
+        "author": "Sudhanshub27",
+        "date": "2026-06-22T02:49:41+05:30",
+        "kind": "feature",
+        "scope": "ai-review",
+        "title": "Add unified AI review report UI and replace legacy review views"
+      },
+      {
+        "shortHash": "c4e41e9",
+        "author": "Sudhanshub27",
+        "date": "2026-06-22T01:20:09+05:30",
+        "kind": "feature",
+        "scope": null,
+        "title": "Implemented file tree in tasks"
+      },
+      {
+        "shortHash": "41e7593",
+        "author": "Sudhanshub27",
+        "date": "2026-06-22T00:16:18+05:30",
+        "kind": "feature",
+        "scope": "sandbox",
+        "title": "Add task publishing workflow, feed integration, task status navigation, and Kiro config ignores"
+      }
+    ]
+  },
+  {
+    "date": "2026-06-21",
+    "label": "jun 21, 2026",
+    "entries": [
+      {
+        "shortHash": "48da4d6",
+        "author": "Sudhanshub27",
+        "date": "2026-06-21T23:45:56+05:30",
+        "kind": "update",
+        "scope": null,
+        "title": "Updated gitignore"
+      },
+      {
+        "shortHash": "1c9314a",
+        "author": "Sudhanshub27",
+        "date": "2026-06-21T23:38:26+05:30",
+        "kind": "update",
+        "scope": null,
+        "title": "Updated gitignore"
+      },
+      {
+        "shortHash": "f5c73f6",
+        "author": "Sudhanshub27",
+        "date": "2026-06-21T23:25:30+05:30",
+        "kind": "feature",
+        "scope": "ui",
+        "title": "Refine button variants, sizing, and hover states; document persistent changelog storage and repository mirroring"
+      }
+    ]
+  },
+  {
+    "date": "2026-06-19",
+    "label": "jun 19, 2026",
+    "entries": [
+      {
+        "shortHash": "8a31725",
+        "author": "Ayushman Mohapatra",
+        "date": "2026-06-19T13:42:50+05:30",
+        "kind": "feature",
+        "scope": null,
+        "title": "Add RelatedArticles component to blog post pages"
+      },
+      {
+        "shortHash": "132c412",
+        "author": "Ayushman Mohapatra",
+        "date": "2026-06-19T10:39:28+05:30",
+        "kind": "feature",
+        "scope": null,
+        "title": "Add image link support to BlogEditor and display profile card on all screen sizes"
+      }
+    ]
+  },
+  {
+    "date": "2026-06-18",
+    "label": "jun 18, 2026",
+    "entries": [
+      {
+        "shortHash": "8320b47",
+        "author": "Ayushman Mohapatra",
+        "date": "2026-06-18T23:22:32+05:30",
+        "kind": "fix",
+        "scope": null,
+        "title": "Prevent Tiptap JSON data loss by stringifying content during server action transition"
+      },
+      {
+        "shortHash": "be025d7",
+        "author": "Sudhanshub27",
+        "date": "2026-06-18T23:09:31+05:30",
+        "kind": "feature",
+        "scope": null,
+        "title": "Implement persistent changelog storage and add repository mirroring utility"
+      },
+      {
+        "shortHash": "99f721d",
+        "author": "Sudhanshub27",
+        "date": "2026-06-18T22:35:15+05:30",
+        "kind": "feature",
+        "scope": null,
+        "title": "Add API routes for repository listing and workspace mirroring with auto-healing functionality"
+      },
+      {
+        "shortHash": "a672fd7",
+        "author": "Sudhanshub27",
+        "date": "2026-06-18T22:30:27+05:30",
+        "kind": "feature",
+        "scope": null,
+        "title": "Implement sandbox workspace with OAuth callback and repository mirroring capabilities"
+      },
+      {
+        "shortHash": "ce816b0",
+        "author": "Sudhanshub27",
+        "date": "2026-06-18T22:05:04+05:30",
+        "kind": "feature",
+        "scope": null,
+        "title": "Implement GitHub OAuth authentication and initial SandboxWorkspace component"
+      },
+      {
+        "shortHash": "ca9fada",
+        "author": "Sudhanshub27",
+        "date": "2026-06-18T21:15:54+05:30",
+        "kind": "feature",
+        "scope": null,
+        "title": "Implement initial SandboxWorkspace component for developer and owner dashboards"
+      },
+      {
+        "shortHash": "b828f4f",
+        "author": "Sudhanshub27",
+        "date": "2026-06-18T21:14:48+05:30",
+        "kind": "feature",
+        "scope": null,
+        "title": "Implement GitHub OAuth authentication flow and initialize sandbox dashboard and task workspaces"
+      },
+      {
+        "shortHash": "3478535",
+        "author": "Sudhanshub27",
+        "date": "2026-06-18T21:03:18+05:30",
+        "kind": "feature",
+        "scope": null,
+        "title": "Implement GitHub OAuth authentication flow and initialize sandbox dashboard and task posting workspaces"
+      },
+      {
+        "shortHash": "582b6d7",
+        "author": "Sudhanshub27",
+        "date": "2026-06-18T20:37:35+05:30",
+        "kind": "feature",
+        "scope": null,
+        "title": "Implement OAuth-based authentication and scaffolding for the core sandbox review engine and developer dashboard"
+      },
+      {
+        "shortHash": "bf922de",
+        "author": "Sudhanshub27",
+        "date": "2026-06-18T20:37:15+05:30",
+        "kind": "feature",
+        "scope": null,
+        "title": "Implement automated AI-driven pull request review pipeline and GitHub OAuth integration with Drizzle persistence"
+      },
+      {
+        "shortHash": "47db0fd",
+        "author": "Ayushman Mohapatra",
+        "date": "2026-06-18T14:50:42+05:30",
+        "kind": "polish",
+        "scope": "docs",
+        "title": "Make mobile drawer opening and closing transitions smoother"
+      },
+      {
+        "shortHash": "30d7822",
+        "author": "Ayushman Mohapatra",
+        "date": "2026-06-18T14:48:48+05:30",
+        "kind": "polish",
+        "scope": "docs",
+        "title": "Replace book icon with hamburger menu and simplify breadcrumbs on mobile"
+      },
+      {
+        "shortHash": "b03633a",
+        "author": "Ayushman Mohapatra",
+        "date": "2026-06-18T14:37:02+05:30",
+        "kind": "polish",
+        "scope": null,
+        "title": "Replace logo image with forke* branding text in docs sidebar"
+      },
+      {
+        "shortHash": "961e104",
+        "author": "Ayushman Mohapatra",
+        "date": "2026-06-18T14:35:50+05:30",
+        "kind": "feature",
+        "scope": null,
+        "title": "Transition changelog data to a persistent json file and increase docs logo size"
+      },
+      {
+        "shortHash": "97a74da",
+        "author": "Ayushman Mohapatra",
+        "date": "2026-06-18T14:30:24+05:30",
+        "kind": "refactor",
+        "scope": null,
+        "title": "Ignore generated changelog-data and filter changelog maintenance commits"
+      },
+      {
+        "shortHash": "fc19366",
+        "author": "Ayushman Mohapatra",
+        "date": "2026-06-18T14:25:02+05:30",
+        "kind": "feature",
+        "scope": null,
+        "title": "Implement docs section, update sitemap, footer, and public middleware routes"
+      },
+      {
+        "shortHash": "b6a8148",
+        "author": "Ayushman Mohapatra",
+        "date": "2026-06-18T12:55:21+05:30",
+        "kind": "polish",
+        "scope": null,
+        "title": "Refine blog status badge to match design system"
+      },
+      {
+        "shortHash": "ffab979",
+        "author": "Ayushman Mohapatra",
+        "date": "2026-06-18T12:48:14+05:30",
+        "kind": "fix",
+        "scope": null,
+        "title": "Adjust ScrollTrigger pinning duration, add image load listener for layout stability, and update hero height responsiveness"
+      },
+      {
+        "shortHash": "e552dcc",
+        "author": "Ayushman Mohapatra",
+        "date": "2026-06-18T12:10:18+05:30",
+        "kind": "refactor",
+        "scope": null,
+        "title": "Remove blog email tracking schema and obsolete utility scripts"
+      },
+      {
+        "shortHash": "4c7de8b",
+        "author": "Ayushman Mohapatra",
+        "date": "2026-06-18T10:51:18+05:30",
+        "kind": "feature",
+        "scope": null,
+        "title": "Add blog_email_sends tracking table, implement robust Resend broadcast logic with retry support, and add environment configuration."
+      },
+      {
+        "shortHash": "7d90be7",
+        "author": "Ayushman Mohapatra",
+        "date": "2026-06-18T09:05:36+05:30",
+        "kind": "feature",
+        "scope": null,
+        "title": "Add custom authorName field to blog editor and database schema"
+      },
+      {
+        "shortHash": "229c38c",
+        "author": "Ayushman Mohapatra",
+        "date": "2026-06-18T08:46:11+05:30",
+        "kind": "feature",
+        "scope": null,
+        "title": "Replace loading spinners with skeleton screens and refine admin UI typography and layout animations"
+      },
+      {
+        "shortHash": "3299583",
+        "author": "Ayushman Mohapatra",
+        "date": "2026-06-18T08:08:35+05:30",
+        "kind": "feature",
+        "scope": null,
+        "title": "Implement mobile capsule navbar design and remove scratch page"
+      }
+    ]
+  },
+  {
+    "date": "2026-06-17",
+    "label": "jun 17, 2026",
+    "entries": [
+      {
+        "shortHash": "97d4efa",
+        "author": "Ayushman Mohapatra",
+        "date": "2026-06-17T16:50:30+05:30",
+        "kind": "refactor",
+        "scope": null,
+        "title": "Adjust lid animation rotation and scroll trigger duration for tighter opening sequence"
+      },
+      {
+        "shortHash": "483aba5",
+        "author": "Ayushman Mohapatra",
+        "date": "2026-06-17T15:21:49+05:30",
+        "kind": "refactor",
+        "scope": null,
+        "title": "Simplify email logic and remove obsolete assets and unused components"
+      },
+      {
+        "shortHash": "7fe107f",
+        "author": "Ayushman Mohapatra",
+        "date": "2026-06-17T10:23:58+05:30",
+        "kind": "refactor",
+        "scope": null,
+        "title": "Simplify laptop reveal animation and update landing section layout"
+      },
+      {
+        "shortHash": "bacd28d",
+        "author": "Ayushman Mohapatra",
+        "date": "2026-06-17T09:57:45+05:30",
+        "kind": "feature",
+        "scope": null,
+        "title": "Add opaque lid backing and adjust animation properties for laptop screen component"
+      },
+      {
+        "shortHash": "e438482",
+        "author": "Ayushman Mohapatra",
+        "date": "2026-06-17T09:52:26+05:30",
+        "kind": "refactor",
+        "scope": null,
+        "title": "Replace dynamic lanyard component with static image mockup in scroll-triggered laptop animation"
+      }
+    ]
+  },
+  {
+    "date": "2026-06-16",
+    "label": "jun 16, 2026",
+    "entries": [
+      {
+        "shortHash": "4fee008",
+        "author": "Ayushman Mohapatra",
+        "date": "2026-06-16T23:21:59+05:30",
+        "kind": "refactor",
+        "scope": null,
+        "title": "Standardize main content padding and update small button border radius for improved layout consistency"
+      },
+      {
+        "shortHash": "789d362",
+        "author": "Ayushman Mohapatra",
+        "date": "2026-06-16T23:09:24+05:30",
+        "kind": "refactor",
+        "scope": null,
+        "title": "Update UI layout, scale, and footer structure for improved responsiveness and add new links"
+      },
+      {
+        "shortHash": "a5a7ebb",
+        "author": "Ayushman Mohapatra",
+        "date": "2026-06-16T22:17:24+05:30",
+        "kind": "feature",
+        "scope": null,
+        "title": "Implement responsive scaling for landing page artifacts and increase maximum container width to 1920px across UI components"
+      },
+      {
+        "shortHash": "709b812",
+        "author": "Ayushman Mohapatra",
+        "date": "2026-06-16T20:39:25+05:30",
+        "kind": "feature",
+        "scope": null,
+        "title": "Implement landing page redesign with animated terminal, metrics, and updated marketing components"
+      }
+    ]
+  },
+  {
+    "date": "2026-06-11",
+    "label": "jun 11, 2026",
+    "entries": [
+      {
+        "shortHash": "2ac81cb",
+        "author": "Ayushman Mohapatra",
+        "date": "2026-06-11T00:59:29+05:30",
+        "kind": "feature",
+        "scope": null,
+        "title": "Add R2 storage support, implement incremental changelog generation, and improve shallow clone handling"
+      },
+      {
+        "shortHash": "d4ab858",
+        "author": "Ayushman Mohapatra",
+        "date": "2026-06-11T00:53:16+05:30",
+        "kind": "feature",
+        "scope": null,
+        "title": "Add R2 storage support, implement shallow clone detection for changelogs, and update blog cleanup logic"
+      },
+      {
+        "shortHash": "12a42d7",
+        "author": "Ayushman Mohapatra",
+        "date": "2026-06-11T00:15:52+05:30",
+        "kind": "feature",
+        "scope": null,
+        "title": "Add R2 storage management tools, automated changelog generation, and avatar cleanup functionality"
+      }
+    ]
+  },
+  {
+    "date": "2026-06-10",
+    "label": "jun 10, 2026",
+    "entries": [
+      {
+        "shortHash": "4e1e494",
+        "author": "Ayushman Mohapatra",
+        "date": "2026-06-10T23:07:13+05:30",
+        "kind": "feature",
+        "scope": null,
+        "title": "Add automated changelog page powered by git history and implement Cloudflare R2 image proxying."
+      },
+      {
+        "shortHash": "2c0c83a",
+        "author": "Ayushman Mohapatra",
+        "date": "2026-06-10T21:27:28+05:30",
+        "kind": "polish",
+        "scope": null,
+        "title": "Update font weight from semibold to medium across marketing and shared UI components"
+      },
+      {
+        "shortHash": "134bc84",
+        "author": "Ayushman Mohapatra",
+        "date": "2026-06-10T14:21:48+05:30",
+        "kind": "polish",
+        "scope": null,
+        "title": "Rebrand interface with updated typography, monospaced navigation, and refined footer aesthetics"
+      },
+      {
+        "shortHash": "524a380",
+        "author": "Ayushman Mohapatra",
+        "date": "2026-06-10T02:05:58+05:30",
+        "kind": "feature",
+        "scope": null,
+        "title": "Implement blog management system with rich link previews and media handling"
+      }
+    ]
+  },
+  {
+    "date": "2026-06-09",
+    "label": "jun 9, 2026",
+    "entries": [
+      {
+        "shortHash": "8ddc2e3",
+        "author": "Ayushman Mohapatra",
+        "date": "2026-06-09T14:18:57+05:30",
+        "kind": "chore",
+        "scope": null,
+        "title": "Remove obsolete database migration scripts"
+      },
+      {
+        "shortHash": "4090ef4",
+        "author": "Ayushman Mohapatra",
+        "date": "2026-06-09T01:33:14+05:30",
+        "kind": "fix",
+        "scope": null,
+        "title": "Update database console layout with wrapped filter controls and consistent insert button styling"
+      },
+      {
+        "shortHash": "16fbc86",
+        "author": "Ayushman Mohapatra",
+        "date": "2026-06-09T01:21:11+05:30",
+        "kind": "fix",
+        "scope": null,
+        "title": "Force dynamic rendering in admin layout to resolve DYNAMIC_SERVER_USAGE errors"
+      },
+      {
+        "shortHash": "114b2ba",
+        "author": "Ayushman Mohapatra",
+        "date": "2026-06-09T01:01:36+05:30",
+        "kind": "fix",
+        "scope": null,
+        "title": "Port error bug fix"
+      },
+      {
+        "shortHash": "51d7705",
+        "author": "Ayushman Mohapatra",
+        "date": "2026-06-09T00:18:31+05:30",
+        "kind": "refactor",
+        "scope": null,
+        "title": "Optimize responsive layout and visibility of hero components and mascots"
+      }
+    ]
+  },
+  {
+    "date": "2026-06-08",
+    "label": "jun 8, 2026",
+    "entries": [
+      {
+        "shortHash": "5da7226",
+        "author": "Ayushman Mohapatra",
+        "date": "2026-06-08T23:35:14+05:30",
+        "kind": "refactor",
+        "scope": null,
+        "title": "Remove SQL editor, optimize button layouts for mobile, and simplify cell edit save interactions"
+      },
+      {
+        "shortHash": "8bdb564",
+        "author": "Ayushman Mohapatra",
+        "date": "2026-06-08T22:45:18+05:30",
+        "kind": "refactor",
+        "scope": null,
+        "title": "Optimize marketing landing page responsiveness and remove unused admin signup source dashboard component"
+      },
+      {
+        "shortHash": "d4700b5",
+        "author": "Ayushman Mohapatra",
+        "date": "2026-06-08T20:24:32+05:30",
+        "kind": "feature",
+        "scope": null,
+        "title": "Implement marketing attribution tracking by adding source and metadata columns to database schema and capturing user conversion channels."
+      }
+    ]
+  },
+  {
+    "date": "2026-06-07",
+    "label": "jun 7, 2026",
+    "entries": [
+      {
+        "shortHash": "c90968c",
+        "author": "Ayushman Mohapatra",
+        "date": "2026-06-07T14:29:11+05:30",
+        "kind": "feature",
+        "scope": null,
+        "title": "Improve mobile responsiveness across hero, card system, and navigation with global scroll management and component loaders"
+      },
+      {
+        "shortHash": "8bb40b0",
+        "author": "Ayushman Mohapatra",
+        "date": "2026-06-07T12:10:53+05:30",
+        "kind": "refactor",
+        "scope": null,
+        "title": "Standardize card design system and UI components across marketing and utility pages"
+      },
+      {
+        "shortHash": "969783a",
+        "author": "Ayushman Mohapatra",
+        "date": "2026-06-07T11:32:28+05:30",
+        "kind": "polish",
+        "scope": null,
+        "title": "Migrate tech stack logos to Devicon CDN to resolve hover transitions and missing icon issues; add JS and TS support"
+      },
+      {
+        "shortHash": "c87d724",
+        "author": "Ayushman Mohapatra",
+        "date": "2026-06-07T11:28:28+05:30",
+        "kind": "polish",
+        "scope": null,
+        "title": "Retrieve accurate SVG logos from Simple Icons CDN in TechStackTicker"
+      },
+      {
+        "shortHash": "4f3806e",
+        "author": "Ayushman Mohapatra",
+        "date": "2026-06-07T11:24:39+05:30",
+        "kind": "feature",
+        "scope": null,
+        "title": "Parallel card positions, tech stack ticker with PHP, and ideation FAQs"
+      }
+    ]
+  },
+  {
+    "date": "2026-06-05",
+    "label": "jun 5, 2026",
+    "entries": [
+      {
+        "shortHash": "986f040",
+        "author": "Sudhanshub27",
+        "date": "2026-06-05T21:31:14+05:30",
+        "kind": "update",
+        "scope": null,
+        "title": "Animation fix how it works"
+      },
+      {
+        "shortHash": "b048d9c",
+        "author": "Sudhanshub27",
+        "date": "2026-06-05T21:00:35+05:30",
+        "kind": "update",
+        "scope": null,
+        "title": "Hover effects on whats forke page"
+      },
+      {
+        "shortHash": "5dbf485",
+        "author": "Sudhanshub27",
+        "date": "2026-06-05T20:51:20+05:30",
+        "kind": "update",
+        "scope": null,
+        "title": "Final level system"
+      },
+      {
+        "shortHash": "7dd4458",
+        "author": "Ayushman Mohapatra",
+        "date": "2026-06-05T20:33:07+05:30",
+        "kind": "refactor",
+        "scope": null,
+        "title": "Improve responsive design for profile view and navbar components and optimize state updates using requestAnimationFrame."
+      },
+      {
+        "shortHash": "f693133",
+        "author": "Sudhanshub27",
+        "date": "2026-06-05T19:49:10+05:30",
+        "kind": "update",
+        "scope": null,
+        "title": "V2"
+      },
+      {
+        "shortHash": "640fa80",
+        "author": "Sudhanshub27",
+        "date": "2026-06-05T19:45:28+05:30",
+        "kind": "update",
+        "scope": null,
+        "title": "V1 level system"
+      },
+      {
+        "shortHash": "54b2262",
+        "author": "Sudhanshub27",
+        "date": "2026-06-05T19:12:45+05:30",
+        "kind": "update",
+        "scope": null,
+        "title": "Hard coded data removed"
+      },
+      {
+        "shortHash": "d0ea5e8",
+        "author": "Ayushman Mohapatra",
+        "date": "2026-06-05T16:09:53+05:30",
+        "kind": "feature",
+        "scope": null,
+        "title": "Implement cache-busting versioned share URLs and optimize social metadata for profiles"
+      },
+      {
+        "shortHash": "91184e4",
+        "author": "Ayushman Mohapatra",
+        "date": "2026-06-05T15:54:10+05:30",
+        "kind": "feature",
+        "scope": null,
+        "title": "Add dynamic cache-busting OG images and implement /@username redirects"
+      },
+      {
+        "shortHash": "1ffd4d1",
+        "author": "Ayushman Mohapatra",
+        "date": "2026-06-05T15:09:49+05:30",
+        "kind": "fix",
+        "scope": null,
+        "title": "Resolve relative avatar URLs and exclude opengraph-image from middleware to prevent cookies"
+      },
+      {
+        "shortHash": "4aa97a8",
+        "author": "Ayushman Mohapatra",
+        "date": "2026-06-05T14:58:41+05:30",
+        "kind": "feature",
+        "scope": null,
+        "title": "Implement dynamic OpenGraph profile images with QR codes and background pattern generator"
+      },
+      {
+        "shortHash": "f65e734",
+        "author": "Ayushman Mohapatra",
+        "date": "2026-06-05T14:31:52+05:30",
+        "kind": "feature",
+        "scope": null,
+        "title": "Restrict public navigation based on waitlist status and update middleware to bypass static assets"
+      },
+      {
+        "shortHash": "f16a246",
+        "author": "Ayushman Mohapatra",
+        "date": "2026-06-05T14:20:32+05:30",
+        "kind": "feature",
+        "scope": null,
+        "title": "Implement waitlist access gating with automatic status verification and session handling"
+      },
+      {
+        "shortHash": "ee31430",
+        "author": "Ayushman Mohapatra",
+        "date": "2026-06-05T14:06:11+05:30",
+        "kind": "refactor",
+        "scope": null,
+        "title": "Update bio limit validation from word count to character count and increase textarea height"
+      },
+      {
+        "shortHash": "e7f2f9b",
+        "author": "Ayushman Mohapatra",
+        "date": "2026-06-05T13:57:12+05:30",
+        "kind": "feature",
+        "scope": null,
+        "title": "Add DotPatternBackground component and implement randomized pattern overlays across app views"
+      },
+      {
+        "shortHash": "9e0a52f",
+        "author": "Ayushman Mohapatra",
+        "date": "2026-06-05T12:44:57+05:30",
+        "kind": "refactor",
+        "scope": null,
+        "title": "Reorganize email assets and update dynamic banner selection in email templates"
+      },
+      {
+        "shortHash": "e5f9aa0",
+        "author": "Ayushman Mohapatra",
+        "date": "2026-06-05T12:21:56+05:30",
+        "kind": "refactor",
+        "scope": null,
+        "title": "Replace browser native confirm with custom reusable ConfirmModal across admin dashboard actions"
+      },
+      {
+        "shortHash": "48e0a83",
+        "author": "Ayushman Mohapatra",
+        "date": "2026-06-05T12:04:03+05:30",
+        "kind": "feature",
+        "scope": null,
+        "title": "Implement owner lifecycle email notifications and add super-admin role management actions"
+      },
+      {
+        "shortHash": "2251e49",
+        "author": "Ayushman Mohapatra",
+        "date": "2026-06-05T10:38:44+05:30",
+        "kind": "refactor",
+        "scope": null,
+        "title": "Implement fault-tolerant dashboard counts and configure database connection pooling limits"
+      },
+      {
+        "shortHash": "58a686a",
+        "author": "Ayushman Mohapatra",
+        "date": "2026-06-05T10:24:48+05:30",
+        "kind": "refactor",
+        "scope": null,
+        "title": "Modularize owners panel with sub-tabs and update sidebar statistics for improved admin dashboard navigation"
+      },
+      {
+        "shortHash": "3bbea15",
+        "author": "Ayushman Mohapatra",
+        "date": "2026-06-05T10:11:06+05:30",
+        "kind": "feature",
+        "scope": null,
+        "title": "Implement dynamic sidebar counters for admin dashboard and enhance SQL request log visibility"
+      },
+      {
+        "shortHash": "89a44d4",
+        "author": "Ayushman Mohapatra",
+        "date": "2026-06-05T09:49:12+05:30",
+        "kind": "feature",
+        "scope": null,
+        "title": "Implement SQL query approval workflow and read-only execution constraints for non-super-admin users"
+      },
+      {
+        "shortHash": "3aac442",
+        "author": "Ayushman Mohapatra",
+        "date": "2026-06-05T09:22:20+05:30",
+        "kind": "feature",
+        "scope": null,
+        "title": "Add SQL editor to admin console and remove userId dependency from subscriber schema"
+      }
+    ]
+  },
+  {
+    "date": "2026-06-03",
+    "label": "jun 3, 2026",
+    "entries": [
+      {
+        "shortHash": "e8a193e",
+        "author": "Sudhanshub27",
+        "date": "2026-06-03T22:49:40+05:30",
+        "kind": "update",
+        "scope": null,
+        "title": "Side bar fixed"
+      },
+      {
+        "shortHash": "ab1d631",
+        "author": "Ayushman Mohapatra",
+        "date": "2026-06-03T19:11:19+05:30",
+        "kind": "feature",
+        "scope": null,
+        "title": "Add foreign key visualization in database console and sync activity status with audit log state"
+      },
+      {
+        "shortHash": "317a838",
+        "author": "Ayushman Mohapatra",
+        "date": "2026-06-03T18:56:17+05:30",
+        "kind": "feature",
+        "scope": null,
+        "title": "Add password change functionality, update subscriber registration logic, and refine email branding and registration UI."
+      },
+      {
+        "shortHash": "8ae17fc",
+        "author": "Ayushman Mohapatra",
+        "date": "2026-06-03T18:10:30+05:30",
+        "kind": "feature",
+        "scope": null,
+        "title": "Implement user account deletion scheduling, automated cleanup via cron, and OAuth registration flow hardening"
+      },
+      {
+        "shortHash": "0123153",
+        "author": "Ayushman Mohapatra",
+        "date": "2026-06-03T17:39:26+05:30",
+        "kind": "feature",
+        "scope": null,
+        "title": "Add OAuth account connection support to settings and hide sidebar for incomplete onboarding profiles"
+      },
+      {
+        "shortHash": "9460a0e",
+        "author": "Ayushman Mohapatra",
+        "date": "2026-06-03T17:26:44+05:30",
+        "kind": "feature",
+        "scope": null,
+        "title": "Enforce GitHub account requirement for tasks, implement Row Level Security, and add audit logging."
+      },
+      {
+        "shortHash": "71df2c5",
+        "author": "Ayushman Mohapatra",
+        "date": "2026-06-03T16:58:24+05:30",
+        "kind": "feature",
+        "scope": null,
+        "title": "Implement global activity feed toggle, audit log purging, and admin event tracking"
+      },
+      {
+        "shortHash": "dd6b3f6",
+        "author": "Ayushman Mohapatra",
+        "date": "2026-06-03T16:27:17+05:30",
+        "kind": "feature",
+        "scope": null,
+        "title": "Add audit logging for data exports and implement automated and manual 7-day audit log purging system"
+      },
+      {
+        "shortHash": "8a385c1",
+        "author": "Ayushman Mohapatra",
+        "date": "2026-06-03T16:04:42+05:30",
+        "kind": "feature",
+        "scope": null,
+        "title": "Add real-time audit activity feed panel to admin dashboard"
+      },
+      {
+        "shortHash": "dacf3e0",
+        "author": "Ayushman Mohapatra",
+        "date": "2026-06-03T15:19:52+05:30",
+        "kind": "fix",
+        "scope": null,
+        "title": "Restrict DB console editing to super_admin only"
+      },
+      {
+        "shortHash": "0942a2c",
+        "author": "Ayushman Mohapatra",
+        "date": "2026-06-03T15:14:46+05:30",
+        "kind": "feature",
+        "scope": null,
+        "title": "Rewrite monitoring with Neon-style charts, remove fake data & SQL editor"
+      },
+      {
+        "shortHash": "62971a6",
+        "author": "Ayushman Mohapatra",
+        "date": "2026-06-03T14:50:25+05:30",
+        "kind": "feature",
+        "scope": null,
+        "title": "Complete live database query performance metrics and security advisory scans"
+      },
+      {
+        "shortHash": "66b04aa",
+        "author": "Ayushman Mohapatra",
+        "date": "2026-06-03T14:34:49+05:30",
+        "kind": "refactor",
+        "scope": null,
+        "title": "Improve admin dashboard layout and add database metrics monitoring panel"
+      },
+      {
+        "shortHash": "717d042",
+        "author": "Ayushman Mohapatra",
+        "date": "2026-06-03T14:22:00+05:30",
+        "kind": "feature",
+        "scope": null,
+        "title": "Enhance database admin dashboard with real-time stats and restrict RLS toggling to superadmins"
+      },
+      {
+        "shortHash": "e96a16a",
+        "author": "Ayushman Mohapatra",
+        "date": "2026-06-03T14:10:55+05:30",
+        "kind": "feature",
+        "scope": null,
+        "title": "Add database admin dashboard with monitoring, overview, and SQL execution panels"
+      },
+      {
+        "shortHash": "de49c21",
+        "author": "Ayushman Mohapatra",
+        "date": "2026-06-03T12:56:23+05:30",
+        "kind": "feature",
+        "scope": null,
+        "title": "Add contact and refund policy pages and update site navigation"
+      }
+    ]
+  },
+  {
+    "date": "2026-06-02",
+    "label": "jun 2, 2026",
+    "entries": [
+      {
+        "shortHash": "3a9e5da",
+        "author": "Ayushman Mohapatra",
+        "date": "2026-06-02T02:02:58+05:30",
+        "kind": "feature",
+        "scope": null,
+        "title": "Initialize full database schema with Drizzle migration"
+      },
+      {
+        "shortHash": "9aa590e",
+        "author": "Ayushman Mohapatra",
+        "date": "2026-06-02T01:43:50+05:30",
+        "kind": "feature",
+        "scope": null,
+        "title": "Add support for account management and update profile schema with GitHub integration"
+      },
+      {
+        "shortHash": "0d7af50",
+        "author": "Ayushman Mohapatra",
+        "date": "2026-06-02T01:29:09+05:30",
+        "kind": "refactor",
+        "scope": null,
+        "title": "Decouple avatar persistence from upload and implement OAuth-linked avatar resolution"
+      },
+      {
+        "shortHash": "ec3198b",
+        "author": "Ayushman Mohapatra",
+        "date": "2026-06-02T00:14:07+05:30",
+        "kind": "refactor",
+        "scope": null,
+        "title": "Enhance profile card with flip functionality, sticky layout, and UI refinements"
+      }
+    ]
+  },
+  {
+    "date": "2026-06-01",
+    "label": "jun 1, 2026",
+    "entries": [
+      {
+        "shortHash": "aa65f8a",
+        "author": "Ayushman Mohapatra",
+        "date": "2026-06-01T23:28:55+05:30",
+        "kind": "refactor",
+        "scope": null,
+        "title": "Consolidate profile pages to username route and implement redirect for legacy IDs"
+      },
+      {
+        "shortHash": "778ccd1",
+        "author": "Ayushman Mohapatra",
+        "date": "2026-06-01T20:00:53+05:30",
+        "kind": "refactor",
+        "scope": null,
+        "title": "Integrate live notification bell into restored premium topbar layout"
+      },
+      {
+        "shortHash": "c180d1a",
+        "author": "Sudhanshub27",
+        "date": "2026-06-01T19:17:04+05:30",
+        "kind": "feature",
+        "scope": null,
+        "title": "Implement user and employer profile pages with XP tracking and dashboard views"
+      },
+      {
+        "shortHash": "3316094",
+        "author": "Sudhanshub27",
+        "date": "2026-06-01T19:05:01+05:30",
+        "kind": "feature",
+        "scope": null,
+        "title": "Implement task detail page with claim and submission UI support"
+      },
+      {
+        "shortHash": "c78333d",
+        "author": "Sudhanshub27",
+        "date": "2026-06-01T18:59:43+05:30",
+        "kind": "feature",
+        "scope": null,
+        "title": "Implement task discovery UI with TaskCard, TaskFeed, and task listing page"
+      },
+      {
+        "shortHash": "a1bfad5",
+        "author": "Sudhanshub27",
+        "date": "2026-06-01T18:52:36+05:30",
+        "kind": "feature",
+        "scope": null,
+        "title": "Implement notification system with database seeding, dashboard integration, and a real-time NotificationBell component"
+      },
+      {
+        "shortHash": "7baaa67",
+        "author": "Sudhanshub27",
+        "date": "2026-06-01T18:05:29+05:30",
+        "kind": "feature",
+        "scope": null,
+        "title": "Add NotificationBell component and database seed script for notifications"
+      },
+      {
+        "shortHash": "bae07d1",
+        "author": "Sudhanshub27",
+        "date": "2026-06-01T18:01:58+05:30",
+        "kind": "feature",
+        "scope": null,
+        "title": "Implement server-side notification system and interactive bell component with read/delete capabilities"
+      },
+      {
+        "shortHash": "74319ef",
+        "author": "Sudhanshub27",
+        "date": "2026-06-01T17:53:48+05:30",
+        "kind": "feature",
+        "scope": null,
+        "title": "Implement AES-256-GCM encryption for chat file URLs in messages and update configuration"
+      },
+      {
+        "shortHash": "d4754db",
+        "author": "Sudhanshub27",
+        "date": "2026-06-01T17:48:45+05:30",
+        "kind": "feature",
+        "scope": null,
+        "title": "Implement interactive chat console, task feed, and dedicated dashboard pages for analytics, messaging, and tasks"
+      },
+      {
+        "shortHash": "15e90af",
+        "author": "Ayushman Mohapatra",
+        "date": "2026-06-01T17:35:25+05:30",
+        "kind": "refactor",
+        "scope": null,
+        "title": "Update default page size and adjust layout responsiveness for DatabaseConsole table container"
+      },
+      {
+        "shortHash": "4846ff0",
+        "author": "Sudhanshub27",
+        "date": "2026-06-01T17:33:33+05:30",
+        "kind": "feature",
+        "scope": null,
+        "title": "Implement messaging system with real-time polling and contact navigation"
+      },
+      {
+        "shortHash": "6e6b550",
+        "author": "Ayushman Mohapatra",
+        "date": "2026-06-01T17:29:59+05:30",
+        "kind": "refactor",
+        "scope": null,
+        "title": "Enhance admin panel responsiveness with improved table layout, mobile-optimized page sizing, and updated header branding"
+      },
+      {
+        "shortHash": "20eb542",
+        "author": "Sudhanshub27",
+        "date": "2026-06-01T17:25:19+05:30",
+        "kind": "feature",
+        "scope": null,
+        "title": "Implement task feed and listing functionality with status-based filtering and pagination"
+      },
+      {
+        "shortHash": "e0ef8f8",
+        "author": "Sudhanshub27",
+        "date": "2026-06-01T17:16:59+05:30",
+        "kind": "feature",
+        "scope": null,
+        "title": "Add task detail page and task card component to display project quests"
+      },
+      {
+        "shortHash": "512fac9",
+        "author": "Ayushman Mohapatra",
+        "date": "2026-06-01T17:16:57+05:30",
+        "kind": "feature",
+        "scope": null,
+        "title": "Introduce reusable Select component and integrate it into DatabaseConsole for improved table navigation"
+      },
+      {
+        "shortHash": "a863f8f",
+        "author": "Sudhanshub27",
+        "date": "2026-06-01T17:11:12+05:30",
+        "kind": "feature",
+        "scope": null,
+        "title": "Add SettingsForm component for profile and notification management"
+      },
+      {
+        "shortHash": "06ea1cd",
+        "author": "Sudhanshub27",
+        "date": "2026-06-01T17:05:54+05:30",
+        "kind": "feature",
+        "scope": null,
+        "title": "Add task discovery page with filtering, search, and dynamic task listing components"
+      },
+      {
+        "shortHash": "2831b17",
+        "author": "Sudhanshub27",
+        "date": "2026-06-01T17:02:09+05:30",
+        "kind": "feature",
+        "scope": null,
+        "title": "Implement public profile system with dynamic routing, metadata generation, and shareable profile components"
+      },
+      {
+        "shortHash": "f4cb544",
+        "author": "Ayushman Mohapatra",
+        "date": "2026-06-01T16:51:52+05:30",
+        "kind": "feature",
+        "scope": null,
+        "title": "Implement mobile-responsive admin layout with drawer navigation and refactored database console components"
+      },
+      {
+        "shortHash": "89a28c1",
+        "author": "Sudhanshub27",
+        "date": "2026-06-01T16:46:19+05:30",
+        "kind": "feature",
+        "scope": null,
+        "title": "Implement task dashboard, detail page, and task management components with authentication-based access control."
+      },
+      {
+        "shortHash": "3dd284c",
+        "author": "Ayushman Mohapatra",
+        "date": "2026-06-01T16:16:10+05:30",
+        "kind": "feature",
+        "scope": null,
+        "title": "Implement admin database console with CRUD actions and add loading states for app routes"
+      },
+      {
+        "shortHash": "e4997af",
+        "author": "Ayushman Mohapatra",
+        "date": "2026-06-01T15:52:57+05:30",
+        "kind": "update",
+        "scope": null,
+        "title": "Squash migrations and add lastActiveAt and messages fields to initial schema"
+      },
+      {
+        "shortHash": "041ae51",
+        "author": "Sudhanshub27",
+        "date": "2026-06-01T14:58:56+05:30",
+        "kind": "feature",
+        "scope": null,
+        "title": "Add TaskFilters component with skill and budget filtering capabilities"
+      },
+      {
+        "shortHash": "bcc0d73",
+        "author": "Sudhanshub27",
+        "date": "2026-06-01T14:38:41+05:30",
+        "kind": "feature",
+        "scope": null,
+        "title": "Initialize database schema and implement messaging infrastructure with file upload support"
+      }
+    ]
+  },
+  {
+    "date": "2026-05-30",
+    "label": "may 30, 2026",
+    "entries": [
+      {
+        "shortHash": "dd90355",
+        "author": "Ayushman Mohapatra",
+        "date": "2026-05-30T19:40:28+05:30",
+        "kind": "refactor",
+        "scope": null,
+        "title": "Standardize UI components and styling across the application for improved design consistency"
+      }
+    ]
+  },
+  {
+    "date": "2026-05-29",
+    "label": "may 29, 2026",
+    "entries": [
+      {
+        "shortHash": "98dadb7",
+        "author": "Sudhanshub27",
+        "date": "2026-05-29T19:21:34+05:30",
+        "kind": "feature",
+        "scope": null,
+        "title": "Enhance system specs retrieval with timeout handling and improve support form with user pre-fill functionality"
+      },
+      {
+        "shortHash": "525dbbc",
+        "author": "Ayushman Mohapatra",
+        "date": "2026-05-29T11:22:29+05:30",
+        "kind": "update",
+        "scope": null,
+        "title": "MERGING PR 35"
+      },
+      {
+        "shortHash": "7c7fa0e",
+        "author": "Ayushman Mohapatra",
+        "date": "2026-05-29T11:16:28+05:30",
+        "kind": "chore",
+        "scope": null,
+        "title": "Consolidate migrations into a single SQL schema migration"
+      }
+    ]
+  },
+  {
+    "date": "2026-05-28",
+    "label": "may 28, 2026",
+    "entries": [
+      {
+        "shortHash": "a949009",
+        "author": "Sudhanshub27",
+        "date": "2026-05-28T20:12:51+05:30",
+        "kind": "feature",
+        "scope": null,
+        "title": "Implement sidebar navigation component and dashboard layout page"
+      },
+      {
+        "shortHash": "84f16fa",
+        "author": "Sudhanshub27",
+        "date": "2026-05-28T20:09:53+05:30",
+        "kind": "feature",
+        "scope": null,
+        "title": "Add Toast notification system and URL-based query parameter handler"
+      },
+      {
+        "shortHash": "91873ad",
+        "author": "Sudhanshub27",
+        "date": "2026-05-28T20:08:38+05:30",
+        "kind": "feature",
+        "scope": null,
+        "title": "Implement task management dashboard with submission, revision, and approval workflows"
+      },
+      {
+        "shortHash": "d85ab23",
+        "author": "Sudhanshub27",
+        "date": "2026-05-28T20:02:34+05:30",
+        "kind": "feature",
+        "scope": null,
+        "title": "Implement settings page with profile management and telemetry configuration"
+      },
+      {
+        "shortHash": "1cdcc84",
+        "author": "Sudhanshub27",
+        "date": "2026-05-28T19:43:54+05:30",
+        "kind": "feature",
+        "scope": null,
+        "title": "Enhance UI components with new styles, add task turnaround metrics, and improve dashboard layout"
+      },
+      {
+        "shortHash": "b545d3d",
+        "author": "Sudhanshub27",
+        "date": "2026-05-28T18:55:06+05:30",
+        "kind": "feature",
+        "scope": null,
+        "title": "Implement task browsing system with database queries, layouts, and filter components"
+      },
+      {
+        "shortHash": "f39d1fc",
+        "author": "Sudhanshub27",
+        "date": "2026-05-28T18:43:10+05:30",
+        "kind": "feature",
+        "scope": null,
+        "title": "Implement authenticated app dashboard layout with dynamic sidebar navigation"
+      },
+      {
+        "shortHash": "3f7e2c6",
+        "author": "Sudhanshub27",
+        "date": "2026-05-28T18:31:31+05:30",
+        "kind": "feature",
+        "scope": null,
+        "title": "Implement analytics dashboard, task submission workflow, and associated database actions and validations"
+      },
+      {
+        "shortHash": "1a36133",
+        "author": "Sudhanshub27",
+        "date": "2026-05-28T18:21:14+05:30",
+        "kind": "feature",
+        "scope": null,
+        "title": "Add task feed and submission tracking components with responsive UI layouts"
+      },
+      {
+        "shortHash": "352692c",
+        "author": "Sudhanshub27",
+        "date": "2026-05-28T18:10:59+05:30",
+        "kind": "feature",
+        "scope": null,
+        "title": "Add settings profile management and task interaction routes with supporting forms and components"
+      },
+      {
+        "shortHash": "eb26fb4",
+        "author": "Sudhanshub27",
+        "date": "2026-05-28T18:02:07+05:30",
+        "kind": "feature",
+        "scope": null,
+        "title": "Implement support page, task creation form, and active task management components"
+      },
+      {
+        "shortHash": "5290c22",
+        "author": "Sudhanshub27",
+        "date": "2026-05-28T17:56:56+05:30",
+        "kind": "feature",
+        "scope": null,
+        "title": "Implement application-wide dashboard layout and initialize core dashboard modules"
+      },
+      {
+        "shortHash": "cb737ba",
+        "author": "Sudhanshub27",
+        "date": "2026-05-28T17:48:00+05:30",
+        "kind": "feature",
+        "scope": null,
+        "title": "Implement dashboard layout, styling system, and refactor middleware waitlist logic"
+      },
+      {
+        "shortHash": "15792ab",
+        "author": "Sudhanshub27",
+        "date": "2026-05-28T17:22:45+05:30",
+        "kind": "update",
+        "scope": null,
+        "title": "Db setup"
+      },
+      {
+        "shortHash": "54cdf36",
+        "author": "Ayushman Mohapatra",
+        "date": "2026-05-28T09:30:20+05:30",
+        "kind": "update",
+        "scope": null,
+        "title": "The first merge : video added"
+      }
+    ]
+  },
+  {
+    "date": "2026-05-27",
+    "label": "may 27, 2026",
+    "entries": [
+      {
+        "shortHash": "141b3b8",
+        "author": "Ayushman Mohapatra",
+        "date": "2026-05-27T16:48:48+05:30",
+        "kind": "fix",
+        "scope": null,
+        "title": "Table for developers fix try 2"
+      },
+      {
+        "shortHash": "7931632",
+        "author": "Ayushman Mohapatra",
+        "date": "2026-05-27T16:22:35+05:30",
+        "kind": "fix",
+        "scope": null,
+        "title": "Table for developers fixed"
+      },
+      {
+        "shortHash": "5682829",
+        "author": "Ayushman Mohapatra",
+        "date": "2026-05-27T16:09:47+05:30",
+        "kind": "fix",
+        "scope": null,
+        "title": "Table fixes"
+      },
+      {
+        "shortHash": "5fa471f",
+        "author": "Ayushman Mohapatra",
+        "date": "2026-05-27T16:02:58+05:30",
+        "kind": "fix",
+        "scope": null,
+        "title": "Admin panel changes"
+      },
+      {
+        "shortHash": "112e9dc",
+        "author": "Ayushman Mohapatra",
+        "date": "2026-05-27T15:19:34+05:30",
+        "kind": "feature",
+        "scope": null,
+        "title": "Admin management added"
+      },
+      {
+        "shortHash": "9f349a5",
+        "author": "Ayushman Mohapatra",
+        "date": "2026-05-27T14:06:47+05:30",
+        "kind": "feature",
+        "scope": null,
+        "title": "Implement subscriber management and mass broadcast email functionality in admin dashboard"
+      },
+      {
+        "shortHash": "ac91ecd",
+        "author": "Ayushman Mohapatra",
+        "date": "2026-05-27T10:03:58+05:30",
+        "kind": "fix",
+        "scope": null,
+        "title": "Ui fixes"
+      }
+    ]
+  },
+  {
+    "date": "2026-05-25",
+    "label": "may 25, 2026",
+    "entries": [
+      {
+        "shortHash": "bf25b5e",
+        "author": "Ayushman Mohapatra",
+        "date": "2026-05-25T20:30:42+05:30",
+        "kind": "fix",
+        "scope": null,
+        "title": "Svg changed"
+      },
+      {
+        "shortHash": "855ba48",
+        "author": "Ayushman Mohapatra",
+        "date": "2026-05-25T20:25:20+05:30",
+        "kind": "fix",
+        "scope": null,
+        "title": "BIMI_LOGO test"
+      },
+      {
+        "shortHash": "598f893",
+        "author": "Ayushman Mohapatra",
+        "date": "2026-05-25T16:04:54+05:30",
+        "kind": "fix",
+        "scope": null,
+        "title": "Remove maxAge from checkout cookies and disable response caching to ensure instant waitlist state updates"
+      },
+      {
+        "shortHash": "b0e23db",
+        "author": "Ayushman Mohapatra",
+        "date": "2026-05-25T15:50:31+05:30",
+        "kind": "feature",
+        "scope": null,
+        "title": "Implement gamification levels page and enhance navbar scroll responsiveness"
+      },
+      {
+        "shortHash": "b92d91c",
+        "author": "Ayushman Mohapatra",
+        "date": "2026-05-25T13:12:53+05:30",
+        "kind": "feature",
+        "scope": null,
+        "title": "Email profile photo added"
+      },
+      {
+        "shortHash": "cb04807",
+        "author": "Ayushman Mohapatra",
+        "date": "2026-05-25T12:59:53+05:30",
+        "kind": "feature",
+        "scope": null,
+        "title": "Add marketing landing page for Forke explanation and enhance email templates with support and social links"
+      },
+      {
+        "shortHash": "c0fdd58",
+        "author": "Ayushman Mohapatra",
+        "date": "2026-05-25T09:56:14+05:30",
+        "kind": "fix",
+        "scope": null,
+        "title": "Support email changed"
+      }
+    ]
+  },
+  {
+    "date": "2026-05-23",
+    "label": "may 23, 2026",
+    "entries": [
+      {
+        "shortHash": "3b1def4",
+        "author": "Ayushman Mohapatra",
+        "date": "2026-05-23T21:24:57+05:30",
+        "kind": "update",
+        "scope": null,
+        "title": "Trigger redeploy after making repo public"
+      },
+      {
+        "shortHash": "0d75346",
+        "author": "Ayushman Mohapatra",
+        "date": "2026-05-23T21:16:49+05:30",
+        "kind": "feature",
+        "scope": null,
+        "title": "Banner image added in share links"
+      },
+      {
+        "shortHash": "dd56631",
+        "author": "Ayushman Mohapatra",
+        "date": "2026-05-23T16:15:12+05:30",
+        "kind": "update",
+        "scope": null,
+        "title": "Check email"
+      },
+      {
+        "shortHash": "180cff5",
+        "author": "Ayushman Mohapatra",
+        "date": "2026-05-23T15:47:59+05:30",
+        "kind": "update",
+        "scope": null,
+        "title": "Email styling"
+      },
+      {
+        "shortHash": "bf5f8eb",
+        "author": "Ayushman Mohapatra",
+        "date": "2026-05-23T14:50:13+05:30",
+        "kind": "fix",
+        "scope": null,
+        "title": "Repeatation prevention of subscribers"
+      },
+      {
+        "shortHash": "1e45ce2",
+        "author": "Ayushman Mohapatra",
+        "date": "2026-05-23T13:58:40+05:30",
+        "kind": "update",
+        "scope": null,
+        "title": "Email system added"
+      },
+      {
+        "shortHash": "9c4a1f2",
+        "author": "Ayushman Mohapatra",
+        "date": "2026-05-23T13:44:48+05:30",
+        "kind": "update",
+        "scope": null,
+        "title": "Fix"
+      },
+      {
+        "shortHash": "63598d5",
+        "author": "Ayushman Mohapatra",
+        "date": "2026-05-23T13:30:36+05:30",
+        "kind": "update",
+        "scope": null,
+        "title": "Updates"
+      },
+      {
+        "shortHash": "38b4553",
+        "author": "Ayushman Mohapatra",
+        "date": "2026-05-23T13:09:17+05:30",
+        "kind": "update",
+        "scope": null,
+        "title": "Waitlist added"
+      },
+      {
+        "shortHash": "b53641e",
+        "author": "Ayushman Mohapatra",
+        "date": "2026-05-23T11:32:07+05:30",
+        "kind": "update",
+        "scope": null,
+        "title": "Privacy and terms added in footer"
+      }
+    ]
+  },
+  {
+    "date": "2026-05-22",
+    "label": "may 22, 2026",
+    "entries": [
+      {
+        "shortHash": "e35eac5",
+        "author": "Ayushman Mohapatra",
+        "date": "2026-05-22T14:39:42+05:30",
+        "kind": "update",
+        "scope": null,
+        "title": "Fix"
+      },
+      {
+        "shortHash": "556fcdd",
+        "author": "Ayushman Mohapatra",
+        "date": "2026-05-22T14:39:29+05:30",
+        "kind": "update",
+        "scope": null,
+        "title": "Gitignore fixed"
+      }
+    ]
+  },
+  {
+    "date": "2026-05-21",
+    "label": "may 21, 2026",
+    "entries": [
+      {
+        "shortHash": "2392d47",
+        "author": "Ayushman Mohapatra",
+        "date": "2026-05-21T18:29:59+05:30",
+        "kind": "update",
+        "scope": null,
+        "title": ".env.example added"
+      },
+      {
+        "shortHash": "5cbc8a8",
+        "author": "Ayushman Mohapatra",
+        "date": "2026-05-21T17:39:25+05:30",
+        "kind": "feature",
+        "scope": null,
+        "title": "Reset database schema, add account and owner entities, and implement seed functionality"
+      },
+      {
+        "shortHash": "4710bd5",
+        "author": "Ayushman Mohapatra",
+        "date": "2026-05-21T17:03:05+05:30",
+        "kind": "update",
+        "scope": null,
+        "title": "Tiny change"
+      },
+      {
+        "shortHash": "a9fc7c1",
+        "author": "Ayushman Mohapatra",
+        "date": "2026-05-21T15:49:02+05:30",
+        "kind": "update",
+        "scope": null,
+        "title": "Small changes"
+      },
+      {
+        "shortHash": "8069e85",
+        "author": "Ayushman Mohapatra",
+        "date": "2026-05-21T15:46:31+05:30",
+        "kind": "update",
+        "scope": null,
+        "title": "README added"
+      },
+      {
+        "shortHash": "3a31f40",
+        "author": "Ayushman Mohapatra",
+        "date": "2026-05-21T14:46:06+05:30",
+        "kind": "update",
+        "scope": null,
+        "title": "CODEOWNERS added"
+      },
+      {
+        "shortHash": "1d85681",
+        "author": "Ayushman Mohapatra",
+        "date": "2026-05-21T14:30:11+05:30",
+        "kind": "update",
+        "scope": null,
+        "title": "Forke-proj"
+      }
+    ]
+  },
+  {
+    "date": "2026-05-20",
+    "label": "may 20, 2026",
+    "entries": [
+      {
+        "shortHash": "fae2616",
+        "author": "Ayushman Mohapatra",
+        "date": "2026-05-20T11:35:05+05:30",
+        "kind": "update",
+        "scope": null,
+        "title": "Fixes"
+      }
+    ]
+  },
+  {
+    "date": "2026-05-18",
+    "label": "may 18, 2026",
+    "entries": [
+      {
+        "shortHash": "2c0b306",
+        "author": "Ayushman Mohapatra",
+        "date": "2026-05-18T14:30:11+05:30",
+        "kind": "feature",
+        "scope": null,
+        "title": "Enhance auth-error page with session-aware form prepopulation and dedicated ban/conflict visuals"
+      }
+    ]
+  },
+  {
+    "date": "2026-05-17",
+    "label": "may 17, 2026",
+    "entries": [
+      {
+        "shortHash": "90eb99e",
+        "author": "Ayushman Mohapatra",
+        "date": "2026-05-17T04:22:14+05:30",
+        "kind": "update",
+        "scope": null,
+        "title": "Admin login styled a bit"
+      },
+      {
+        "shortHash": "ae9fef5",
+        "author": "Ayushman Mohapatra",
+        "date": "2026-05-17T03:57:52+05:30",
+        "kind": "update",
+        "scope": null,
+        "title": "Tiny syntax error fix"
+      },
+      {
+        "shortHash": "17e7d46",
+        "author": "Ayushman Mohapatra",
+        "date": "2026-05-17T03:54:40+05:30",
+        "kind": "refactor",
+        "scope": null,
+        "title": "Rename client role to owner, implement developer registration flow, and add authentication enhancements"
+      }
+    ]
+  },
+  {
+    "date": "2026-05-16",
+    "label": "may 16, 2026",
+    "entries": [
+      {
+        "shortHash": "8ac11a9",
+        "author": "Ayushman Mohapatra",
+        "date": "2026-05-16T23:29:58+05:30",
+        "kind": "update",
+        "scope": null,
+        "title": "Auth and admin improvised"
+      }
+    ]
+  },
+  {
+    "date": "2026-05-15",
+    "label": "may 15, 2026",
+    "entries": [
+      {
+        "shortHash": "ab0a5f8",
+        "author": "Ayushman Mohapatra",
+        "date": "2026-05-15T16:18:11+05:30",
+        "kind": "update",
+        "scope": null,
+        "title": "Major ui fixes"
+      }
+    ]
+  },
+  {
+    "date": "2026-04-20",
+    "label": "apr 20, 2026",
+    "entries": [
+      {
+        "shortHash": "5dbed69",
+        "author": "Ayushman Mohapatra",
+        "date": "2026-04-20T22:17:20+05:30",
+        "kind": "feature",
+        "scope": null,
+        "title": "Implement skill-based task leveling, dynamic XP calculation with bonuses, and submission rating system"
+      },
+      {
+        "shortHash": "bb57e84",
+        "author": "Ayushman Mohapatra",
+        "date": "2026-04-20T22:05:21+05:30",
+        "kind": "feature",
+        "scope": null,
+        "title": "Implement task management system including task browsing, posting, and filtering with level-based access control"
+      },
+      {
+        "shortHash": "e3cc64f",
+        "author": "Ayushman Mohapatra",
+        "date": "2026-04-20T18:45:22+05:30",
+        "kind": "feature",
+        "scope": null,
+        "title": "Initialize project structure with Next.js, Drizzle ORM, Tailwind CSS, and NextAuth authentication"
+      },
+      {
+        "shortHash": "f78eb1a",
+        "author": "Ayushman Mohapatra",
+        "date": "2026-04-20T18:02:05+05:30",
+        "kind": "update",
+        "scope": null,
+        "title": "Initial commit from Create Next App"
+      }
+    ]
+  }
+]

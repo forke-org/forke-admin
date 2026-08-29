@@ -1,0 +1,13 @@
+# Forke
+
+> Forke is a developer micro-task and bounty marketplace where independent developers complete technical tasks and earn rewards.
+
+## Main Resources
+
+- [Home](https://www.forke.space/) - Platform landing page and developer onboarding.
+- [Changelog](https://www.forke.space/changelog) - Chronological log of product updates, enhancements, and platform releases.
+- [Documentation](https://www.forke.space/docs) - Welcome guide, core concepts, and tutorials for developers and task posters.
+- [Privacy Policy](https://www.forke.space/privacy) - Policies governing data protection, security, and cookie consent.
+- [Terms of Service](https://www.forke.space/terms) - Rules, guidelines, and terms of service for users of the platform.
+- [Refund Policy](https://www.forke.space/refund) - Payment, refund, and dispute resolution guidelines.
+- [Status / Active Levels](https://www.forke.space/levels) - Developer leveling structure and XP progression system.
