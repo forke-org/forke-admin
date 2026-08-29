@@ -11,6 +11,8 @@
 import type { Metadata, Viewport } from 'next'
 import { geistSans, instrumentSerif, jetbrainsMono } from '@/app/fonts'
 import './globals.css'
+import { NextAuthProvider } from '@/components/providers/NextAuthProvider'
+import { ScrollToTopOnLoad } from '@/components/providers/ScrollToTopOnLoad'
 
 export const viewport: Viewport = {
   themeColor: '#FF7A00',
@@ -19,68 +21,21 @@ export const viewport: Viewport = {
 }
 
 export const metadata: Metadata = {
-  metadataBase: new URL('https://www.forke.space'),
+  metadataBase: new URL('https://admin.forke.space'),
   title: {
-    default: 'Forke — Ship Real Work, Get Paid',
-    template: '%s | Forke'
+    default: 'Admin Control Unit | Forke',
+    template: '%s | Forke Admin'
   },
-  description: 'The micro-task marketplace for developers. Join the movement, complete bounties, level up, and earn rewards for shipping high-quality code.',
-  keywords: ['developer marketplace', 'bounties', 'micro-tasks', 'programming', 'software engineering', 'earn money coding', 'forke'],
-  authors: [{ name: 'Forke Team' }],
-  creator: 'Forke Technology Group',
-  publisher: 'Forke',
-  formatDetection: {
-    email: false,
-    address: false,
-    telephone: false,
-  },
-  openGraph: {
-    title: 'Forke — Ship Real Work, Get Paid',
-    description: 'The micro-task marketplace for developers. Complete bounties and level up your engineering career.',
-    url: 'https://www.forke.space',
-    siteName: 'Forke',
-    images: [
-      {
-        url: '/forke-assets/og-image.jpg',
-        width: 1200,
-        height: 630,
-        alt: 'Forke — The Developer Marketplace',
-      },
-    ],
-    locale: 'en_US',
-    type: 'website',
-  },
-  twitter: {
-    card: 'summary_large_image',
-    title: 'Forke — Ship Real Work, Get Paid',
-    description: 'The micro-task marketplace for developers. Complete bounties and level up your engineering career.',
-    creator: '@forkedotdev',
-    images: ['/forke-assets/og-image.jpg'],
-  },
-
-  manifest: '/site.webmanifest',
+  description: 'Forke administrative operations console.',
   robots: {
-    index: true,
-    follow: true,
+    index: false,
+    follow: false,
     googleBot: {
-      index: true,
-      follow: true,
-      'max-video-preview': -1,
-      'max-image-preview': 'large',
-      'max-snippet': -1,
+      index: false,
+      follow: false,
     },
   },
 }
-
-import { NextAuthProvider } from '@/components/providers/NextAuthProvider'
-import { ScrollToTopOnLoad } from '@/components/providers/ScrollToTopOnLoad'
-import { CookieConsentProvider } from '@/components/providers/CookieConsentProvider'
-import { GoogleAnalyticsWrapper } from '@/components/providers/GoogleAnalyticsWrapper'
-import { CookieConsentBanner } from '@/components/ui/CookieConsentBanner'
-
-// Load GA4 only in production with a configured ID, so local dev never pollutes
-// the live analytics. Set NEXT_PUBLIC_GA_ID in Vercel (e.g. G-XV7FKNZ4S6).
-const GA_ID = process.env.NEXT_PUBLIC_GA_ID
 
 export default function RootLayout({
   children,
@@ -95,15 +50,10 @@ export default function RootLayout({
     >
       <body className="antialiased bg-[#0A0A0A]">
         <ScrollToTopOnLoad />
-        <CookieConsentProvider>
-          <NextAuthProvider>
-            {children}
-          </NextAuthProvider>
-          <CookieConsentBanner />
-          <GoogleAnalyticsWrapper gaId={GA_ID} />
-        </CookieConsentProvider>
+        <NextAuthProvider>
+          {children}
+        </NextAuthProvider>
       </body>
     </html>
   )
 }
-
