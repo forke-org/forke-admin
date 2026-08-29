@@ -40,7 +40,7 @@ export default function AdminLoginPage() {
     const result = await adminLogin(formData)
 
     if (result.success) {
-      router.push('/admin')
+      router.push('/')
       router.refresh()
     } else {
       setError(result.error || 'Failed to authenticate')

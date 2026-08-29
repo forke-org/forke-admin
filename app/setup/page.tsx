@@ -88,7 +88,7 @@ function SetupFormContent() {
       if (res.success) {
         setIsSuccess(true)
         setTimeout(() => {
-          router.push('/admin/login')
+          router.push('/login')
         }, 3000)
       } else {
         setSubmitError(res.error || 'Failed to complete credentials setup.')
@@ -121,7 +121,7 @@ function SetupFormContent() {
           <p className="text-[13px] text-[var(--color-text-muted)] leading-relaxed">{validationError}</p>
         </div>
         <Button 
-          onClick={() => router.push('/admin/login')}
+          onClick={() => router.push('/login')}
           className="w-full h-10 text-[13px] font-medium rounded-lg ui-btn-secondary transition-colors"
         >
           Return to Login
