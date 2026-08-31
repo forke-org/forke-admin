@@ -52,7 +52,7 @@ export async function readSessionId(): Promise<string | undefined> {
 const CHANNEL_ALIASES: { canonical: string; matches: string[] }[] = [
   { canonical: 'whatsapp', matches: ['whatsapp', 'whatsa', 'whats', 'whatp', 'wapp', 'wa', 'wh'] },
   { canonical: 'reddit', matches: ['reddit', 'reddi', 'redd'] },
-  { canonical: 'twitter', matches: ['twitter', 'tweet', 'twt'] },
+  { canonical: 'twitter', matches: ['twitter', 'tweet', 'twt', 'x'] },
   { canonical: 'linkedin', matches: ['linkedin', 'linked', 'lnkd'] },
   { canonical: 'instagram', matches: ['instagram', 'insta', 'ig'] },
   { canonical: 'discord', matches: ['discord', 'discrd'] },
@@ -60,6 +60,17 @@ const CHANNEL_ALIASES: { canonical: string; matches: string[] }[] = [
   { canonical: 'facebook', matches: ['facebook', 'fbook', 'fb'] },
   { canonical: 'youtube', matches: ['youtube', 'ytube', 'yt'] },
   { canonical: 'email', matches: ['email', 'newsletter', 'mail'] },
+  { canonical: 'chatgpt', matches: ['chatgpt', 'chatgptcom', 'openai'] },
+  { canonical: 'claude', matches: ['claude', 'anthropic'] },
+  { canonical: 'perplexity', matches: ['perplexity', 'pplx'] },
+  { canonical: 'gemini', matches: ['gemini', 'deepmind'] },
+  { canonical: 'deepseek', matches: ['deepseek'] },
+  { canonical: 'hackernews', matches: ['hackernews', 'hn', 'ycombinator'] },
+  { canonical: 'peerlist', matches: ['peerlist'] },
+  { canonical: 'threads', matches: ['threads'] },
+  { canonical: 'bluesky', matches: ['bluesky', 'bsky'] },
+  { canonical: 'github', matches: ['github', 'gh'] },
+  { canonical: 'producthunt', matches: ['producthunt', 'ph'] },
 ]
 
 /** Map a slugified value to a canonical channel, or null if it matches no known channel. */

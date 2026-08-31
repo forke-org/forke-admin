@@ -745,7 +745,22 @@ export async function getTrackerData(days = 30): Promise<{ success: boolean; dat
         GROUP BY 1 ORDER BY clicks DESC LIMIT 10
       `),
       db.execute(sql`
-        SELECT referrer, count(*)::int AS clicks
+        SELECT 
+          CASE 
+            WHEN referrer LIKE '%chatgpt%' OR referrer LIKE '%openai%' THEN 'chatgpt.com'
+            WHEN referrer LIKE '%reddit%' THEN 'reddit.com'
+            WHEN referrer LIKE '%google%' THEN 'google.com'
+            WHEN referrer LIKE '%linkedin%' THEN 'linkedin.com'
+            WHEN referrer LIKE '%github%' THEN 'github.com'
+            WHEN referrer LIKE '%whatsapp%' THEN 'whatsapp.com'
+            WHEN referrer LIKE '%producthunt%' THEN 'producthunt.com'
+            WHEN referrer LIKE '%instagram%' THEN 'instagram.com'
+            WHEN referrer LIKE '%facebook%' THEN 'facebook.com'
+            WHEN referrer LIKE '%yandex%' THEN 'yandex.ru'
+            WHEN referrer LIKE '%bing%' THEN 'bing.com'
+            ELSE regexp_replace(regexp_replace(referrer, '^https?://(www\.)?', ''), '/.*$', '')
+          END AS referrer,
+          count(*)::int AS clicks
         FROM public.page_visits
         WHERE is_bot = false AND ${windowSql} AND referrer IS NOT NULL AND referrer <> ''
         GROUP BY 1 ORDER BY clicks DESC LIMIT 10

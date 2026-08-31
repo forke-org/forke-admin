@@ -138,6 +138,7 @@ export async function adminLogout() {
   }
   const cookieStore = await cookies()
   cookieStore.delete('admin_token')
+  return { success: true }
 }
 
 export async function getCurrentAdmin() {

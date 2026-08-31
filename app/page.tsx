@@ -2230,19 +2230,11 @@ export default function AdminDashboard() {
                               <span className="inline-flex items-center px-2 py-0.5 rounded-md text-[11px] font-medium font-mono bg-white/[0.04] border border-[var(--color-border)] text-white/70">
                                 {sub.source || 'direct'}
                               </span>
-                              {(() => {
-                                // Skip detail parts that just repeat the source badge above
-                                // (e.g. source "organic" with medium "organic").
-                                const shown = (sub.source || 'direct').toLowerCase()
-                                const detail = a
-                                  ? [a.medium, a.campaign]
-                                      .filter((v) => v && String(v).toLowerCase() !== shown)
-                                      .join(' · ')
-                                  : ''
-                                return detail ? (
-                                  <p className="text-[10px] text-[var(--color-text-muted)] font-mono mt-1" title={a?.referrer || undefined}>{detail}</p>
-                                ) : null
-                              })()}
+                              {a?.campaign && (
+                                <p className="text-[10px] text-[var(--color-text-muted)] font-mono mt-1" title={a?.referrer || undefined}>
+                                  {a.campaign}
+                                </p>
+                              )}
                             </td>
                             <td className="px-6 py-4 whitespace-nowrap">
                               {country ? (
