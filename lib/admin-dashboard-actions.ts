@@ -652,6 +652,7 @@ export async function getSidebarCounts() {
     adminsCount,
     enquiries,
     blogs,
+    changelogs,
     tables,
     pendingSqlRequests,
   ] = await Promise.all([
@@ -662,6 +663,7 @@ export async function getSidebarCounts() {
     countOf(sql`SELECT count(*)::int AS count FROM public.admins`),
     countOf(sql`SELECT count(*)::int AS count FROM public.support_enquiries`),
     countOf(sql`SELECT count(*)::int AS count FROM public.blogs`),
+    countOf(sql`SELECT count(*)::int AS count FROM public.changelogs`),
     countOf(sql`SELECT count(*)::int AS count FROM pg_class c JOIN pg_namespace n ON n.oid = c.relnamespace WHERE n.nspname = 'public' AND c.relkind = 'r'`),
     admin.role === 'super_admin'
       ? countOf(sql`SELECT count(*)::int AS count FROM public.sql_query_requests WHERE status = 'pending'`)
@@ -678,9 +680,10 @@ export async function getSidebarCounts() {
       admins: adminsCount,
       enquiries,
       blogs,
+      changelogs,
       tables,
       pendingSqlRequests,
-    }
+    },
   }
 }
 
@@ -730,7 +733,13 @@ export async function getTrackerData(days = 30): Promise<{ success: boolean; dat
       `),
       db.execute(sql`
         WITH clicks AS (
-          SELECT source, session_id FROM public.page_visits WHERE is_bot = false AND ${windowSql}
+          SELECT 
+            CASE 
+              WHEN source = 'direct' AND referrer ~* 'google|bing|yahoo|duckduckgo|brave|ecosia|baidu|startpage|kagi' THEN 'organic'
+              ELSE source 
+            END AS source,
+            session_id 
+          FROM public.page_visits WHERE is_bot = false AND ${windowSql}
         ),
         converted AS (
           SELECT attribution->>'sessionId' AS session_id FROM public.subscribers WHERE attribution->>'sessionId' IS NOT NULL
@@ -790,7 +799,13 @@ export async function getTrackerData(days = 30): Promise<{ success: boolean; dat
         ORDER BY clicks DESC
       `),
       db.execute(sql`
-        SELECT source, landing_path, referrer, country, created_at
+        SELECT 
+          source, 
+          landing_path, 
+          referrer, 
+          country, 
+          to_char(created_at, 'YYYY-MM-DD"T"HH24:MI:SS.MS"Z"') AS created_at_iso,
+          EXTRACT(EPOCH FROM created_at) * 1000 AS created_at_epoch
         FROM public.page_visits WHERE is_bot = false AND ${windowSql}
         ORDER BY created_at DESC LIMIT 25
       `),
@@ -816,13 +831,27 @@ export async function getTrackerData(days = 30): Promise<{ success: boolean; dat
       landingPages: (landingRows as any[]).map((r) => ({ path: r.path as string, clicks: Number(r.clicks) })),
       referrers: (referrerRows as any[]).map((r) => ({ referrer: r.referrer as string, clicks: Number(r.clicks) })),
       countries: (countryRows as any[]).map((r) => ({ country: r.country as string, clicks: Number(r.clicks), conversions: Number(r.conversions) })),
-      recent: (recentRows as any[]).map((r) => ({
-        source: r.source as string,
-        landingPath: (r.landing_path as string) ?? null,
-        referrer: (r.referrer as string) ?? null,
-        country: (r.country as string) ?? null,
-        createdAt: new Date(r.created_at).toISOString(),
-      })),
+      recent: (recentRows as any[]).map((r) => {
+        let createdAtIso = r.created_at_iso as string
+        if (!createdAtIso && r.created_at_epoch) {
+          createdAtIso = new Date(Number(r.created_at_epoch)).toISOString()
+        } else if (!createdAtIso && r.created_at) {
+          const str = String(r.created_at).trim()
+          createdAtIso = str.endsWith('Z') ? str : (str.replace(' ', 'T') + 'Z')
+        }
+        const refStr = (r.referrer as string) || ''
+        let src = (r.source as string) || 'direct'
+        if (src === 'direct' && refStr && /google|bing|yahoo|duckduckgo|brave|ecosia|baidu|startpage|kagi/i.test(refStr)) {
+          src = 'organic'
+        }
+        return {
+          source: src,
+          landingPath: (r.landing_path as string) ?? null,
+          referrer: (r.referrer as string) ?? null,
+          country: (r.country as string) ?? null,
+          createdAt: createdAtIso || new Date().toISOString(),
+        }
+      }),
     }
     return { success: true, data }
   } catch (error) {

@@ -37,6 +37,7 @@ import { Button } from '@/components/ui/Button'
 import { Select } from '@/components/ui/Select'
 import { toast } from '@/components/shared/Toast'
 import ConfirmModal, { type ConfirmOptions } from '@/components/shared/ConfirmModal'
+import { TableLoadingRows } from '@/components/ui/Skeleton'
 import { cn } from '@/lib/utils/cn'
 import {
   Plus,
@@ -308,37 +309,39 @@ function BlogList({ onOpen }: { onOpen: (id: string | null) => void }) {
 
       {/* Table */}
       <div className="flex-grow overflow-auto rounded-xl border border-[var(--color-border)] bg-white/[0.018]">
-        {loading ? (
-          <div className="flex items-center justify-center py-20 text-sm text-[var(--color-text-muted)]">
-            <Loader2 className="mr-2 h-4 w-4 animate-spin" /> Loading posts…
-          </div>
-        ) : filtered.length === 0 ? (
-          <div className="flex flex-col items-center justify-center py-20 text-center">
-            <FileText className="mb-3 h-8 w-8 text-white/15" />
-            <p className="text-sm font-medium text-white">
-              {rows.length === 0 ? 'No posts yet' : 'No posts match your filters'}
-            </p>
-            <p className="mt-1 text-xs text-[var(--color-text-muted)]">
-              {rows.length === 0 ? 'Create your first post to get started.' : 'Try a different search or status.'}
-            </p>
-          </div>
-        ) : (
-          <table className="w-full border-collapse text-left">
-            <thead>
-              <tr className="border-b border-[var(--color-border)] text-[10px] uppercase tracking-wider text-white/35">
-                <th className="w-10 px-3 py-2.5">
-                  <Checkbox checked={allFilteredSelected} onChange={toggleAllFiltered} aria-label="Select all" />
-                </th>
-                <th className="px-2 py-2.5 font-medium">Title</th>
-                <th className="hidden px-2 py-2.5 font-medium md:table-cell">Status</th>
-                <th className="hidden px-2 py-2.5 font-medium lg:table-cell">Author</th>
-                <th className="hidden px-2 py-2.5 font-medium sm:table-cell">Readers</th>
-                <th className="hidden px-2 py-2.5 font-medium sm:table-cell">Updated</th>
-                <th className="w-28 px-3 py-2.5 text-right font-medium">Actions</th>
+        <table className="w-full border-collapse text-left">
+          <thead>
+            <tr className="border-b border-[var(--color-border)] text-[10px] uppercase tracking-wider text-white/35">
+              <th className="w-10 px-3 py-2.5">
+                <Checkbox checked={allFilteredSelected} onChange={toggleAllFiltered} aria-label="Select all" />
+              </th>
+              <th className="px-2 py-2.5 font-medium">Title</th>
+              <th className="hidden px-2 py-2.5 font-medium md:table-cell">Status</th>
+              <th className="hidden px-2 py-2.5 font-medium lg:table-cell">Author</th>
+              <th className="hidden px-2 py-2.5 font-medium sm:table-cell">Readers</th>
+              <th className="hidden px-2 py-2.5 font-medium sm:table-cell">Updated</th>
+              <th className="w-28 px-3 py-2.5 text-right font-medium">Actions</th>
+            </tr>
+          </thead>
+          <tbody className="divide-y divide-[var(--color-border)]">
+            {loading ? (
+              <TableLoadingRows cols={7} rows={6} />
+            ) : filtered.length === 0 ? (
+              <tr>
+                <td colSpan={7} className="px-4 py-16 text-center">
+                  <div className="flex flex-col items-center justify-center text-center">
+                    <FileText className="mb-3 h-8 w-8 text-white/15" />
+                    <p className="text-sm font-medium text-white">
+                      {rows.length === 0 ? 'No posts yet' : 'No posts match your filters'}
+                    </p>
+                    <p className="mt-1 text-xs text-[var(--color-text-muted)]">
+                      {rows.length === 0 ? 'Create your first post to get started.' : 'Try a different search or status.'}
+                    </p>
+                  </div>
+                </td>
               </tr>
-            </thead>
-            <tbody className="divide-y divide-[var(--color-border)]">
-              {visibleRows.map((row) => (
+            ) : (
+              visibleRows.map((row) => (
                 <tr
                   key={row.id}
                   className={cn(
@@ -424,10 +427,10 @@ function BlogList({ onOpen }: { onOpen: (id: string | null) => void }) {
                     </div>
                   </td>
                 </tr>
-              ))}
-            </tbody>
-          </table>
-        )}
+              ))
+            )}
+          </tbody>
+        </table>
       </div>
 
       {/* Pagination — 10 posts per page */}

@@ -40,7 +40,7 @@ import { getEnquiries } from '@/lib/actions/support-actions'
 import { adminLogout } from '@/lib/admin-actions'
 import { Button } from '@/components/ui/Button'
 import { Select } from '@/components/ui/Select'
-import { Skeleton } from '@/components/ui/Skeleton'
+import { Skeleton, PanelSkeleton, TableLoadingRows } from '@/components/ui/Skeleton'
 import ToastContainer, { toast } from '@/components/shared/Toast'
 import ConfirmModal, { type ConfirmOptions } from '@/components/shared/ConfirmModal'
 import { cn } from '@/lib/utils/cn'
@@ -82,16 +82,21 @@ import {
   Code,
   HardDrive,
   LineChart,
-  Archive
+  Archive,
+  Sparkles,
+  Trash2,
+  Server,
+  RefreshCw,
+  History
 } from 'lucide-react'
 import DatabaseConsole from '@/components/admin/DatabaseConsole'
 import BlogPanel from '@/components/admin/BlogPanel'
-import DatabaseOverviewPanel from '@/components/admin/DatabaseOverviewPanel'
-import DatabaseMonitoringPanel from '@/components/admin/DatabaseMonitoringPanel'
+import VmOverviewPanel from '@/components/admin/VmOverviewPanel'
 import ActivityFeedPanel from '@/components/admin/ActivityFeedPanel'
 import BucketsPanel from '@/components/admin/BucketsPanel'
 import TrackerPanel from '@/components/admin/TrackerPanel'
 import BackupsPanel from '@/components/admin/BackupsPanel'
+import ChangelogPanel from '@/components/admin/ChangelogPanel'
 import { getActivityLogLiveStatusAction } from '@/lib/actions/audit-actions'
 
 
@@ -101,12 +106,40 @@ const maskToken = (token: string) => {
   return `${token.slice(0, 8)}••••••••${token.slice(-4)}`
 }
 
+function parseDate(iso: string | Date | null | undefined): Date | null {
+  if (!iso) return null
+  if (iso instanceof Date) return isNaN(iso.getTime()) ? null : iso
+  let str = String(iso).trim()
+  if (/^\d{4}-\d{2}-\d{2}[ T]\d{2}:\d{2}:\d{2}(\.\d+)?$/.test(str)) {
+    str = str.replace(' ', 'T') + 'Z'
+  }
+  const d = new Date(str)
+  return isNaN(d.getTime()) ? null : d
+}
+
+function formatLocalDateTime(iso: string | Date | null | undefined): string {
+  const d = parseDate(iso)
+  if (!d) return '—'
+  try {
+    return new Intl.DateTimeFormat(undefined, {
+      month: 'short',
+      day: 'numeric',
+      year: 'numeric',
+      hour: 'numeric',
+      minute: '2-digit',
+      hour12: true,
+    }).format(d)
+  } catch {
+    return typeof iso === 'string' ? iso : '—'
+  }
+}
+
 export default function AdminDashboard() {
   const router = useRouter()
   
   // Navigation states
   const [activeTab, setActiveTab] = useState<
-    'dashboard' | 'owner-approval' | 'developer-ban' | 'enquiries' | 'admins' | 'subscribers' | 'tracker' | 'blogs' | 'activity' | 'database' | 'buckets' | 'db-overview' | 'db-monitoring' | 'sql-editor' | 'backups' | null
+    'dashboard' | 'owner-approval' | 'developer-ban' | 'enquiries' | 'admins' | 'subscribers' | 'tracker' | 'blogs' | 'changelog' | 'activity' | 'database' | 'buckets' | 'vm-overview' | 'sql-editor' | 'backups' | null
   >(null)
   const [usersMenuOpen, setUsersMenuOpen] = useState(true)
   const [mobileNavOpen, setMobileNavOpen] = useState(false)
@@ -134,7 +167,7 @@ export default function AdminDashboard() {
   // Sidebar counts – fetched once on mount
   const [sidebarCounts, setSidebarCounts] = useState({
     owners: 0, pendingOwners: 0, developers: 0, subscribers: 0,
-    admins: 0, enquiries: 0, blogs: 0, tables: 0, pendingSqlRequests: 0
+    admins: 0, enquiries: 0, blogs: 0, changelogs: 0, tables: 0, pendingSqlRequests: 0
   })
 
 
@@ -157,9 +190,14 @@ export default function AdminDashboard() {
       const tab = params.get('tab')
       const validTabs = [
         'dashboard', 'owner-approval', 'developer-ban', 'enquiries',
-        'admins', 'subscribers', 'tracker', 'blogs', 'activity', 'database', 'db-overview', 'db-monitoring', 'sql-editor', 'buckets', 'backups'
+        'admins', 'subscribers', 'tracker', 'blogs', 'changelog', 'activity', 'database', 'vm-overview', 'sql-editor', 'buckets', 'backups'
       ]
-      if (tab && validTabs.includes(tab)) {
+      if (tab === 'db-overview' || tab === 'db-monitoring') {
+        setActiveTab('vm-overview')
+        const url = new URL(window.location.href)
+        url.searchParams.set('tab', 'vm-overview')
+        window.history.replaceState({}, '', url.pathname + url.search)
+      } else if (tab && validTabs.includes(tab)) {
         setActiveTab(tab as any)
       } else {
         setActiveTab('dashboard')
@@ -267,9 +305,20 @@ export default function AdminDashboard() {
     fetchData()
   }, [activeTab, currentAdmin])
 
-  async function fetchData() {
+  async function fetchData(forceSpinner = false) {
     if (activeTab === null) return
-    setIsLoading(true)
+
+    // SWR instant rendering: only show skeleton if there is no data in state yet or if explicitly forced
+    const hasData = 
+      (activeTab === 'owner-approval' && ownersList.length > 0) ||
+      (activeTab === 'developer-ban' && developersList.length > 0) ||
+      (activeTab === 'enquiries' && enquiriesList.length > 0) ||
+      (activeTab === 'subscribers' && subscribersList.length > 0) ||
+      (activeTab === 'admins' && adminsList.length > 0)
+
+    if (!hasData || forceSpinner) {
+      setIsLoading(true)
+    }
 
     // Every fetch below is independent of the others, so they run concurrently
     // instead of one-after-another — each one catches its own error so a
@@ -904,27 +953,18 @@ export default function AdminDashboard() {
     return (
       <div className="min-h-screen bg-[#070709] text-white flex">
         {/* Sidebar skeleton */}
-        <div className="hidden md:flex w-60 border-r border-white/[0.06] flex-col p-4 gap-2 shrink-0">
-          <Skeleton className="h-8 w-36 mb-4" />
-          {[...Array(7)].map((_, i) => (
+        <div className="hidden lg:flex w-60 border-r border-[var(--color-border)] flex-col p-4 gap-2 shrink-0 bg-[#070709]">
+          <div className="flex items-center gap-3 px-2 py-2 mb-3">
+            <Skeleton className="h-8 w-8 rounded-lg" />
+            <Skeleton className="h-4 w-28 rounded" />
+          </div>
+          {[...Array(9)].map((_, i) => (
             <Skeleton key={i} className="h-9 w-full rounded-lg" />
           ))}
         </div>
         {/* Main content skeleton */}
-        <div className="flex-grow p-6 md:p-8 space-y-6 max-w-6xl">
-          <div className="space-y-2">
-            <Skeleton className="h-7 w-48" />
-            <Skeleton className="h-4 w-72" />
-          </div>
-          <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
-            {[...Array(4)].map((_, i) => (
-              <div key={i} className="rounded-xl border border-white/[0.06] bg-white/[0.018] p-4 space-y-3">
-                <Skeleton className="h-3 w-16" />
-                <Skeleton className="h-8 w-24" />
-              </div>
-            ))}
-          </div>
-          <Skeleton className="h-64 w-full rounded-xl" />
+        <div className="flex-grow p-4 md:p-6 flex flex-col min-h-0 h-screen overflow-hidden">
+          <PanelSkeleton />
         </div>
       </div>
     )
@@ -1217,6 +1257,32 @@ export default function AdminDashboard() {
               )}
             </button>
 
+            {/* Changelog */}
+            <button
+              onClick={() => selectTab('changelog')}
+              className={cn(
+                "w-full flex items-center justify-between px-2.5 py-2 rounded-lg transition-colors text-[13px] font-medium text-left relative",
+                sidebarCollapsed && "lg:justify-center lg:px-0",
+                activeTab === 'changelog'
+                  ? 'bg-white/[0.05] text-white'
+                  : 'text-[var(--color-text-muted)] hover:bg-white/[0.03] hover:text-white'
+              )}
+              title={sidebarCollapsed ? "Changelog" : undefined}
+            >
+              <div className="flex items-center gap-2.5">
+                <History className={cn(
+                  `w-[18px] h-[18px] shrink-0 transition-colors`,
+                  activeTab === 'changelog' ? 'text-accent' : 'text-[var(--color-text-muted)]'
+                )} />
+                {!sidebarCollapsed && <span className="animate-in fade-in duration-200">Changelog</span>}
+              </div>
+              {!sidebarCollapsed && (
+                <span className="text-[10px] font-mono text-white/25 leading-none">
+                  {sidebarCounts.changelogs}
+                </span>
+              )}
+            </button>
+
             {/* Activity / audit log */}
             <button
               onClick={() => selectTab('activity')}
@@ -1262,42 +1328,23 @@ export default function AdminDashboard() {
               <div className="h-[1px] bg-[var(--color-border)] my-2" />
             )}
 
-            {/* Overview */}
+            {/* VM Overview & Health */}
             <button
-              onClick={() => selectTab('db-overview')}
+              onClick={() => selectTab('vm-overview')}
               className={cn(
                 "w-full flex items-center gap-2.5 px-2.5 py-2 rounded-lg transition-colors text-[13px] font-medium text-left relative",
                 sidebarCollapsed && "lg:justify-center lg:px-0",
-                activeTab === 'db-overview'
+                activeTab === 'vm-overview'
                   ? 'bg-white/[0.05] text-white'
                   : 'text-[var(--color-text-muted)] hover:bg-white/[0.03] hover:text-white'
               )}
-              title={sidebarCollapsed ? "DB Overview" : undefined}
+              title={sidebarCollapsed ? "VM Overview" : undefined}
             >
-              <Globe className={cn(
+              <Server className={cn(
                 `w-[18px] h-[18px] shrink-0 transition-colors`,
-                activeTab === 'db-overview' ? 'text-accent' : 'text-[var(--color-text-muted)]'
+                activeTab === 'vm-overview' ? 'text-accent' : 'text-[var(--color-text-muted)]'
               )} />
-              {!sidebarCollapsed && <span className="animate-in fade-in duration-200">Overview</span>}
-            </button>
-
-            {/* Monitoring */}
-            <button
-              onClick={() => selectTab('db-monitoring')}
-              className={cn(
-                "w-full flex items-center gap-2.5 px-2.5 py-2 rounded-lg transition-colors text-[13px] font-medium text-left relative",
-                sidebarCollapsed && "lg:justify-center lg:px-0",
-                activeTab === 'db-monitoring'
-                  ? 'bg-white/[0.05] text-white'
-                  : 'text-[var(--color-text-muted)] hover:bg-white/[0.03] hover:text-white'
-              )}
-              title={sidebarCollapsed ? "DB Monitoring" : undefined}
-            >
-              <Activity className={cn(
-                `w-[18px] h-[18px] shrink-0 transition-colors`,
-                activeTab === 'db-monitoring' ? 'text-accent' : 'text-[var(--color-text-muted)]'
-              )} />
-              {!sidebarCollapsed && <span className="animate-in fade-in duration-200">Monitoring</span>}
+              {!sidebarCollapsed && <span className="animate-in fade-in duration-200">VM Overview</span>}
             </button>
 
 
@@ -1688,93 +1735,115 @@ export default function AdminDashboard() {
             const totalBanned = ownersList.filter(({ user }) => user.isApproved && user.isBanned).length
 
             return (
-              <div className="rounded-xl bg-white/[0.018] border border-[var(--color-border)] overflow-hidden flex flex-col min-h-0 flex-grow">
-
-                {/* Sub-tab switcher + search */}
-                <div className="p-4 border-b border-[var(--color-border)] flex flex-col sm:flex-row sm:items-center gap-3 bg-white/[0.005]">
-                  <div className="flex items-center gap-1 bg-white/[0.03] border border-[var(--color-border)] rounded-lg p-1 shrink-0">
-                    <button
-                      onClick={() => { setOwnersSubTab('approved'); setCurrentPage(1) }}
-                      className={`px-3 py-1.5 rounded-md text-xs font-medium transition-colors ${
-                        ownersSubTab === 'approved'
-                          ? 'bg-white/[0.08] text-white'
-                          : 'text-[var(--color-text-muted)] hover:text-white'
-                      }`}
-                    >
-                      Approved
-                      <span className={`ml-1.5 text-[10px] font-mono ${ownersSubTab === 'approved' ? 'text-white/60' : 'text-white/25'}`}>
-                        {totalApproved}
+              <div className="flex flex-col min-h-0 flex-grow gap-5 overflow-y-auto pr-1">
+                
+                {/* Header */}
+                <div className="flex items-center justify-between gap-4 border-b border-[var(--color-border)] pb-3 shrink-0">
+                  <div>
+                    <div className="flex items-center gap-2">
+                      <h2 className="text-base font-medium text-white">Clients &amp; Company Owners</h2>
+                      <span className="bg-white/[0.04] border border-white/[0.08] text-white/70 px-2 py-0.5 rounded font-mono text-[10px]">
+                        {ownersList.length} TOTAL
                       </span>
-                    </button>
-                    <button
-                      onClick={() => { setOwnersSubTab('requests'); setCurrentPage(1) }}
-                      className={`px-3 py-1.5 rounded-md text-xs font-medium transition-colors flex items-center gap-1.5 ${
-                        ownersSubTab === 'requests'
-                          ? 'bg-white/[0.08] text-white'
-                          : 'text-[var(--color-text-muted)] hover:text-white'
-                      }`}
-                    >
-                      Requests
-                      {totalRequests > 0 ? (
-                        <span className="px-1.5 py-0.5 text-[10px] font-medium rounded-full bg-orange-500/15 border border-orange-500/25 text-orange-400 leading-none">
-                          {totalRequests}
-                        </span>
-                      ) : (
-                        <span className={`text-[10px] font-mono ${ownersSubTab === 'requests' ? 'text-white/60' : 'text-white/25'}`}>0</span>
-                      )}
-                    </button>
-                    <button
-                      onClick={() => { setOwnersSubTab('banned'); setCurrentPage(1) }}
-                      className={`px-3 py-1.5 rounded-md text-xs font-medium transition-colors flex items-center gap-1.5 ${
-                        ownersSubTab === 'banned'
-                          ? 'bg-white/[0.08] text-white'
-                          : 'text-[var(--color-text-muted)] hover:text-white'
-                      }`}
-                    >
-                      Banned
-                      {totalBanned > 0 ? (
-                        <span className="px-1.5 py-0.5 text-[10px] font-medium rounded-full bg-red-500/15 border border-red-500/25 text-red-400 leading-none">
-                          {totalBanned}
-                        </span>
-                      ) : (
-                        <span className={`text-[10px] font-mono ${ownersSubTab === 'banned' ? 'text-white/60' : 'text-white/25'}`}>0</span>
-                      )}
-                    </button>
+                    </div>
+                    <p className="mt-0.5 text-xs text-[var(--color-text-muted)]">
+                      Review onboarding requests, approve verified business owners, and manage client accounts.
+                    </p>
                   </div>
-
-                  <div className="relative w-full max-w-md">
-                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[var(--color-text-muted)]" />
-                    <input
-                      type="text"
-                      placeholder="Search by name, company, email..."
-                      value={searchQuery}
-                      onChange={(e) => setSearchQuery(e.target.value)}
-                      className="w-full h-9 bg-white/[0.02] border border-[var(--color-border)] rounded-lg pl-9 pr-3 text-[13px] text-white focus:outline-none focus:border-accent transition-colors"
-                    />
-                  </div>
+                  <button 
+                    onClick={() => fetchOwners()}
+                    className="h-8 px-3 rounded-lg text-xs transition-colors border border-[var(--color-border)] hover:bg-white/[0.05] flex items-center gap-1.5 font-medium text-white"
+                  >
+                    <RefreshCw className={cn("w-3.5 h-3.5", isLoading ? "animate-spin" : "")} />
+                    Refresh
+                  </button>
                 </div>
 
-                {/* Table */}
-                <div className="overflow-auto flex-grow min-h-0">
-                  <table className="w-full text-left border-collapse">
-                    <thead>
-                      <tr className="border-b border-[var(--color-border)] bg-white/[0.01]">
-                        <th className="px-6 py-3 text-xs font-semibold text-[var(--color-text-muted)]">User Details</th>
-                        <th className="px-6 py-3 text-xs font-semibold text-[var(--color-text-muted)]">Company / Designation</th>
-                        {ownersSubTab !== 'requests' && (
-                          <th className="px-6 py-3 text-xs font-semibold text-[var(--color-text-muted)]">Status</th>
+                <div className="rounded-xl bg-white/[0.018] border border-[var(--color-border)] overflow-hidden flex flex-col min-h-0 flex-grow">
+
+                  {/* Sub-tab switcher + search */}
+                  <div className="p-4 border-b border-[var(--color-border)] flex flex-col sm:flex-row sm:items-center gap-3 bg-white/[0.005]">
+                    <div className="flex items-center gap-1 bg-white/[0.03] border border-[var(--color-border)] rounded-lg p-1 shrink-0">
+                      <button
+                        onClick={() => { setOwnersSubTab('approved'); setCurrentPage(1) }}
+                        className={`px-3 py-1.5 rounded-md text-xs font-medium transition-colors ${
+                          ownersSubTab === 'approved'
+                            ? 'bg-white/[0.08] text-white'
+                            : 'text-[var(--color-text-muted)] hover:text-white'
+                        }`}
+                      >
+                        Approved
+                        <span className={`ml-1.5 text-[10px] font-mono ${ownersSubTab === 'approved' ? 'text-white/60' : 'text-white/25'}`}>
+                          {totalApproved}
+                        </span>
+                      </button>
+                      <button
+                        onClick={() => { setOwnersSubTab('requests'); setCurrentPage(1) }}
+                        className={`px-3 py-1.5 rounded-md text-xs font-medium transition-colors flex items-center gap-1.5 ${
+                          ownersSubTab === 'requests'
+                            ? 'bg-white/[0.08] text-white'
+                            : 'text-[var(--color-text-muted)] hover:text-white'
+                        }`}
+                      >
+                        Requests
+                        {totalRequests > 0 ? (
+                          <span className="px-1.5 py-0.5 text-[10px] font-medium rounded-full bg-orange-500/15 border border-orange-500/25 text-orange-400 leading-none">
+                            {totalRequests}
+                          </span>
+                        ) : (
+                          <span className={`text-[10px] font-mono ${ownersSubTab === 'requests' ? 'text-white/60' : 'text-white/25'}`}>0</span>
                         )}
-                        <th className="px-6 py-3 text-xs font-semibold text-[var(--color-text-muted)]">Actions</th>
-                      </tr>
-                    </thead>
-                    <tbody className="divide-y divide-[var(--color-border)]/50">
-                      {isLoading ? (
-                        <tr>
-                          <td colSpan={4} className="px-6 py-12 text-center text-[var(--color-text-muted)] text-sm">Loading records...</td>
+                      </button>
+                      <button
+                        onClick={() => { setOwnersSubTab('banned'); setCurrentPage(1) }}
+                        className={`px-3 py-1.5 rounded-md text-xs font-medium transition-colors flex items-center gap-1.5 ${
+                          ownersSubTab === 'banned'
+                            ? 'bg-white/[0.08] text-white'
+                            : 'text-[var(--color-text-muted)] hover:text-white'
+                        }`}
+                      >
+                        Banned
+                        {totalBanned > 0 ? (
+                          <span className="px-1.5 py-0.5 text-[10px] font-medium rounded-full bg-red-500/15 border border-red-500/25 text-red-400 leading-none">
+                            {totalBanned}
+                          </span>
+                        ) : (
+                          <span className={`text-[10px] font-mono ${ownersSubTab === 'banned' ? 'text-white/60' : 'text-white/25'}`}>0</span>
+                        )}
+                      </button>
+                    </div>
+
+                    <div className="relative w-full max-w-md">
+                      <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[var(--color-text-muted)]" />
+                      <input
+                        type="text"
+                        placeholder="Search by name, company, email..."
+                        value={searchQuery}
+                        onChange={(e) => setSearchQuery(e.target.value)}
+                        className="w-full h-9 bg-white/[0.02] border border-[var(--color-border)] rounded-lg pl-9 pr-3 text-[13px] text-white focus:outline-none focus:border-accent transition-colors"
+                      />
+                    </div>
+                  </div>
+
+                  {/* Table */}
+                  <div className="overflow-auto flex-grow min-h-0">
+                    <table className="w-full text-left border-collapse">
+                      <thead>
+                        <tr className="border-b border-[var(--color-border)] text-[10px] uppercase tracking-wider text-white/35 font-medium">
+                          <th className="px-4 py-2.5">User Details</th>
+                          <th className="px-4 py-2.5">Company / Designation</th>
+                          {ownersSubTab !== 'requests' && (
+                            <th className="px-4 py-2.5">Status</th>
+                          )}
+                          <th className="px-4 py-2.5 text-right font-medium">Actions</th>
                         </tr>
-                      ) : activeOwners.length === 0 ? (
+                      </thead>
+                      <tbody className="divide-y divide-[var(--color-border)]">
+                        {isLoading ? (
+                          <TableLoadingRows cols={ownersSubTab !== 'requests' ? 4 : 3} rows={6} />
+                        ) : activeOwners.length === 0 ? (
                         <tr>
-                          <td colSpan={4} className="px-6 py-12 text-center text-[var(--color-text-muted)] text-sm">
+                          <td colSpan={4} className="px-4 py-12 text-center text-[var(--color-text-muted)] text-xs font-mono">
                             {ownersSubTab === 'requests'
                               ? 'No pending requests'
                               : ownersSubTab === 'banned'
@@ -1784,10 +1853,10 @@ export default function AdminDashboard() {
                         </tr>
                       ) : (
                         paginatedActive.map(({ user, owner }) => (
-                          <tr key={user.id} className="group hover:bg-white/[0.005] transition-colors border-b border-[var(--color-border)]/50 last:border-b-0">
-                            <td className="px-6 py-4">
+                          <tr key={user.id} className="group hover:bg-white/[0.015] transition-colors">
+                            <td className="px-4 py-3">
                               <div className="flex items-center gap-3">
-                                <div className="w-10 h-10 rounded-full bg-white/5 border border-[var(--color-border)] overflow-hidden relative shrink-0">
+                                <div className="w-9 h-9 rounded-md bg-white/[0.02] border border-[var(--color-border)] overflow-hidden relative shrink-0">
                                   {user.image && <img src={user.image} alt={user.name} className="object-cover w-full h-full" />}
                                 </div>
                                 <div>
@@ -1796,52 +1865,52 @@ export default function AdminDashboard() {
                                       href={`/${user.username}`}
                                       target="_blank"
                                       rel="noopener noreferrer"
-                                      className="font-medium text-white text-sm hover:text-accent transition-colors"
+                                      className="font-medium text-white text-[13px] hover:text-accent transition-colors"
                                       title={`View @${user.username}'s profile`}
                                     >
                                       {owner.firstName} {owner.lastName}
-                                      <span className="text-xs text-accent ml-1.5">@{user.username}</span>
+                                      <span className="text-xs text-accent ml-1.5 font-mono">@{user.username}</span>
                                     </a>
                                   ) : (
-                                    <p className="font-medium text-white text-sm">{owner.firstName} {owner.lastName}</p>
+                                    <p className="font-medium text-white text-[13px]">{owner.firstName} {owner.lastName}</p>
                                   )}
-                                  <div className="flex items-center gap-2 text-xs text-[var(--color-text-muted)] mt-1">
+                                  <div className="flex items-center gap-2 text-xs text-[var(--color-text-muted)] mt-0.5">
                                     <span>{owner.contactEmail}</span>
-                                    {owner.contactNumber && <span>&middot; {owner.contactNumber}</span>}
+                                    {owner.contactNumber && <span>· {owner.contactNumber}</span>}
                                   </div>
                                 </div>
                               </div>
                             </td>
-                            <td className="px-6 py-4 text-[13px] text-[var(--color-text-muted)]">
+                            <td className="px-4 py-3 text-[13px] text-[var(--color-text-muted)]">
                               <div>
-                                <p className="font-medium text-white/80">{owner.companyName}</p>
-                                <p className="text-xs text-[var(--color-text-muted)] mt-1">{owner.designation}</p>
-                                <div className="flex items-center gap-3 mt-2">
-                                  <a href={owner.personalLinkedIn} target="_blank" rel="noopener noreferrer" className="text-xs text-accent hover:underline">LinkedIn</a>
-                                  {owner.companyWebsite && <a href={owner.companyWebsite} target="_blank" rel="noopener noreferrer" className="text-xs text-accent hover:underline">Website</a>}
+                                <p className="font-medium text-white/90">{owner.companyName}</p>
+                                <p className="text-xs text-[var(--color-text-muted)] mt-0.5">{owner.designation}</p>
+                                <div className="flex items-center gap-3 mt-1 text-xs">
+                                  <a href={owner.personalLinkedIn} target="_blank" rel="noopener noreferrer" className="text-accent hover:underline">LinkedIn</a>
+                                  {owner.companyWebsite && <a href={owner.companyWebsite} target="_blank" rel="noopener noreferrer" className="text-accent hover:underline">Website</a>}
                                 </div>
                               </div>
                             </td>
                             {ownersSubTab !== 'requests' && (
-                              <td className="px-6 py-4">
+                              <td className="px-4 py-3">
                                 {ownersSubTab === 'banned' ? (
-                                  <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-red-500/10 border border-red-500/20 text-red-400 text-xs font-medium">
-                                    <UserX className="w-3.5 h-3.5" /> Banned
+                                  <span className="inline-flex items-center gap-1 rounded px-1.5 py-0.5 font-mono text-[10px] font-medium uppercase tracking-wider border border-red-500/30 bg-red-500/10 text-red-400">
+                                    <span className="h-1.5 w-1.5 rounded-full bg-red-400" /> Banned
                                   </span>
                                 ) : (
-                                  <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-xs font-medium">
-                                    <CheckCircle2 className="w-3.5 h-3.5" /> Approved
+                                  <span className="inline-flex items-center gap-1 rounded px-1.5 py-0.5 font-mono text-[10px] font-medium uppercase tracking-wider border border-emerald-500/30 bg-emerald-500/10 text-emerald-400">
+                                    <span className="h-1.5 w-1.5 rounded-full bg-emerald-400" /> Approved
                                   </span>
                                 )}
                               </td>
                             )}
-                            <td className="px-6 py-4">
-                              <div className="flex items-center gap-2">
+                            <td className="px-4 py-3 text-right">
+                              <div className="flex items-center justify-end gap-1">
                                 {ownersSubTab === 'requests' && (
                                   <>
                                     <button
                                       onClick={() => handleApprove(user.id)}
-                                      className="w-8 h-8 rounded-lg bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 flex items-center justify-center hover:bg-emerald-500 hover:text-white transition-colors cursor-pointer"
+                                      className="flex h-8 w-8 items-center justify-center rounded-md text-emerald-400 transition-colors hover:bg-emerald-500/10"
                                       title="Approve Owner"
                                     >
                                       <CheckCircle2 className="w-4 h-4" />
@@ -1852,8 +1921,8 @@ export default function AdminDashboard() {
                                         setDeclineReason('')
                                         setIsDeclineModalOpen(true)
                                       }}
-                                      className="w-8 h-8 rounded-lg bg-red-500/10 border border-red-500/20 text-red-400 flex items-center justify-center hover:bg-red-500 hover:text-white transition-colors cursor-pointer"
-                                      title="Decline with Reason"
+                                      className="flex h-8 w-8 items-center justify-center rounded-md text-red-400 transition-colors hover:bg-red-500/10"
+                                      title="Decline"
                                     >
                                       <XCircle className="w-4 h-4" />
                                     </button>
@@ -1862,7 +1931,7 @@ export default function AdminDashboard() {
                                 {ownersSubTab === 'approved' && (
                                   <button
                                     onClick={() => handleToggleOwnerBan(user.id, false)}
-                                    className="h-8 px-3 rounded-lg text-xs font-medium border bg-red-500/10 border-red-500/20 text-red-400 hover:bg-red-500 hover:text-white transition-colors cursor-pointer"
+                                    className="px-2.5 py-1 rounded-md text-xs font-medium border border-red-500/30 bg-red-500/10 text-red-400 hover:bg-red-500/20 transition-colors"
                                     title="Ban Owner"
                                   >
                                     Ban
@@ -1871,7 +1940,7 @@ export default function AdminDashboard() {
                                 {ownersSubTab === 'banned' && (
                                   <button
                                     onClick={() => handleToggleOwnerBan(user.id, true)}
-                                    className="h-8 px-3 rounded-lg text-xs font-medium border bg-emerald-500/10 border-emerald-500/20 text-emerald-400 hover:bg-emerald-500 hover:text-white transition-colors cursor-pointer"
+                                    className="px-2.5 py-1 rounded-md text-xs font-medium border border-emerald-500/30 bg-emerald-500/10 text-emerald-400 hover:bg-emerald-500/20 transition-colors"
                                     title="Unban Owner"
                                   >
                                     Unban
@@ -1913,457 +1982,524 @@ export default function AdminDashboard() {
                   </div>
                 )}
 
+                </div>
               </div>
             )
           })()}
 
           {/* ==================== DEVELOPERS PANEL ==================== */}
           {activeTab === 'developer-ban' && (
-            <div className="rounded-xl bg-white/[0.018] border border-[var(--color-border)] overflow-hidden flex flex-col min-h-0 flex-grow">
+            <div className="flex flex-col min-h-0 flex-grow gap-5 overflow-y-auto pr-1">
               
-              {/* Search */}
-              <div className="p-4 border-b border-[var(--color-border)] bg-white/[0.005]">
-                <div className="relative w-full max-w-md">
-                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[var(--color-text-muted)]" />
-                  <input 
-                    type="text" 
-                    placeholder="Search by username or GitHub ID..."
-                    value={searchQuery}
-                    onChange={(e) => setSearchQuery(e.target.value)}
-                    className="w-full h-9 bg-white/[0.02] border border-[var(--color-border)] rounded-lg pl-9 pr-3 text-[13px] text-white focus:outline-none focus:border-accent transition-colors"
-                  />
+              {/* Header */}
+              <div className="flex items-center justify-between gap-4 border-b border-[var(--color-border)] pb-3 shrink-0">
+                <div>
+                  <div className="flex items-center gap-2">
+                    <h2 className="text-base font-medium text-white">Developer Accounts</h2>
+                    <span className="bg-white/[0.04] border border-white/[0.08] text-white/70 px-2 py-0.5 rounded font-mono text-[10px]">
+                      {developersList.length} TOTAL
+                    </span>
+                  </div>
+                  <p className="mt-0.5 text-xs text-[var(--color-text-muted)]">
+                    Inspect developer profiles, access credentials, joined timestamps, and enforcement actions.
+                  </p>
                 </div>
+                <button 
+                  onClick={() => fetchDevelopers()}
+                  className="h-8 px-3 rounded-lg text-xs transition-colors border border-[var(--color-border)] hover:bg-white/[0.05] flex items-center gap-1.5 font-medium text-white"
+                >
+                  <RefreshCw className={cn("w-3.5 h-3.5", isLoading ? "animate-spin" : "")} />
+                  Refresh
+                </button>
               </div>
 
-              {/* Table list */}
-              <div className="overflow-auto flex-grow min-h-0">
-                <table className="w-full text-left border-collapse">
-                  <thead>
-                    <tr className="border-b border-[var(--color-border)] bg-white/[0.01]">
-                      <th className="px-6 py-3 text-xs font-semibold text-[var(--color-text-muted)]">Developer</th>
-                      <th className="px-6 py-3 text-xs font-semibold text-[var(--color-text-muted)]">GitHub ID</th>
-                      <th className="px-6 py-3 text-xs font-semibold text-[var(--color-text-muted)]">Access Token</th>
-                      <th className="px-6 py-3 text-xs font-semibold text-[var(--color-text-muted)]">Joined Date</th>
-                      <th className="px-6 py-3 text-xs font-semibold text-[var(--color-text-muted)]">Status</th>
-                      <th className="px-6 py-3 text-xs font-semibold text-[var(--color-text-muted)]">Actions</th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-[var(--color-border)]/50">
-                    {isLoading ? (
-                      <tr>
-                        <td colSpan={6} className="px-6 py-12 text-center text-[var(--color-text-muted)] text-sm">Loading records...</td>
+              <div className="rounded-xl bg-white/[0.018] border border-[var(--color-border)] overflow-hidden flex flex-col min-h-0 flex-grow">
+                
+                {/* Search */}
+                <div className="p-4 border-b border-[var(--color-border)] bg-white/[0.005]">
+                  <div className="relative w-full max-w-md">
+                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[var(--color-text-muted)]" />
+                    <input 
+                      type="text" 
+                      placeholder="Search by username or GitHub ID..."
+                      value={searchQuery}
+                      onChange={(e) => setSearchQuery(e.target.value)}
+                      className="w-full h-9 bg-white/[0.02] border border-[var(--color-border)] rounded-lg pl-9 pr-3 text-[13px] text-white focus:outline-none focus:border-accent transition-colors"
+                    />
+                  </div>
+                </div>
+
+                {/* Table list */}
+                <div className="overflow-auto flex-grow min-h-0">
+                  <table className="w-full text-left border-collapse">
+                    <thead>
+                      <tr className="border-b border-[var(--color-border)] text-[10px] uppercase tracking-wider text-white/35 font-medium">
+                        <th className="px-4 py-2.5">Developer</th>
+                        <th className="px-4 py-2.5">GitHub ID</th>
+                        <th className="px-4 py-2.5">Access Token</th>
+                        <th className="px-4 py-2.5">Joined Date</th>
+                        <th className="px-4 py-2.5">Status</th>
+                        <th className="px-4 py-2.5 text-right font-medium">Actions</th>
                       </tr>
-                    ) : filteredDevelopers.length === 0 ? (
-                      <tr>
-                        <td colSpan={6} className="px-6 py-12 text-center text-[var(--color-text-muted)] text-sm">No matching records found</td>
-                      </tr>
-                    ) : (
-                      paginatedDevelopers.map((dev) => (
-                        <tr key={dev.id} className="group hover:bg-white/[0.005] transition-colors border-b border-[var(--color-border)]/50 last:border-b-0">
-                          <td className="px-6 py-4">
-                            <div className="flex items-center gap-3">
-                              <div className="w-10 h-10 rounded-full bg-white/5 border border-[var(--color-border)] flex items-center justify-center shrink-0 overflow-hidden relative">
-                                {dev.image ? (
-                                  <img src={dev.image} alt={dev.name || dev.username} className="object-cover w-full h-full" />
-                                ) : (
-                                  <Terminal className="w-4 h-4 text-white/60" />
-                                )}
-                              </div>
-                              <div>
-                                {dev.forkeUsername ? (
-                                  <a
-                                    href={`/${dev.forkeUsername}`}
-                                    target="_blank"
-                                    rel="noopener noreferrer"
-                                    className="font-medium text-white hover:text-accent transition-colors block text-sm"
-                                    title={`View @${dev.forkeUsername}'s Forke profile`}
-                                  >
-                                    {dev.name || dev.forkeUsername}
-                                    <span className="text-xs text-accent ml-1.5">@{dev.forkeUsername}</span>
-                                  </a>
-                                ) : (
-                                  <p className="font-medium text-white text-sm">{dev.name || 'N/A'}</p>
-                                )}
-                                <p className="text-xs text-[var(--color-text-muted)] mt-1">
-                                  {dev.email || 'No Email Linked'}
-                                  {dev.username && <> &middot; <a href={`https://github.com/${dev.username}`} target="_blank" rel="noopener noreferrer" className="hover:text-accent transition-colors">@{dev.username} (GitHub)</a></>}
-                                </p>
-                              </div>
-                            </div>
-                          </td>
-                          <td className="px-6 py-4 text-xs font-mono text-[var(--color-text-muted)]">
-                            <span className="px-2 py-0.5 rounded bg-white/[0.03] border border-[var(--color-border)]">
-                              {dev.githubId || 'N/A'}
-                            </span>
-                          </td>
-                          <td className="px-6 py-4 text-[13px] text-[var(--color-text-muted)]">
-                            {dev.accessToken ? (
-                              <div className="flex items-center gap-2">
-                                <span className="font-mono text-xs text-[var(--color-text-muted)]">
-                                  {maskToken(dev.accessToken)}
-                                </span>
-                                <button
-                                  onClick={() => {
-                                    navigator.clipboard.writeText(dev.accessToken)
-                                    const btnId = `copied-${dev.id}`
-                                    const el = document.getElementById(btnId)
-                                    if (el) {
-                                      el.classList.remove('opacity-0')
-                                      el.classList.add('opacity-100')
-                                      setTimeout(() => {
-                                        el.classList.remove('opacity-100')
-                                        el.classList.add('opacity-0')
-                                      }, 2000)
-                                    }
-                                  }}
-                                  className="p-1.5 rounded-lg bg-white/[0.02] border border-[var(--color-border)] hover:bg-white/[0.06] hover:border-white/10 transition-colors text-white/40 hover:text-white"
-                                  title="Copy Access Token"
-                                >
-                                  <Copy className="w-3.5 h-3.5" />
-                                </button>
-                                <span id={`copied-${dev.id}`} className="text-[10px] text-emerald-400 font-mono opacity-0 transition-opacity duration-300">
-                                  Copied!
-                                </span>
-                              </div>
-                            ) : (
-                              <span className="text-xs text-white/20 italic">No Access Token</span>
-                            )}
-                          </td>
-                          <td className="px-6 py-4 text-xs font-mono text-[var(--color-text-muted)]">
-                            <span>
-                              {dev.createdAt ? new Date(dev.createdAt).toLocaleString('en-IN', {
-                                dateStyle: 'medium',
-                                timeStyle: 'short',
-                              }) : 'N/A'}
-                            </span>
-                          </td>
-                          <td className="px-6 py-4">
-                            {!dev.userId ? (
-                              <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-blue-500/10 border border-blue-500/20 text-blue-400 text-xs font-medium">
-                                <Terminal className="w-3 h-3" /> Unlinked
-                              </span>
-                            ) : dev.isBanned ? (
-                              <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-red-500/10 border border-red-500/20 text-red-400 text-xs font-medium">
-                                <UserX className="w-3 h-3" /> Banned
-                              </span>
-                            ) : (
-                              <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-xs font-medium">
-                                <CheckCircle2 className="w-3 h-3" /> Active
-                              </span>
-                            )}
-                          </td>
-                          <td className="px-6 py-4">
-                            {dev.userId ? (
-                              <button 
-                                onClick={() => handleToggleBan(dev.userId, dev.isBanned)}
-                                className={`h-8 px-3 rounded-lg text-xs font-medium border transition-colors cursor-pointer ${
-                                  dev.isBanned 
-                                    ? 'bg-emerald-500/10 border-emerald-500/20 text-emerald-400 hover:bg-emerald-500 hover:text-white' 
-                                    : 'bg-red-500/10 border-red-500/20 text-red-400 hover:bg-red-500 hover:text-white'
-                                }`}
-                              >
-                                {dev.isBanned ? 'Unban' : 'Ban'}
-                              </button>
-                            ) : (
-                              <span className="text-xs text-white/20 italic">No Action Needed</span>
-                            )}
-                          </td>
+                    </thead>
+                    <tbody className="divide-y divide-[var(--color-border)]">
+                      {isLoading ? (
+                        <TableLoadingRows cols={6} rows={6} />
+                      ) : filteredDevelopers.length === 0 ? (
+                        <tr>
+                          <td colSpan={6} className="px-4 py-12 text-center text-[var(--color-text-muted)] text-xs font-mono">No matching records found</td>
                         </tr>
-                      ))
-                    )}
-                  </tbody>
-                </table>
+                      ) : (
+                        paginatedDevelopers.map((dev) => (
+                          <tr key={dev.id} className="group hover:bg-white/[0.015] transition-colors">
+                            <td className="px-4 py-3">
+                              <div className="flex items-center gap-3">
+                                <div className="w-9 h-9 rounded-md bg-white/[0.02] border border-[var(--color-border)] flex items-center justify-center shrink-0 overflow-hidden relative">
+                                  {dev.image ? (
+                                    <img src={dev.image} alt={dev.name || dev.username} className="object-cover w-full h-full" />
+                                  ) : (
+                                    <Terminal className="w-4 h-4 text-white/60" />
+                                  )}
+                                </div>
+                                <div>
+                                  {dev.forkeUsername ? (
+                                    <a
+                                      href={`/${dev.forkeUsername}`}
+                                      target="_blank"
+                                      rel="noopener noreferrer"
+                                      className="font-medium text-white hover:text-accent transition-colors block text-[13px]"
+                                      title={`View @${dev.forkeUsername}'s Forke profile`}
+                                    >
+                                      {dev.name || dev.forkeUsername}
+                                      <span className="text-xs text-accent ml-1.5 font-mono">@{dev.forkeUsername}</span>
+                                    </a>
+                                  ) : (
+                                    <p className="font-medium text-white text-[13px]">{dev.name || 'N/A'}</p>
+                                  )}
+                                  <p className="text-xs text-[var(--color-text-muted)] mt-0.5">
+                                    {dev.email || 'No Email Linked'}
+                                    {dev.username && <> · <a href={`https://github.com/${dev.username}`} target="_blank" rel="noopener noreferrer" className="hover:text-accent transition-colors font-mono">@{dev.username}</a></>}
+                                  </p>
+                                </div>
+                              </div>
+                            </td>
+                            <td className="px-4 py-3 text-xs font-mono text-[var(--color-text-muted)]">
+                              <span className="px-1.5 py-0.5 rounded bg-white/[0.03] border border-[var(--color-border)]">
+                                {dev.githubId || 'N/A'}
+                              </span>
+                            </td>
+                            <td className="px-4 py-3 text-xs font-mono text-[var(--color-text-muted)]">
+                              {dev.token ? (
+                                <div className="flex items-center gap-2">
+                                  <span className="truncate max-w-[140px] font-mono text-[11px] text-white/60">{maskToken(dev.token)}</span>
+                                  <button
+                                    onClick={() => handleCopyToken(dev.token!, dev.id)}
+                                    className="p-1 hover:bg-white/10 rounded transition-colors text-[var(--color-text-muted)] hover:text-white"
+                                    title="Copy full token"
+                                  >
+                                    <Copy className="w-3 h-3" />
+                                  </button>
+                                </div>
+                              ) : (
+                                <span className="text-white/20 font-mono">—</span>
+                              )}
+                            </td>
+                            <td className="px-4 py-3 text-xs font-mono text-[var(--color-text-muted)]">
+                              {formatLocalDateTime(dev.createdAt)}
+                            </td>
+                            <td className="px-4 py-3">
+                              {!dev.userId ? (
+                                <span className="inline-flex items-center gap-1 rounded px-1.5 py-0.5 font-mono text-[10px] font-medium uppercase tracking-wider border border-blue-500/30 bg-blue-500/10 text-blue-400">
+                                  <span className="h-1.5 w-1.5 rounded-full bg-blue-400" /> Unlinked
+                                </span>
+                              ) : dev.isBanned ? (
+                                <span className="inline-flex items-center gap-1 rounded px-1.5 py-0.5 font-mono text-[10px] font-medium uppercase tracking-wider border border-red-500/30 bg-red-500/10 text-red-400">
+                                  <span className="h-1.5 w-1.5 rounded-full bg-red-400" /> Banned
+                                </span>
+                              ) : (
+                                <span className="inline-flex items-center gap-1 rounded px-1.5 py-0.5 font-mono text-[10px] font-medium uppercase tracking-wider border border-emerald-500/30 bg-emerald-500/10 text-emerald-400">
+                                  <span className="h-1.5 w-1.5 rounded-full bg-emerald-400" /> Active
+                                </span>
+                              )}
+                            </td>
+                            <td className="px-4 py-3 text-right">
+                              {dev.userId ? (
+                                <button 
+                                  onClick={() => handleToggleBan(dev.userId, dev.isBanned)}
+                                  className={`px-2.5 py-1 rounded-md text-xs font-medium border transition-colors ${
+                                    dev.isBanned 
+                                      ? 'border-emerald-500/30 bg-emerald-500/10 text-emerald-400 hover:bg-emerald-500/20' 
+                                      : 'border-red-500/30 bg-red-500/10 text-red-400 hover:bg-red-500/20'
+                                  }`}
+                                >
+                                  {dev.isBanned ? 'Unban' : 'Ban'}
+                                </button>
+                              ) : (
+                                <span className="text-xs text-white/20 font-mono">—</span>
+                              )}
+                            </td>
+                          </tr>
+                        ))
+                      )}
+                    </tbody>
+                  </table>
+                </div>
+
+                {renderPagination()}
+
               </div>
-
-              {renderPagination()}
-
             </div>
           )}
 
           {/* ==================== ENQUIRIES PANEL ==================== */}
           {activeTab === 'enquiries' && (
-            <div className="rounded-xl bg-white/[0.018] border border-[var(--color-border)] overflow-hidden flex flex-col min-h-0 flex-grow">
+            <div className="flex flex-col min-h-0 flex-grow gap-5 overflow-y-auto pr-1">
               
-              {/* Search */}
-              <div className="p-4 border-b border-[var(--color-border)] bg-white/[0.005]">
-                <div className="relative w-full max-w-md">
-                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[var(--color-text-muted)]" />
-                  <input 
-                    type="text" 
-                    placeholder="Search enquiries..."
-                    value={searchQuery}
-                    onChange={(e) => setSearchQuery(e.target.value)}
-                    className="w-full h-9 bg-white/[0.02] border border-[var(--color-border)] rounded-lg pl-9 pr-3 text-[13px] text-white focus:outline-none focus:border-accent transition-colors"
-                  />
+              {/* Header */}
+              <div className="flex items-center justify-between gap-4 border-b border-[var(--color-border)] pb-3 shrink-0">
+                <div>
+                  <div className="flex items-center gap-2">
+                    <h2 className="text-base font-medium text-white">Support Enquiries</h2>
+                    <span className="bg-white/[0.04] border border-white/[0.08] text-white/70 px-2 py-0.5 rounded font-mono text-[10px]">
+                      {enquiriesList.length} SUBMISSIONS
+                    </span>
+                  </div>
+                  <p className="mt-0.5 text-xs text-[var(--color-text-muted)]">
+                    Inbound contact submissions, customer help requests, and enterprise leads.
+                  </p>
                 </div>
+                <button 
+                  onClick={() => fetchEnquiries()}
+                  className="h-8 px-3 rounded-lg text-xs transition-colors border border-[var(--color-border)] hover:bg-white/[0.05] flex items-center gap-1.5 font-medium text-white"
+                >
+                  <RefreshCw className={cn("w-3.5 h-3.5", isLoading ? "animate-spin" : "")} />
+                  Refresh
+                </button>
               </div>
 
-              {/* Table */}
-              <div className="overflow-auto flex-grow min-h-0">
-                <table className="w-full text-left border-collapse">
-                  <thead>
-                    <tr className="border-b border-[var(--color-border)] bg-white/[0.01]">
-                      <th className="px-6 py-3 text-xs font-semibold text-[var(--color-text-muted)]">Contact Info</th>
-                      <th className="px-6 py-3 text-xs font-semibold text-[var(--color-text-muted)]">Message Details</th>
-                      <th className="px-6 py-3 text-xs font-semibold text-[var(--color-text-muted)]">Issue Category</th>
-                      <th className="px-6 py-3 text-xs font-semibold text-[var(--color-text-muted)]">Timestamp</th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-[var(--color-border)]/50">
-                    {isLoading ? (
-                      <tr>
-                        <td colSpan={4} className="px-6 py-12 text-center text-[var(--color-text-muted)] text-sm">Loading records...</td>
+              <div className="rounded-xl bg-white/[0.018] border border-[var(--color-border)] overflow-hidden flex flex-col min-h-0 flex-grow">
+                
+                {/* Search */}
+                <div className="p-4 border-b border-[var(--color-border)] bg-white/[0.005]">
+                  <div className="relative w-full max-w-md">
+                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[var(--color-text-muted)]" />
+                    <input 
+                      type="text" 
+                      placeholder="Search enquiries..."
+                      value={searchQuery}
+                      onChange={(e) => setSearchQuery(e.target.value)}
+                      className="w-full h-9 bg-white/[0.02] border border-[var(--color-border)] rounded-lg pl-9 pr-3 text-[13px] text-white focus:outline-none focus:border-accent transition-colors"
+                    />
+                  </div>
+                </div>
+
+                {/* Table */}
+                <div className="overflow-auto flex-grow min-h-0">
+                  <table className="w-full text-left border-collapse">
+                    <thead>
+                      <tr className="border-b border-[var(--color-border)] text-[10px] uppercase tracking-wider text-white/35 font-medium">
+                        <th className="px-4 py-2.5">Contact Info</th>
+                        <th className="px-4 py-2.5">Message Details</th>
+                        <th className="px-4 py-2.5">Category</th>
+                        <th className="px-4 py-2.5 text-right font-medium">Timestamp</th>
                       </tr>
-                    ) : filteredEnquiries.length === 0 ? (
-                      <tr>
-                        <td colSpan={4} className="px-6 py-12 text-center text-[var(--color-text-muted)] text-sm">No matching records found</td>
-                      </tr>
-                    ) : (
-                      paginatedEnquiries.map((enq) => (
-                        <tr key={enq.id} className="group hover:bg-white/[0.005] transition-colors border-b border-[var(--color-border)]/50 last:border-b-0">
-                          <td className="px-6 py-4">
-                            <div>
-                              <p className="font-medium text-white text-sm">{enq.firstName} {enq.lastName}</p>
-                              <div className="flex items-center gap-2 text-xs text-[var(--color-text-muted)] mt-1">
-                                <span>{enq.contactEmail}</span>
-                                <span>&middot; {enq.contactNumber}</span>
-                              </div>
-                            </div>
-                          </td>
-                          <td className="px-6 py-4 max-w-sm">
-                            <p className="text-[13px] text-white/70 line-clamp-3 leading-relaxed" title={enq.message}>
-                              {enq.message}
-                            </p>
-                            {enq.relevantLinks && (
-                              <a href={enq.relevantLinks} target="_blank" rel="noopener noreferrer" className="text-xs text-accent mt-2 inline-block hover:underline">
-                                View Attached Link
-                              </a>
-                            )}
-                          </td>
-                          <td className="px-6 py-4">
-                            <span className="inline-flex items-center px-2 py-0.5 rounded bg-white/[0.03] border border-[var(--color-border)] text-[var(--color-text-muted)] text-xs font-medium">
-                              {enq.errorType === 'AccessDenied' 
-                                ? 'USER BAN' 
-                                : enq.errorType === 'GitHubIdentityMismatch' 
-                                ? 'GITHUB CONFLICT' 
-                                : enq.errorType || 'GENERAL'}
-                            </span>
-                          </td>
-                          <td className="px-6 py-4 text-xs font-mono text-[var(--color-text-muted)]">
-                            <p>{new Date(enq.createdAt).toLocaleDateString()}</p>
-                          </td>
+                    </thead>
+                    <tbody className="divide-y divide-[var(--color-border)]">
+                      {isLoading ? (
+                        <TableLoadingRows cols={4} rows={6} />
+                      ) : filteredEnquiries.length === 0 ? (
+                        <tr>
+                          <td colSpan={4} className="px-4 py-12 text-center text-[var(--color-text-muted)] text-xs font-mono">No matching records found</td>
                         </tr>
-                      ))
-                    )}
-                  </tbody>
-                </table>
+                      ) : (
+                        paginatedEnquiries.map((enq) => (
+                          <tr key={enq.id} className="group hover:bg-white/[0.015] transition-colors">
+                            <td className="px-4 py-3">
+                              <div>
+                                <p className="font-medium text-white text-[13px]">{enq.firstName} {enq.lastName}</p>
+                                <div className="flex items-center gap-2 text-xs text-[var(--color-text-muted)] mt-0.5">
+                                  <span>{enq.contactEmail}</span>
+                                  <span>· {enq.contactNumber}</span>
+                                </div>
+                              </div>
+                            </td>
+                            <td className="px-4 py-3 max-w-sm">
+                              <p className="text-[13px] text-white/70 line-clamp-3 leading-relaxed" title={enq.message}>
+                                {enq.message}
+                              </p>
+                              {enq.relevantLinks && (
+                                <a href={enq.relevantLinks} target="_blank" rel="noopener noreferrer" className="text-xs text-accent mt-1.5 inline-block hover:underline">
+                                  View Attached Link
+                                </a>
+                              )}
+                            </td>
+                            <td className="px-4 py-3">
+                              <span className="inline-flex items-center px-1.5 py-0.5 rounded font-mono text-[10px] font-medium uppercase tracking-wider bg-white/[0.03] border border-[var(--color-border)] text-white/70">
+                                {enq.errorType === 'AccessDenied' 
+                                  ? 'USER BAN' 
+                                  : enq.errorType === 'GitHubIdentityMismatch' 
+                                  ? 'GITHUB CONFLICT' 
+                                  : enq.errorType || 'GENERAL'}
+                              </span>
+                            </td>
+                            <td className="px-4 py-3 text-xs font-mono text-[var(--color-text-muted)] text-right">
+                              <p>{formatLocalDateTime(enq.createdAt)}</p>
+                            </td>
+                          </tr>
+                        ))
+                      )}
+                    </tbody>
+                  </table>
+                </div>
+
+                {renderPagination()}
+
               </div>
-
-              {renderPagination()}
-
             </div>
           )}
 
           {/* ==================== SUBSCRIBERS PANEL ==================== */}
           {activeTab === 'subscribers' && (
-            <div className="flex flex-col min-h-0 flex-grow gap-4 overflow-y-auto pr-1">
+            <div className="flex flex-col min-h-0 flex-grow gap-5 overflow-y-auto pr-1">
 
-            <div className="rounded-xl bg-white/[0.018] border border-[var(--color-border)] overflow-hidden flex flex-col min-h-0 flex-grow">
-
-              {/* Search & Action Buttons */}
-              <div className="p-4 border-b border-[var(--color-border)] flex flex-col md:flex-row md:items-center justify-between bg-white/[0.005] gap-4">
-                <div className="relative w-full max-w-md">
-                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[var(--color-text-muted)]" />
-                  <input 
-                    type="text" 
-                    placeholder="Search subscribers by email, source or country..."
-                    value={searchQuery}
-                    onChange={(e) => setSearchQuery(e.target.value)}
-                    className="w-full h-9 bg-white/[0.02] border border-[var(--color-border)] rounded-lg pl-9 pr-3 text-[13px] text-white focus:outline-none focus:border-accent transition-colors"
-                  />
+              {/* Header */}
+              <div className="flex items-center justify-between gap-4 border-b border-[var(--color-border)] pb-3 shrink-0">
+                <div>
+                  <div className="flex items-center gap-2">
+                    <h2 className="text-base font-medium text-white">Newsletter Subscribers</h2>
+                    <span className="bg-white/[0.04] border border-white/[0.08] text-white/70 px-2 py-0.5 rounded font-mono text-[10px]">
+                      {subscribersList.length} SUBSCRIBERS
+                    </span>
+                  </div>
+                  <p className="mt-0.5 text-xs text-[var(--color-text-muted)]">
+                    Verified email subscriptions, attribution sources, and audience lists.
+                  </p>
                 </div>
-                <div className="flex items-center gap-3">
+                <div className="flex items-center gap-2">
                   <button 
                     onClick={handleExportCSV}
-                    className="h-8 px-3 rounded-lg text-[13px] transition-colors border border-[var(--color-border)] hover:bg-white/[0.05] flex items-center gap-2 cursor-pointer font-medium"
+                    className="h-8 px-3 rounded-lg text-xs transition-colors border border-[var(--color-border)] hover:bg-white/[0.05] flex items-center gap-1.5 font-medium text-white"
                   >
                     Export CSV
+                  </button>
+                  <button 
+                    onClick={() => fetchSubscribers()}
+                    className="h-8 px-3 rounded-lg text-xs transition-colors border border-[var(--color-border)] hover:bg-white/[0.05] flex items-center gap-1.5 font-medium text-white"
+                  >
+                    <RefreshCw className={cn("w-3.5 h-3.5", isLoading ? "animate-spin" : "")} />
+                    Refresh
                   </button>
                 </div>
               </div>
 
-              {/* Table */}
-              <div className="overflow-auto flex-grow min-h-0">
-                <table className="w-full text-left border-collapse">
-                  <thead>
-                    <tr className="border-b border-[var(--color-border)] bg-white/[0.01]">
-                      <th className="px-6 py-3 text-xs font-semibold text-[var(--color-text-muted)] whitespace-nowrap">Subscriber ID</th>
-                      <th className="px-6 py-3 text-xs font-semibold text-[var(--color-text-muted)] whitespace-nowrap">Email Address</th>
-                      <th className="px-6 py-3 text-xs font-semibold text-[var(--color-text-muted)] whitespace-nowrap">Source</th>
-                      <th className="px-6 py-3 text-xs font-semibold text-[var(--color-text-muted)] whitespace-nowrap">Country</th>
-                      <th className="px-6 py-3 text-xs font-semibold text-[var(--color-text-muted)] whitespace-nowrap">Date & Time Joined</th>
-                      <th className="px-6 py-3 text-xs font-semibold text-[var(--color-text-muted)] whitespace-nowrap">Actions</th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-[var(--color-border)]/50">
-                    {isLoading ? (
-                      <tr>
-                        <td colSpan={6} className="px-6 py-12 text-center text-[var(--color-text-muted)] text-sm">Loading records...</td>
+              <div className="rounded-xl bg-white/[0.018] border border-[var(--color-border)] overflow-hidden flex flex-col min-h-0 flex-grow">
+
+                {/* Search */}
+                <div className="p-4 border-b border-[var(--color-border)] bg-white/[0.005]">
+                  <div className="relative w-full max-w-md">
+                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[var(--color-text-muted)]" />
+                    <input 
+                      type="text" 
+                      placeholder="Search subscribers by email, source or country..."
+                      value={searchQuery}
+                      onChange={(e) => setSearchQuery(e.target.value)}
+                      className="w-full h-9 bg-white/[0.02] border border-[var(--color-border)] rounded-lg pl-9 pr-3 text-[13px] text-white focus:outline-none focus:border-accent transition-colors"
+                    />
+                  </div>
+                </div>
+
+                {/* Table */}
+                <div className="overflow-auto flex-grow min-h-0">
+                  <table className="w-full text-left border-collapse">
+                    <thead>
+                      <tr className="border-b border-[var(--color-border)] text-[10px] uppercase tracking-wider text-white/35 font-medium">
+                        <th className="px-4 py-2.5 whitespace-nowrap">Subscriber ID</th>
+                        <th className="px-4 py-2.5 whitespace-nowrap">Email Address</th>
+                        <th className="px-4 py-2.5 whitespace-nowrap">Source</th>
+                        <th className="px-4 py-2.5 whitespace-nowrap">Country</th>
+                        <th className="px-4 py-2.5 whitespace-nowrap">Joined (Local)</th>
+                        <th className="px-4 py-2.5 text-right font-medium whitespace-nowrap">Actions</th>
                       </tr>
-                    ) : filteredSubscribers.length === 0 ? (
-                      <tr>
-                        <td colSpan={6} className="px-6 py-12 text-center text-[var(--color-text-muted)] text-sm">No matching records found</td>
-                      </tr>
-                    ) : (
-                      paginatedSubscribers.map((sub) => {
-                        const a = sub.attribution as Record<string, any> | null
-                        const country = a?.country as string | null | undefined
-                        return (
-                          <tr key={sub.id} className="group hover:bg-white/[0.005] transition-colors border-b border-[var(--color-border)]/50 last:border-b-0">
-                            <td className="px-6 py-4 text-xs font-mono text-[var(--color-text-muted)] whitespace-nowrap">
-                              <p>{sub.id}</p>
-                            </td>
-                            <td className="px-6 py-4 whitespace-nowrap">
-                              <p className="text-sm font-medium text-white">{sub.email}</p>
-                            </td>
-                            <td className="px-6 py-4 whitespace-nowrap">
-                              <span className="inline-flex items-center px-2 py-0.5 rounded-md text-[11px] font-medium font-mono bg-white/[0.04] border border-[var(--color-border)] text-white/70">
-                                {sub.source || 'direct'}
-                              </span>
-                              {a?.campaign && (
-                                <p className="text-[10px] text-[var(--color-text-muted)] font-mono mt-1" title={a?.referrer || undefined}>
-                                  {a.campaign}
-                                </p>
-                              )}
-                            </td>
-                            <td className="px-6 py-4 whitespace-nowrap">
-                              {country ? (
-                                <span className="inline-flex items-center gap-1.5 text-xs font-mono text-white/70">
-                                  <Globe className="w-3 h-3 text-[var(--color-text-muted)]" />
-                                  {country.toUpperCase()}
+                    </thead>
+                    <tbody className="divide-y divide-[var(--color-border)]">
+                      {isLoading ? (
+                        <TableLoadingRows cols={6} rows={6} />
+                      ) : filteredSubscribers.length === 0 ? (
+                        <tr>
+                          <td colSpan={6} className="px-4 py-12 text-center text-[var(--color-text-muted)] text-xs font-mono">No matching records found</td>
+                        </tr>
+                      ) : (
+                        paginatedSubscribers.map((sub) => {
+                          const a = sub.attribution as Record<string, any> | null
+                          const country = a?.country as string | null | undefined
+                          return (
+                            <tr key={sub.id} className="group hover:bg-white/[0.015] transition-colors">
+                              <td className="px-4 py-3 text-xs font-mono text-[var(--color-text-muted)] whitespace-nowrap">
+                                <p>{sub.id}</p>
+                              </td>
+                              <td className="px-4 py-3 whitespace-nowrap">
+                                <p className="text-[13px] font-medium text-white">{sub.email}</p>
+                              </td>
+                              <td className="px-4 py-3 whitespace-nowrap">
+                                <span className="inline-flex items-center px-1.5 py-0.5 rounded font-mono text-[10px] font-medium uppercase tracking-wider bg-white/[0.03] border border-[var(--color-border)] text-white/70">
+                                  {sub.source || 'direct'}
                                 </span>
-                              ) : (
-                                <span className="text-xs font-mono text-white/25">—</span>
-                              )}
-                            </td>
-                            <td className="px-6 py-4 text-xs font-mono text-[var(--color-text-muted)] whitespace-nowrap">
-                              <p>{new Date(sub.createdAt).toLocaleString()}</p>
-                            </td>
-                            <td className="px-6 py-4 whitespace-nowrap">
-                              <button
-                                onClick={() => handleDeleteSubscriber(sub.id)}
-                                className="w-8 h-8 rounded-lg bg-red-500/10 border border-red-500/20 text-red-400 flex items-center justify-center hover:bg-red-500 hover:text-white transition-colors cursor-pointer"
-                                title="Delete Subscriber"
-                              >
-                                <UserX className="w-4 h-4" />
-                              </button>
-                            </td>
-                          </tr>
-                        )
-                      })
-                    )}
-                  </tbody>
-                </table>
+                                {a?.campaign && (
+                                  <p className="text-[10px] text-[var(--color-text-muted)] font-mono mt-0.5" title={a?.referrer || undefined}>
+                                    {a.campaign}
+                                  </p>
+                                )}
+                              </td>
+                              <td className="px-4 py-3 whitespace-nowrap">
+                                {country ? (
+                                  <span className="inline-flex items-center gap-1.5 text-xs font-mono text-white/70">
+                                    <Globe className="w-3 h-3 text-[var(--color-text-muted)]" />
+                                    {country.toUpperCase()}
+                                  </span>
+                                ) : (
+                                  <span className="text-xs font-mono text-white/25">—</span>
+                                )}
+                              </td>
+                              <td className="px-4 py-3 text-xs font-mono text-[var(--color-text-muted)] whitespace-nowrap">
+                                <p>{formatLocalDateTime(sub.createdAt)}</p>
+                              </td>
+                              <td className="px-4 py-3 text-right whitespace-nowrap">
+                                <button
+                                  onClick={() => handleDeleteSubscriber(sub.id)}
+                                  className="flex h-8 w-8 items-center justify-center rounded-md text-[var(--color-text-muted)] transition-colors hover:bg-red-500/10 hover:text-red-400 ml-auto"
+                                  title="Delete Subscriber"
+                                >
+                                  <Trash2 className="w-4 h-4" />
+                                </button>
+                              </td>
+                            </tr>
+                          )
+                        })
+                      )}
+                    </tbody>
+                  </table>
+                </div>
+
+                {renderPagination()}
+
               </div>
-
-              {renderPagination()}
-
-            </div>
             </div>
           )}
 
           {/* ==================== ADMINS PANEL ==================== */}
           {activeTab === 'admins' && (
-            <div className="rounded-xl bg-white/[0.018] border border-[var(--color-border)] overflow-hidden flex flex-col min-h-0 flex-grow">
+            <div className="flex flex-col min-h-0 flex-grow gap-5 overflow-y-auto pr-1">
               
-              {/* Search & Action Buttons */}
-              <div className="p-4 border-b border-[var(--color-border)] flex flex-col md:flex-row md:items-center justify-between bg-white/[0.005] gap-4">
-                <div className="relative w-full max-w-md">
-                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[var(--color-text-muted)]" />
-                  <input 
-                    type="text" 
-                    placeholder="Search administrators by name, email or username..."
-                    value={searchQuery}
-                    onChange={(e) => setSearchQuery(e.target.value)}
-                    className="w-full h-9 bg-white/[0.02] border border-[var(--color-border)] rounded-lg pl-9 pr-3 text-[13px] text-white focus:outline-none focus:border-accent transition-colors"
-                  />
+              {/* Header */}
+              <div className="flex items-center justify-between gap-4 border-b border-[var(--color-border)] pb-3 shrink-0">
+                <div>
+                  <div className="flex items-center gap-2">
+                    <h2 className="text-base font-medium text-white">Administrators</h2>
+                    <span className="bg-white/[0.04] border border-white/[0.08] text-white/70 px-2 py-0.5 rounded font-mono text-[10px]">
+                      {adminsList.length} ADMINS
+                    </span>
+                  </div>
+                  <p className="mt-0.5 text-xs text-[var(--color-text-muted)]">
+                    Control access permissions, manage security roles, and invite administrative team members.
+                  </p>
                 </div>
-                <div className="flex items-center gap-3">
+                <div className="flex items-center gap-2">
                   {currentAdmin?.role === 'super_admin' && (
                     <button 
                       onClick={() => setIsInviteModalOpen(true)}
-                      className="h-8 px-3 rounded-lg text-[13px] ui-btn-primary transition-colors flex items-center gap-2 cursor-pointer font-medium"
+                      className="h-8 px-3 rounded-lg text-xs ui-btn-primary transition-colors flex items-center gap-1.5 cursor-pointer font-medium"
                     >
-                      <UserPlus className="w-4 h-4 text-black" /> Invite Admin
+                      <UserPlus className="w-3.5 h-3.5 text-black" /> Invite Admin
                     </button>
                   )}
+                  <button 
+                    onClick={() => fetchAdmins()}
+                    className="h-8 px-3 rounded-lg text-xs transition-colors border border-[var(--color-border)] hover:bg-white/[0.05] flex items-center gap-1.5 font-medium text-white"
+                  >
+                    <RefreshCw className={cn("w-3.5 h-3.5", isLoading ? "animate-spin" : "")} />
+                    Refresh
+                  </button>
                 </div>
               </div>
 
-              {/* Table */}
-              <div className="overflow-auto flex-grow min-h-0">
-                <table className="w-full text-left border-collapse">
-                  <thead>
-                    <tr className="border-b border-[var(--color-border)] bg-white/[0.01]">
-                      <th className="px-6 py-3 text-xs font-semibold text-[var(--color-text-muted)] whitespace-nowrap">Administrative Profile</th>
-                      <th className="px-6 py-3 text-xs font-semibold text-[var(--color-text-muted)] whitespace-nowrap">Email / Credentials</th>
-                      <th className="px-6 py-3 text-xs font-semibold text-[var(--color-text-muted)] whitespace-nowrap">Access Level</th>
-                      <th className="px-6 py-3 text-xs font-semibold text-[var(--color-text-muted)] whitespace-nowrap">Last Login</th>
-                      <th className="px-6 py-3 text-xs font-semibold text-[var(--color-text-muted)] whitespace-nowrap">Status</th>
-                      {currentAdmin?.role === 'super_admin' && (
-                        <th className="px-6 py-3 text-xs font-semibold text-[var(--color-text-muted)] whitespace-nowrap">Actions</th>
-                      )}
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-[var(--color-border)]/50">
-                    {isLoading ? (
-                      <tr>
-                        <td colSpan={6} className="px-6 py-12 text-center text-[var(--color-text-muted)] text-sm">Loading records...</td>
+              <div className="rounded-xl bg-white/[0.018] border border-[var(--color-border)] overflow-hidden flex flex-col min-h-0 flex-grow">
+                
+                {/* Search */}
+                <div className="p-4 border-b border-[var(--color-border)] bg-white/[0.005]">
+                  <div className="relative w-full max-w-md">
+                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[var(--color-text-muted)]" />
+                    <input 
+                      type="text" 
+                      placeholder="Search administrators by name, email or username..."
+                      value={searchQuery}
+                      onChange={(e) => setSearchQuery(e.target.value)}
+                      className="w-full h-9 bg-white/[0.02] border border-[var(--color-border)] rounded-lg pl-9 pr-3 text-[13px] text-white focus:outline-none focus:border-accent transition-colors"
+                    />
+                  </div>
+                </div>
+
+                {/* Table */}
+                <div className="overflow-auto flex-grow min-h-0">
+                  <table className="w-full text-left border-collapse">
+                    <thead>
+                      <tr className="border-b border-[var(--color-border)] text-[10px] uppercase tracking-wider text-white/35 font-medium">
+                        <th className="px-4 py-2.5 whitespace-nowrap">Admin Profile</th>
+                        <th className="px-4 py-2.5 whitespace-nowrap">Email / Handle</th>
+                        <th className="px-4 py-2.5 whitespace-nowrap">Role</th>
+                        <th className="px-4 py-2.5 whitespace-nowrap">Last Login</th>
+                        <th className="px-4 py-2.5 whitespace-nowrap">Status</th>
+                        {currentAdmin?.role === 'super_admin' && (
+                          <th className="px-4 py-2.5 text-right font-medium whitespace-nowrap">Actions</th>
+                        )}
                       </tr>
-                    ) : filteredAdmins.length === 0 ? (
+                    </thead>
+                    <tbody className="divide-y divide-[var(--color-border)]">
+                      {isLoading ? (
+                        <TableLoadingRows cols={currentAdmin?.role === 'super_admin' ? 6 : 5} rows={6} />
+                      ) : filteredAdmins.length === 0 ? (
                       <tr>
-                        <td colSpan={6} className="px-6 py-12 text-center text-[var(--color-text-muted)] text-sm">No matching records found</td>
+                        <td colSpan={6} className="px-4 py-12 text-center text-[var(--color-text-muted)] text-xs font-mono">No matching records found</td>
                       </tr>
                     ) : (
                       paginatedAdmins.map((adm) => (
-                        <tr key={adm.id} className={`group hover:bg-white/[0.005] transition-colors border-b border-[var(--color-border)]/50 last:border-b-0 ${adm.isDisabled ? 'opacity-40' : ''}`}>
-                          <td className="px-6 py-4 whitespace-nowrap">
+                        <tr key={adm.id} className={`group hover:bg-white/[0.015] transition-colors ${adm.isDisabled ? 'opacity-40' : ''}`}>
+                          <td className="px-4 py-3 whitespace-nowrap">
                             <div>
-                              <p className="font-medium text-white text-sm">{adm.name}</p>
+                              <p className="font-medium text-white text-[13px]">{adm.name}</p>
                               {adm.alternativeEmail && (
-                                <p className="text-xs text-[var(--color-text-muted)] mt-1">
+                                <p className="text-xs text-[var(--color-text-muted)] mt-0.5">
                                   Alt: {adm.alternativeEmail}
                                 </p>
                               )}
                             </div>
                           </td>
-                          <td className="px-6 py-4 whitespace-nowrap">
+                          <td className="px-4 py-3 whitespace-nowrap">
                             <div>
                               <p className="font-mono text-xs text-[var(--color-text-muted)]">{adm.email}</p>
                               {adm.username ? (
-                                <p className="text-xs text-accent mt-1">
+                                <p className="text-xs text-accent mt-0.5 font-mono">
                                   @{adm.username}
                                 </p>
                               ) : (
-                                <p className="text-xs text-white/20 mt-1 italic">
-                                  No username set yet
+                                <p className="text-xs text-white/20 mt-0.5 italic font-mono">
+                                  No username
                                 </p>
                               )}
                             </div>
                           </td>
-                          <td className="px-6 py-4 whitespace-nowrap">
-                            <span className={`inline-flex px-2 py-0.5 rounded-full text-xs font-medium whitespace-nowrap ${
+                          <td className="px-4 py-3 whitespace-nowrap">
+                            <span className={`inline-flex px-1.5 py-0.5 rounded font-mono text-[10px] font-medium uppercase tracking-wider ${
                               adm.role === 'super_admin' 
-                                ? 'bg-orange-500/10 border border-orange-500/20 text-orange-400' 
-                                : 'bg-blue-500/10 border border-blue-500/20 text-blue-400'
+                                ? 'bg-orange-500/10 border border-orange-500/30 text-orange-400' 
+                                : 'bg-blue-500/10 border border-blue-500/30 text-blue-400'
                             }`}>
                               {adm.role === 'super_admin' ? 'Super Admin' : 'Admin'}
                             </span>
                           </td>
-                          <td className="px-6 py-4 text-xs font-mono text-[var(--color-text-muted)] whitespace-nowrap">
+                          <td className="px-4 py-3 text-xs font-mono text-[var(--color-text-muted)] whitespace-nowrap">
                             {adm.lastLoginAt ? (
                               <p className="whitespace-nowrap">
-                                {new Date(adm.lastLoginAt).toLocaleString()}
+                                {formatLocalDateTime(adm.lastLoginAt)}
                               </p>
                             ) : (
                               <p className="text-white/20 italic whitespace-nowrap">
@@ -2371,36 +2507,36 @@ export default function AdminDashboard() {
                               </p>
                             )}
                           </td>
-                          <td className="px-6 py-4 whitespace-nowrap">
+                          <td className="px-4 py-3 whitespace-nowrap">
                             {adm.isDisabled ? (
-                              <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-red-500/10 border border-red-500/20 text-red-400 text-xs font-medium">
-                                <UserX className="w-3 h-3" /> Disabled
+                              <span className="inline-flex items-center gap-1 rounded px-1.5 py-0.5 font-mono text-[10px] font-medium uppercase tracking-wider border border-red-500/30 bg-red-500/10 text-red-400">
+                                <span className="h-1.5 w-1.5 rounded-full bg-red-400" /> Disabled
                               </span>
                             ) : adm.username ? (
-                              <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-xs font-medium">
-                                <CheckCircle2 className="w-3 h-3" /> Active
+                              <span className="inline-flex items-center gap-1 rounded px-1.5 py-0.5 font-mono text-[10px] font-medium uppercase tracking-wider border border-emerald-500/30 bg-emerald-500/10 text-emerald-400">
+                                <span className="h-1.5 w-1.5 rounded-full bg-emerald-400" /> Active
                               </span>
                             ) : (
-                              <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-orange-500/10 border border-orange-500/20 text-orange-400 text-xs font-medium animate-pulse">
-                                <ShieldCheck className="w-3.5 h-3.5" /> Pending Setup
+                              <span className="inline-flex items-center gap-1 rounded px-1.5 py-0.5 font-mono text-[10px] font-medium uppercase tracking-wider border border-amber-500/30 bg-amber-500/10 text-amber-400">
+                                <span className="h-1.5 w-1.5 rounded-full bg-amber-400 animate-pulse" /> Pending
                               </span>
                             )}
                           </td>
                           {currentAdmin?.role === 'super_admin' && (
-                            <td className="px-6 py-4 whitespace-nowrap">
+                            <td className="px-4 py-3 text-right whitespace-nowrap">
                               {currentAdmin.id !== adm.id ? (
-                                <div className="flex items-center gap-2">
+                                <div className="flex items-center justify-end gap-1">
                                   {/* Toggle Disable/Enable */}
                                   <button
                                     onClick={() => handleToggleDisabled(adm.id, adm.isDisabled)}
-                                    className={`w-8 h-8 rounded-lg flex items-center justify-center transition-colors cursor-pointer ${
-                                      adm.isDisabled 
-                                        ? 'bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 hover:bg-emerald-500 hover:text-white' 
-                                        : 'bg-orange-500/10 border border-orange-500/20 text-orange-400 hover:bg-orange-500 hover:text-white'
+                                    className={`px-2.5 py-1 rounded-md text-xs font-medium border transition-colors ${
+                                      adm.isDisabled
+                                        ? 'border-emerald-500/30 bg-emerald-500/10 text-emerald-400 hover:bg-emerald-500/20'
+                                        : 'border-red-500/30 bg-red-500/10 text-red-400 hover:bg-red-500/20'
                                     }`}
                                     title={adm.isDisabled ? 'Enable Account' : 'Disable Account'}
                                   >
-                                    {adm.isDisabled ? <CheckCircle2 className="w-4 h-4" /> : <UserX className="w-4 h-4" />}
+                                    {adm.isDisabled ? 'Enable' : 'Disable'}
                                   </button>
 
                                   {/* Edit Role */}
@@ -2410,10 +2546,10 @@ export default function AdminDashboard() {
                                       setEditRoleValue(adm.role)
                                       setIsEditRoleModalOpen(true)
                                     }}
-                                    className="w-8 h-8 rounded-lg bg-orange-500/10 border border-orange-500/20 text-orange-400 flex items-center justify-center hover:bg-orange-500 hover:text-white transition-colors cursor-pointer"
+                                    className="flex h-8 w-8 items-center justify-center rounded-md text-[var(--color-text-muted)] transition-colors hover:bg-white/[0.06] hover:text-white"
                                     title="Edit Access Role"
                                   >
-                                    <Pencil className="w-4 h-4" />
+                                    <Pencil className="w-3.5 h-3.5" />
                                   </button>
 
                                   {/* Reset Password */}
@@ -2422,23 +2558,23 @@ export default function AdminDashboard() {
                                       setResetTargetAdmin(adm)
                                       setIsResetModalOpen(true)
                                     }}
-                                    className="w-8 h-8 rounded-lg bg-blue-500/10 border border-blue-500/20 text-blue-400 flex items-center justify-center hover:bg-blue-500 hover:text-white transition-colors cursor-pointer"
+                                    className="flex h-8 w-8 items-center justify-center rounded-md text-[var(--color-text-muted)] transition-colors hover:bg-white/[0.06] hover:text-white"
                                     title="Reset Password Override"
                                   >
-                                    <KeyRound className="w-4 h-4" />
+                                    <KeyRound className="w-3.5 h-3.5" />
                                   </button>
 
                                   {/* Delete Account */}
                                   <button 
                                     onClick={() => handleDeleteAdmin(adm.id)}
-                                    className="w-8 h-8 rounded-lg bg-red-500/10 border border-red-500/20 text-red-400 flex items-center justify-center hover:bg-red-500 hover:text-white transition-colors cursor-pointer"
+                                    className="flex h-8 w-8 items-center justify-center rounded-md text-[var(--color-text-muted)] transition-colors hover:bg-red-500/10 hover:text-red-400"
                                     title="Delete Account"
                                   >
-                                    <UserX className="w-4 h-4" />
+                                    <Trash2 className="w-3.5 h-3.5" />
                                   </button>
                                 </div>
                               ) : (
-                                <span className="text-xs text-white/20 italic whitespace-nowrap">Logged In</span>
+                                <span className="text-xs text-white/20 font-mono">—</span>
                               )}
                             </td>
                           )}
@@ -2450,12 +2586,20 @@ export default function AdminDashboard() {
               </div>
 
             </div>
-          )}
+          </div>
+        )}
 
           {/* ==================== BLOG PANEL ==================== */}
           {activeTab === 'blogs' && (
             <div className="flex-grow min-h-0 h-full flex flex-col">
               <BlogPanel />
+            </div>
+          )}
+
+          {/* ==================== CHANGELOG PANEL ==================== */}
+          {activeTab === 'changelog' && (
+            <div className="flex-grow min-h-0 h-full flex flex-col">
+              <ChangelogPanel />
             </div>
           )}
 
@@ -2473,17 +2617,10 @@ export default function AdminDashboard() {
             </div>
           )}
 
-          {/* ==================== DATABASE OVERVIEW PANEL ==================== */}
-          {activeTab === 'db-overview' && (
+          {/* ==================== VM OVERVIEW & HEALTH PANEL ==================== */}
+          {activeTab === 'vm-overview' && (
             <div className="flex-grow min-h-0 h-full flex flex-col">
-              <DatabaseOverviewPanel />
-            </div>
-          )}
-
-          {/* ==================== DATABASE MONITORING PANEL ==================== */}
-          {activeTab === 'db-monitoring' && (
-            <div className="flex-grow min-h-0 h-full flex flex-col">
-              <DatabaseMonitoringPanel />
+              <VmOverviewPanel />
             </div>
           )}
 

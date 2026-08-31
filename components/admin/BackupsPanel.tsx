@@ -23,13 +23,22 @@ function formatBytes(bytes: number | null): string {
   return `${(bytes / (1024 * 1024)).toFixed(1)} MB`
 }
 
-function formatDate(iso: string | null): string {
+function formatLocalDateTime(iso: string | null | undefined): string {
   if (!iso) return 'Never'
-  return new Date(iso).toLocaleString('en-US', {
-    timeZone: 'Asia/Kolkata',
-    dateStyle: 'medium',
-    timeStyle: 'short',
-  })
+  try {
+    const d = new Date(iso)
+    if (isNaN(d.getTime())) return 'Never'
+    return new Intl.DateTimeFormat(undefined, {
+      month: 'short',
+      day: 'numeric',
+      year: 'numeric',
+      hour: 'numeric',
+      minute: '2-digit',
+      hour12: true,
+    }).format(d)
+  } catch {
+    return iso
+  }
 }
 
 const TIER_LABEL: Record<string, string> = {
@@ -69,100 +78,103 @@ export default function BackupsPanel() {
     stats.lastSuccess && Date.now() - new Date(stats.lastSuccess).getTime() > 2 * 24 * 60 * 60 * 1000
 
   return (
-    <div className="flex-grow overflow-y-auto p-6 space-y-6 text-left select-none bg-[#070709] text-white font-sans h-full min-h-0">
-      <div className="flex items-start justify-between gap-4 border-b border-white/[0.04] pb-4">
-        <div className="space-y-1">
-          <h1 className="text-xl font-semibold tracking-tight text-white flex items-center gap-2">
-            Database backups
-          </h1>
-          <p className="text-xs text-white/40">Daily automated backups with 7-day / 4-week / 6-month retention, stored offsite on R2.</p>
+    <div className="flex-grow flex flex-col space-y-4 overflow-hidden h-full min-h-0 text-left">
+      {/* Header */}
+      <div className="flex items-center justify-between gap-4 mb-1">
+        <div>
+          <h2 className="text-base font-medium text-white">Database Backups</h2>
+          <p className="mt-0.5 text-xs text-[var(--color-text-muted)]">
+            Automated backups with multi-tier retention stored securely offsite on Cloudflare R2.
+          </p>
         </div>
         <button
           onClick={loadData}
-          className="px-3 py-1.5 bg-white/[0.02] hover:bg-white/[0.05] border border-white/[0.06] rounded-lg text-xs font-medium text-white/80 hover:text-white transition-colors cursor-pointer flex items-center gap-1.5"
+          className="h-8 px-3 rounded-lg text-xs transition-colors border border-[var(--color-border)] hover:bg-white/[0.05] flex items-center gap-1.5 font-medium text-white"
         >
           <RefreshCw className="w-3.5 h-3.5" />
           Refresh
         </button>
       </div>
 
+      {/* Stats Cards */}
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-3.5">
-        <div className={`bg-[#0b0b0e] border rounded-xl p-4 space-y-2 ${lastSuccessStale ? 'border-red-500/30' : 'border-white/[0.06]'}`}>
+        <div className={`rounded-xl bg-white/[0.018] border p-4 space-y-2 ${lastSuccessStale ? 'border-red-500/30' : 'border-[var(--color-border)]'}`}>
           <div className="text-[10px] font-medium text-white/40 uppercase tracking-wider flex items-center justify-between">
             <span>Last Successful</span>
             <CheckCircle2 className={`w-3.5 h-3.5 ${lastSuccessStale ? 'text-red-400' : 'text-emerald-400'}`} />
           </div>
-          <div className="text-sm font-mono font-bold text-white">{formatDate(stats.lastSuccess ?? null)}</div>
-          {lastSuccessStale && <div className="text-[9px] text-red-400">No successful backup in 2+ days</div>}
+          <div className="text-sm font-mono font-medium text-white">{formatLocalDateTime(stats.lastSuccess ?? null)}</div>
+          {lastSuccessStale && <div className="text-[9px] text-red-400 font-mono">No backup in 2+ days</div>}
         </div>
 
-        <div className="bg-[#0b0b0e] border border-white/[0.06] rounded-xl p-4 space-y-2">
+        <div className="rounded-xl bg-white/[0.018] border border-[var(--color-border)] p-4 space-y-2">
           <div className="text-[10px] font-medium text-white/40 uppercase tracking-wider flex items-center justify-between">
             <span>Last Run</span>
             <Clock className="w-3.5 h-3.5 text-accent/60" />
           </div>
-          <div className="text-sm font-mono font-bold text-white">{formatDate(stats.lastRun ?? null)}</div>
+          <div className="text-sm font-mono font-medium text-white">{formatLocalDateTime(stats.lastRun ?? null)}</div>
         </div>
 
-        <div className="bg-[#0b0b0e] border border-white/[0.06] rounded-xl p-4 space-y-2">
+        <div className="rounded-xl bg-white/[0.018] border border-[var(--color-border)] p-4 space-y-2">
           <div className="text-[10px] font-medium text-white/40 uppercase tracking-wider flex items-center justify-between">
             <span>Successful (90d)</span>
             <Archive className="w-3.5 h-3.5 text-accent/60" />
           </div>
-          <div className="text-lg font-mono font-bold text-white">{stats.successCount ?? 0}</div>
+          <div className="text-lg font-mono font-medium text-white">{stats.successCount ?? 0}</div>
         </div>
 
-        <div className="bg-[#0b0b0e] border border-white/[0.06] rounded-xl p-4 space-y-2">
+        <div className="rounded-xl bg-white/[0.018] border border-[var(--color-border)] p-4 space-y-2">
           <div className="text-[10px] font-medium text-white/40 uppercase tracking-wider flex items-center justify-between">
             <span>Failed (90d)</span>
             <Shield className={`w-3.5 h-3.5 ${(stats.failureCount ?? 0) > 0 ? 'text-red-400' : 'text-white/30'}`} />
           </div>
-          <div className={`text-lg font-mono font-bold ${(stats.failureCount ?? 0) > 0 ? 'text-red-400' : 'text-white'}`}>{stats.failureCount ?? 0}</div>
+          <div className={`text-lg font-mono font-medium ${(stats.failureCount ?? 0) > 0 ? 'text-red-400' : 'text-white'}`}>{stats.failureCount ?? 0}</div>
         </div>
       </div>
 
-      <div className="overflow-x-auto border border-white/[0.06] rounded-xl bg-[#0b0b0e]">
-        <table className="w-full border-collapse font-sans text-xs text-left">
+      {/* Table */}
+      <div className="flex-grow overflow-auto rounded-xl border border-[var(--color-border)] bg-white/[0.018]">
+        <table className="w-full border-collapse text-left">
           <thead>
-            <tr className="border-b border-white/[0.06] bg-white/[0.01] text-white/40 font-semibold">
-              <th className="px-4 py-3">Started</th>
-              <th className="px-4 py-3">Tier</th>
-              <th className="px-4 py-3">Status</th>
-              <th className="px-4 py-3">Size</th>
-              <th className="px-4 py-3">Triggered By</th>
-              <th className="px-4 py-3 text-right">Error</th>
+            <tr className="border-b border-[var(--color-border)] text-[10px] uppercase tracking-wider text-white/35 font-medium">
+              <th className="px-4 py-2.5">Started (Local)</th>
+              <th className="px-4 py-2.5">Tier</th>
+              <th className="px-4 py-2.5">Status</th>
+              <th className="px-4 py-2.5">Size</th>
+              <th className="px-4 py-2.5">Trigger</th>
+              <th className="px-4 py-2.5 text-right font-medium">Error</th>
             </tr>
           </thead>
-          <tbody className="divide-y divide-white/[0.04]">
+          <tbody className="divide-y divide-[var(--color-border)]">
             {runs.length === 0 ? (
               <tr>
-                <td colSpan={6} className="px-4 py-8 text-center text-white/30">
+                <td colSpan={6} className="px-4 py-12 text-center text-[var(--color-text-muted)] text-xs font-mono">
                   No backup runs recorded yet.
                 </td>
               </tr>
             ) : (
               runs.map((run) => (
-                <tr key={run.id} className="hover:bg-white/[0.01] transition-colors">
-                  <td className="px-4 py-3.5 text-white/80 font-mono">{formatDate(run.startedAt)}</td>
-                  <td className="px-4 py-3.5">
-                    <span className="bg-white/[0.03] border border-white/[0.06] text-white/60 px-1.5 py-0.5 rounded text-[10px] font-semibold uppercase">
+                <tr key={run.id} className="group hover:bg-white/[0.015] transition-colors">
+                  <td className="px-4 py-3 text-white/80 font-mono text-xs">{formatLocalDateTime(run.startedAt)}</td>
+                  <td className="px-4 py-3">
+                    <span className="px-1.5 py-0.5 rounded font-mono text-[10px] font-medium uppercase tracking-wider bg-white/[0.03] border border-[var(--color-border)] text-white/70">
                       {TIER_LABEL[run.tier] || run.tier}
                     </span>
                   </td>
-                  <td className="px-4 py-3.5">
+                  <td className="px-4 py-3">
                     {run.status === 'success' ? (
-                      <span className="bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-[10px] font-bold px-2 py-0.5 rounded inline-flex items-center gap-1.5 w-max">
-                        <CheckCircle2 className="w-3 h-3" /> Success
+                      <span className="inline-flex items-center gap-1 rounded px-1.5 py-0.5 font-mono text-[10px] font-medium uppercase tracking-wider border border-emerald-500/30 bg-emerald-500/10 text-emerald-400">
+                        <span className="h-1.5 w-1.5 rounded-full bg-emerald-400" /> Success
                       </span>
                     ) : (
-                      <span className="bg-red-500/10 border border-red-500/20 text-red-400 text-[10px] font-bold px-2 py-0.5 rounded inline-flex items-center gap-1.5 w-max">
-                        <XCircle className="w-3 h-3" /> Failed
+                      <span className="inline-flex items-center gap-1 rounded px-1.5 py-0.5 font-mono text-[10px] font-medium uppercase tracking-wider border border-red-500/30 bg-red-500/10 text-red-400">
+                        <span className="h-1.5 w-1.5 rounded-full bg-red-400" /> Failed
                       </span>
                     )}
                   </td>
-                  <td className="px-4 py-3.5 text-white/60 font-mono">{formatBytes(run.sizeBytes)}</td>
-                  <td className="px-4 py-3.5 text-white/60 font-mono">{run.triggeredBy || 'cron'}</td>
-                  <td className="px-4 py-3.5 text-right text-red-400/70 font-mono text-[10px] max-w-[200px] truncate" title={run.errorMessage || ''}>
+                  <td className="px-4 py-3 text-white/60 font-mono text-xs">{formatBytes(run.sizeBytes)}</td>
+                  <td className="px-4 py-3 text-white/60 font-mono text-xs">{run.triggeredBy || 'cron'}</td>
+                  <td className="px-4 py-3 text-right text-red-400/80 font-mono text-xs max-w-[220px] truncate" title={run.errorMessage || ''}>
                     {run.errorMessage || '—'}
                   </td>
                 </tr>

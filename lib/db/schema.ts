@@ -460,3 +460,21 @@ export const codeReviews = pgTable('code_reviews', {
   tokensUsed: integer('tokens_used'),
   createdAt: timestamp('created_at').defaultNow().notNull(),
 })
+
+// ===== CHANGELOG SYSTEM (Linear / Supermemory style) =====
+export const changelogs = pgTable('changelogs', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  title: text('title').notNull(),
+  slug: text('slug').notNull().unique(),
+  tag: text('tag').default('CORE').notNull(),
+  description: text('description').notNull(),
+  improvements: jsonb('improvements').default([]).$type<string[]>(),
+  fixes: jsonb('fixes').default([]).$type<string[]>(),
+  mediaType: text('media_type').default('none').notNull(), // 'none' | 'image' | 'video'
+  mediaUrl: text('media_url'),
+  isPublished: boolean('is_published').default(true).notNull(),
+  publishedAt: timestamp('published_at').defaultNow().notNull(),
+  createdAt: timestamp('created_at').defaultNow().notNull(),
+  updatedAt: timestamp('updated_at').defaultNow().notNull(),
+})
+

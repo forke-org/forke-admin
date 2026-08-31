@@ -69,6 +69,7 @@ const CHANNEL_ALIASES: { canonical: string; matches: string[] }[] = [
   { canonical: 'peerlist', matches: ['peerlist'] },
   { canonical: 'threads', matches: ['threads'] },
   { canonical: 'bluesky', matches: ['bluesky', 'bsky'] },
+  { canonical: 'organic', matches: ['organic', 'google', 'goog', 'bing', 'yahoo', 'duckduckgo', 'ecosia', 'search', 'seo'] },
   { canonical: 'github', matches: ['github', 'gh'] },
   { canonical: 'producthunt', matches: ['producthunt', 'ph'] },
 ]

@@ -395,42 +395,72 @@ export function SupportSkeleton() {
   )
 }
 
-// I. Admin Panel Skeleton — full-panel loading state for admin console panels.
+// I. Admin Panel Skeleton — matching the exact minimalist vibe and theme
 export function PanelSkeleton() {
   return (
-    <div className="flex-grow flex flex-col min-h-[400px] bg-[#070709] p-6 space-y-6">
-      {/* Toolbar row */}
-      <div className="flex items-center justify-between">
-        <div className="space-y-2">
-          <Skeleton className="h-5 w-40" />
-          <Skeleton className="h-3 w-56" />
+    <div className="flex-grow flex flex-col space-y-5 h-full min-h-0 text-left pr-1 select-none font-sans">
+      {/* Header */}
+      <div className="flex items-center justify-between gap-4 border-b border-[var(--color-border)] pb-3 shrink-0">
+        <div className="space-y-1.5">
+          <Skeleton className="h-5 w-44 rounded" />
+          <Skeleton className="h-3 w-72 rounded" />
         </div>
-        <div className="flex gap-2">
-          <Skeleton className="h-8 w-20 rounded-lg" />
-          <Skeleton className="h-8 w-8 rounded-lg" />
-        </div>
+        <Skeleton className="h-8 w-24 rounded-lg" />
       </div>
-      {/* Stat row */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
-        {[...Array(4)].map((_, i) => (
-          <div key={i} className="rounded-xl border border-white/[0.06] bg-white/[0.018] p-4 space-y-3">
-            <Skeleton className="h-3 w-16" />
-            <Skeleton className="h-7 w-20" />
-          </div>
-        ))}
-      </div>
-      {/* Table / body rows */}
-      <div className="rounded-xl border border-white/[0.06] bg-white/[0.01] divide-y divide-white/[0.04]">
+
+      {/* Metrics Row */}
+      <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-6 gap-3.5 shrink-0">
         {[...Array(6)].map((_, i) => (
-          <div key={i} className="flex items-center gap-4 px-4 py-3.5">
-            <Skeleton className="h-8 w-8 rounded-lg shrink-0" />
-            <Skeleton className="h-3.5 w-1/4" />
-            <Skeleton className="h-3.5 w-1/3" />
-            <Skeleton className="h-3.5 w-16 ml-auto" />
+          <div key={i} className="rounded-xl border border-[var(--color-border)] bg-white/[0.018] p-3.5 space-y-2">
+            <Skeleton className="h-2.5 w-16 rounded" />
+            <Skeleton className="h-5 w-20 rounded" />
+            <Skeleton className="h-2 w-28 rounded" />
           </div>
         ))}
+      </div>
+
+      {/* Subtab Pill Bar / Search Bar */}
+      <div className="flex items-center justify-between gap-3 shrink-0">
+        <Skeleton className="h-9 w-64 rounded-lg" />
+        <Skeleton className="h-9 w-32 rounded-lg" />
+      </div>
+
+      {/* Table Skeleton */}
+      <div className="rounded-xl border border-[var(--color-border)] bg-white/[0.018] overflow-hidden flex-grow min-h-0">
+        <div className="h-9 border-b border-[var(--color-border)] px-4 flex items-center gap-6">
+          <Skeleton className="h-2.5 w-24 rounded" />
+          <Skeleton className="h-2.5 w-32 rounded" />
+          <Skeleton className="h-2.5 w-20 rounded" />
+          <Skeleton className="h-2.5 w-24 rounded ml-auto" />
+        </div>
+        <div className="divide-y divide-[var(--color-border)]">
+          {[...Array(7)].map((_, i) => (
+            <div key={i} className="px-4 py-3.5 flex items-center gap-6">
+              <Skeleton className="h-3.5 w-32 rounded" />
+              <Skeleton className="h-3.5 w-48 rounded" />
+              <Skeleton className="h-3.5 w-20 rounded" />
+              <Skeleton className="h-3.5 w-24 rounded ml-auto" />
+            </div>
+          ))}
+        </div>
       </div>
     </div>
+  )
+}
+
+export function TableLoadingRows({ cols = 4, rows = 6 }: { cols?: number; rows?: number }) {
+  return (
+    <>
+      {[...Array(rows)].map((_, r) => (
+        <tr key={r} className="animate-in fade-in duration-150">
+          {[...Array(cols)].map((_, c) => (
+            <td key={c} className="px-4 py-3.5">
+              <Skeleton className={cn("h-3.5 rounded", c === 0 ? "w-3/4" : c === cols - 1 ? "w-1/2 ml-auto" : "w-2/3")} />
+            </td>
+          ))}
+        </tr>
+      ))}
+    </>
   )
 }
 

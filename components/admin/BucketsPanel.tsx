@@ -23,6 +23,7 @@ import {
   type BucketObject,
   type CloudflareR2Metrics
 } from '@/lib/actions/bucket-actions'
+import { TableLoadingRows } from '@/components/ui/Skeleton'
 import { 
   RefreshCw, 
   Copy, 
@@ -78,8 +79,8 @@ export default function BucketsPanel({ currentAdmin }: BucketsPanelProps) {
     isConfigured: false
   })
 
-  // Subtabs: explorer, metrics, settings
-  const [activeSubTab, setActiveSubTab] = useState<'explorer' | 'metrics' | 'settings'>('explorer')
+  // Subtabs: explorer, metrics
+  const [activeSubTab, setActiveSubTab] = useState<'explorer' | 'metrics'>('explorer')
   
   // Folders and prefix logic
   const [objects, setObjects] = useState<BucketObject[]>([])
@@ -381,6 +382,24 @@ export default function BucketsPanel({ currentAdmin }: BucketsPanelProps) {
     return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i]
   }
 
+  function formatLocalDateTime(iso: string | null | undefined): string {
+    if (!iso) return '—'
+    try {
+      const d = new Date(iso)
+      if (isNaN(d.getTime())) return '—'
+      return new Intl.DateTimeFormat(undefined, {
+        month: 'short',
+        day: 'numeric',
+        year: 'numeric',
+        hour: 'numeric',
+        minute: '2-digit',
+        hour12: true,
+      }).format(d)
+    } catch {
+      return iso
+    }
+  }
+
   // Helper variables for Cloudflare-styled metrics graphs
   const yTicksA = [100, 80, 60, 40, 20, 0]
   const yTicksB = [60, 50, 40, 30, 20, 10, 0]
@@ -543,36 +562,37 @@ export default function BucketsPanel({ currentAdmin }: BucketsPanelProps) {
   }
 
   return (
-    <div className="flex-grow overflow-y-auto p-6 space-y-6 text-left select-none bg-[#070709] text-white font-sans h-full min-h-0">
+    <div className="flex-grow overflow-y-auto space-y-5 text-left select-none text-white font-sans h-full min-h-0 pr-1">
       
       {/* Header */}
-      <div className="flex items-start justify-between gap-4 border-b border-white/[0.04] pb-4">
-        <div className="space-y-1">
-          <h1 className="text-xl font-semibold tracking-tight text-white flex items-center gap-2">
-            Storage &amp; R2 Buckets
-          </h1>
+      <div className="flex items-center justify-between gap-4 border-b border-[var(--color-border)] pb-3 shrink-0">
+        <div>
           <div className="flex items-center gap-2">
-            <span className={`border px-2 py-0.5 rounded text-[10px] font-mono flex items-center gap-1.5 ${
+            <h2 className="text-base font-medium text-white">Storage &amp; R2 Buckets</h2>
+            <span className={`border px-2 py-0.5 rounded font-mono text-[10px] flex items-center gap-1.5 ${
               config.isConfigured 
-                ? 'bg-emerald-500/10 border-emerald-500/20 text-emerald-400' 
-                : 'bg-red-500/10 border-red-500/20 text-red-400'
+                ? 'bg-emerald-500/10 border-emerald-500/30 text-emerald-400' 
+                : 'bg-red-500/10 border-red-500/30 text-red-400'
             }`}>
               <span className={`w-1.5 h-1.5 rounded-full ${config.isConfigured ? 'bg-emerald-400 animate-pulse' : 'bg-red-400'}`} />
-              {config.isConfigured ? 'CLOUDFLARE R2 CONNECTED' : "CLOUDFLARE ISN'T CONNECTED"}
+              {config.isConfigured ? 'CONNECTED' : 'NOT CONFIGURED'}
             </span>
             {!isSuperAdmin && (
-              <span className="bg-red-500/10 border border-red-500/20 text-red-400 px-2 py-0.5 rounded text-[10px] font-mono flex items-center gap-1.5">
-                <Lock className="w-3.5 h-3.5" />
-                READ-ONLY ACCESS
+              <span className="bg-red-500/10 border border-red-500/20 text-red-400 px-2 py-0.5 rounded font-mono text-[10px] flex items-center gap-1.5">
+                <Lock className="w-3 h-3" />
+                READ-ONLY
               </span>
             )}
           </div>
+          <p className="mt-0.5 text-xs text-[var(--color-text-muted)]">
+            Inspect, upload, and manage assets and media stored in Cloudflare R2.
+          </p>
         </div>
 
         <div className="flex items-center gap-2">
           <button 
             onClick={handleRefresh}
-            className="px-3 py-1.5 bg-white/[0.02] hover:bg-white/[0.05] border border-white/[0.06] rounded-lg text-xs font-medium text-white/80 hover:text-white transition-colors cursor-pointer flex items-center gap-1.5"
+            className="h-8 px-3 rounded-lg text-xs transition-colors border border-[var(--color-border)] hover:bg-white/[0.05] flex items-center gap-1.5 font-medium text-white"
           >
             <RefreshCw className="w-3.5 h-3.5" />
             Refresh
@@ -583,39 +603,39 @@ export default function BucketsPanel({ currentAdmin }: BucketsPanelProps) {
       {/* R2 Dashboard Summary Metrics */}
       {config.isConfigured && (
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-5 gap-3.5">
-          <div className="bg-[#0b0b0e] border border-white/[0.06] rounded-xl p-4 space-y-2">
-            <div className="text-[10px] font-medium text-white/40 uppercase tracking-wider">Default Storage Class</div>
-            <div className="text-lg font-mono font-bold text-white">Standard</div>
-            <div className="text-[9px] text-white/30 leading-snug">Default class for bucket.</div>
+          <div className="rounded-xl bg-white/[0.018] border border-[var(--color-border)] p-4 space-y-2">
+            <div className="text-[10px] font-medium text-white/40 uppercase tracking-wider">Storage Class</div>
+            <div className="text-base font-mono font-medium text-white">Standard</div>
+            <div className="text-[10px] font-mono text-white/30">Default class</div>
           </div>
 
-          <div className="bg-[#0b0b0e] border border-white/[0.06] rounded-xl p-4 space-y-2">
+          <div className="rounded-xl bg-white/[0.018] border border-[var(--color-border)] p-4 space-y-2">
             <div className="text-[10px] font-medium text-white/40 uppercase tracking-wider">Public Access</div>
-            <div className="text-lg font-mono font-bold text-white flex items-center gap-1.5">
+            <div className="text-base font-mono font-medium text-white flex items-center gap-1.5">
               <span className={`w-2 h-2 rounded-full ${config.publicUrl ? 'bg-emerald-400' : 'bg-red-400'}`} />
               {config.publicUrl ? 'Enabled' : 'Disabled'}
             </div>
-            <div className="text-[9px] text-white/30 leading-snug truncate" title={config.publicUrl}>
-              {config.publicUrl || 'No public domain set.'}
+            <div className="text-[10px] font-mono text-white/30 truncate" title={config.publicUrl}>
+              {config.publicUrl || 'No domain'}
             </div>
           </div>
 
-          <div className="bg-[#0b0b0e] border border-white/[0.06] rounded-xl p-4 space-y-2">
+          <div className="rounded-xl bg-white/[0.018] border border-[var(--color-border)] p-4 space-y-2">
             <div className="text-[10px] font-medium text-white/40 uppercase tracking-wider">Bucket Size</div>
-            <div className="text-lg font-mono font-bold text-white">{formatBytes(totalStorageSize)}</div>
-            <div className="text-[9px] text-white/30 leading-snug">Total size of listed objects.</div>
+            <div className="text-base font-mono font-medium text-white">{formatBytes(totalStorageSize)}</div>
+            <div className="text-[10px] font-mono text-white/30">Total listed objects</div>
           </div>
 
-          <div className="bg-[#0b0b0e] border border-white/[0.06] rounded-xl p-4 space-y-2">
-            <div className="text-[10px] font-medium text-white/40 uppercase tracking-wider">Class A Operations</div>
-            <div className="text-lg font-mono font-bold text-accent">{metrics.classA}</div>
-            <div className="text-[9px] text-white/30 leading-snug">Object mutations count.</div>
+          <div className="rounded-xl bg-white/[0.018] border border-[var(--color-border)] p-4 space-y-2">
+            <div className="text-[10px] font-medium text-white/40 uppercase tracking-wider">Class A Ops</div>
+            <div className="text-base font-mono font-medium text-accent">{metrics.classA}</div>
+            <div className="text-[10px] font-mono text-white/30">Mutations</div>
           </div>
 
-          <div className="bg-[#0b0b0e] border border-white/[0.06] rounded-xl p-4 space-y-2">
-            <div className="text-[10px] font-medium text-white/40 uppercase tracking-wider">Class B Operations</div>
-            <div className="text-lg font-mono font-bold text-accent">{metrics.classB}</div>
-            <div className="text-[9px] text-white/30 leading-snug">Object downloads count.</div>
+          <div className="rounded-xl bg-white/[0.018] border border-[var(--color-border)] p-4 space-y-2">
+            <div className="text-[10px] font-medium text-white/40 uppercase tracking-wider">Class B Ops</div>
+            <div className="text-base font-mono font-medium text-accent">{metrics.classB}</div>
+            <div className="text-[10px] font-mono text-white/30">Downloads</div>
           </div>
         </div>
       )}
@@ -623,42 +643,30 @@ export default function BucketsPanel({ currentAdmin }: BucketsPanelProps) {
       {/* Tabs */}
       <div className="space-y-4">
         
-        <div className="border-b border-white/[0.06] flex items-center gap-5">
+        <div className="flex items-center gap-1 bg-white/[0.03] border border-[var(--color-border)] rounded-lg p-1 w-fit shrink-0">
           {config.isConfigured && (
             <>
               <button
                 onClick={() => setActiveSubTab('explorer')}
-                className={`pb-2.5 text-xs font-semibold tracking-wider transition-all relative border-b-2 cursor-pointer ${
+                className={`px-3 py-1.5 rounded-md text-xs font-medium transition-colors ${
                   activeSubTab === 'explorer'
-                    ? "border-accent text-accent"
-                    : "border-transparent text-white/40 hover:text-white/70"
+                    ? "bg-white/[0.08] text-white"
+                    : "text-[var(--color-text-muted)] hover:text-white"
                 }`}
               >
                 Objects Explorer
               </button>
               <button
                 onClick={() => setActiveSubTab('metrics')}
-                className={`pb-2.5 text-xs font-semibold tracking-wider transition-all relative border-b-2 cursor-pointer ${
+                className={`px-3 py-1.5 rounded-md text-xs font-medium transition-colors ${
                   activeSubTab === 'metrics'
-                    ? "border-accent text-accent"
-                    : "border-transparent text-white/40 hover:text-white/70"
+                    ? "bg-white/[0.08] text-white"
+                    : "text-[var(--color-text-muted)] hover:text-white"
                 }`}
               >
                 Bucket Metrics
               </button>
             </>
-          )}
-          {isSuperAdmin && (
-            <button
-              onClick={() => setActiveSubTab('settings')}
-              className={`pb-2.5 text-xs font-semibold tracking-wider transition-all relative border-b-2 cursor-pointer ${
-                activeSubTab === 'settings'
-                  ? "border-accent text-accent"
-                  : "border-transparent text-white/40 hover:text-white/70"
-              }`}
-            >
-              Bucket Settings
-            </button>
           )}
         </div>
 
@@ -748,69 +756,71 @@ export default function BucketsPanel({ currentAdmin }: BucketsPanelProps) {
             </div>
 
             {/* Search filter */}
-            <div className="flex items-center gap-2 bg-[#0b0b0e] border border-white/[0.06] rounded-xl px-3 py-2 max-w-md">
-              <Search className="w-4 h-4 text-white/30" />
+            <div className="relative w-full max-w-md">
+              <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-[var(--color-text-muted)]" />
               <input 
                 type="text" 
                 value={searchQuery}
                 onChange={e => setSearchQuery(e.target.value)}
-                placeholder="Search objects in current view..." 
-                className="bg-transparent border-none text-xs text-white placeholder-white/20 focus:outline-none w-full font-mono"
+                placeholder="Search objects in current view…" 
+                className="h-9 w-full rounded-lg border border-[var(--color-border)] bg-white/[0.02] pl-8 pr-3 text-[13px] text-white outline-none transition-colors focus:border-accent/40 placeholder:text-white/30"
               />
             </div>
 
-            {/* Objects table matching cloudflare dashboard */}
-            <div className="overflow-x-auto border border-white/[0.06] rounded-xl bg-[#0b0b0e]">
+            {/* Objects table */}
+            <div className="overflow-auto rounded-xl border border-[var(--color-border)] bg-white/[0.018]">
               <table className="w-full min-w-[680px] border-collapse font-sans text-xs text-left">
                 <thead>
-                  <tr className="border-b border-white/[0.06] bg-white/[0.01] text-white/40 font-semibold select-none">
-                    <th className="w-10 px-4 py-3">
+                  <tr className="border-b border-[var(--color-border)] text-[10px] uppercase tracking-wider text-white/35 font-medium select-none">
+                    <th className="w-10 px-4 py-2.5">
                       <input 
                         type="checkbox"
                         checked={allSelected}
                         onChange={handleSelectAll}
-                        className="rounded !border-white/20 !bg-black checked:!bg-accent text-accent focus:ring-0 focus:ring-offset-0 cursor-pointer w-3.5 h-3.5 transition-colors"
+                        className="rounded border-[var(--color-border)] bg-black checked:bg-accent text-accent focus:ring-0 focus:ring-offset-0 cursor-pointer w-3.5 h-3.5 transition-colors"
                       />
                     </th>
-                    <th className="px-4 py-3">Objects</th>
-                    <th className="px-4 py-3">Type</th>
-                    <th className="px-4 py-3">Storage Class</th>
-                    <th className="px-4 py-3">Size</th>
-                    <th className="px-4 py-3">Modified</th>
-                    <th className="px-4 py-3 text-right whitespace-nowrap">Actions</th>
+                    <th className="px-4 py-2.5">Objects</th>
+                    <th className="px-4 py-2.5">Type</th>
+                    <th className="px-4 py-2.5">Class</th>
+                    <th className="px-4 py-2.5">Size</th>
+                    <th className="px-4 py-2.5">Modified (Local)</th>
+                    <th className="px-4 py-2.5 text-right whitespace-nowrap font-medium">Actions</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-white/[0.04] font-mono">
-                  {filteredItems.length > 0 ? (
+                <tbody className="divide-y divide-[var(--color-border)] font-mono text-xs">
+                  {loading ? (
+                    <TableLoadingRows cols={7} rows={6} />
+                  ) : filteredItems.length > 0 ? (
                     pagedItems.map(item => {
                       const itemContentType = (item as any).contentType as string | undefined
                       const isImage = !item.isFolder && !!itemContentType && itemContentType.startsWith('image/')
                       const isExpanded = expandedKey === item.key
                       return (
                       <React.Fragment key={item.key}>
-                      <tr className="hover:bg-white/[0.01] transition-colors group">
+                      <tr className="hover:bg-white/[0.015] transition-colors group">
                         
                         <td className="px-4 py-3">
                           <input 
                             type="checkbox"
                             checked={selectedKeys.includes(item.key)}
                             onChange={() => handleSelectItem(item.key)}
-                            className="rounded !border-white/20 !bg-black checked:!bg-accent text-accent focus:ring-0 focus:ring-offset-0 cursor-pointer w-3.5 h-3.5 transition-colors"
+                            className="rounded border-[var(--color-border)] bg-black checked:bg-accent text-accent focus:ring-0 focus:ring-offset-0 cursor-pointer w-3.5 h-3.5 transition-colors"
                           />
                         </td>
 
                         {/* Name Column */}
-                        <td className="px-4 py-3.5">
+                        <td className="px-4 py-3">
                           {item.isFolder ? (
                             <button
                               onClick={() => handleEnterFolder(item.key)}
-                              className="text-accent font-bold hover:underline cursor-pointer flex items-center gap-2 text-left"
+                              className="text-accent font-medium hover:underline cursor-pointer flex items-center gap-2 text-left"
                             >
                               <Folder className="w-4 h-4 text-accent/70 shrink-0" />
                               <span>{item.name}/</span>
                             </button>
                           ) : (
-                            <div className="text-white/80 font-medium flex items-center gap-2">
+                            <div className="text-white/90 font-medium flex items-center gap-2">
                               <File className="w-4 h-4 text-white/30 shrink-0" />
                               <span className="truncate max-w-[240px]" title={item.name}>
                                 {item.name}
@@ -820,23 +830,23 @@ export default function BucketsPanel({ currentAdmin }: BucketsPanelProps) {
                         </td>
 
                         {/* Type Column */}
-                        <td className="px-4 py-3.5 text-white/50 font-sans">
+                        <td className="px-4 py-3 text-white/50 font-sans text-xs">
                           {item.isFolder ? 'Folder' : (item as any).contentType || 'application/octet-stream'}
                         </td>
 
                         {/* Storage Class */}
-                        <td className="px-4 py-3.5 text-white/40 font-sans">
+                        <td className="px-4 py-3 text-white/40 font-sans text-xs">
                           Standard
                         </td>
 
                         {/* Size Column */}
-                        <td className="px-4 py-3.5 text-white/50">
+                        <td className="px-4 py-3 text-white/50">
                           {item.isFolder ? '--' : formatBytes(item.size)}
                         </td>
 
                         {/* Modified Column */}
-                        <td className="px-4 py-3.5 text-white/40 text-[11px] font-sans">
-                          {item.isFolder ? '--' : new Date(item.lastModified).toLocaleString()}
+                        <td className="px-4 py-3 text-white/40 text-xs font-mono">
+                          {item.isFolder ? '--' : formatLocalDateTime(item.lastModified)}
                         </td>
 
                         {/* Actions Column */}
@@ -1357,154 +1367,25 @@ export default function BucketsPanel({ currentAdmin }: BucketsPanelProps) {
           </div>
         )}
 
-        {/* Tab 3: Settings / Config Form */}
-        {activeSubTab === 'settings' && isSuperAdmin && (
-          <form onSubmit={handleSaveConfig} className="space-y-4 max-w-2xl bg-[#0b0b0e] border border-white/[0.06] rounded-xl p-5 animate-in fade-in duration-200">
-            
-            <div className="space-y-1 pb-2 border-b border-white/[0.04]">
-              <h3 className="text-sm font-semibold text-white flex items-center gap-1.5">
-                <Settings className="w-4 h-4 text-accent" /> Cloudflare R2 Credentials
-              </h3>
-              <p className="text-[11px] text-white/40 leading-relaxed">
-                Configure bucket parameters. Only **Super Administrators** have write authorization to modify variables.
-              </p>
-            </div>
-
-            {!isSuperAdmin && (
-              <div className="bg-red-500/5 border border-red-500/20 rounded-xl p-3.5 flex items-start gap-2.5 text-xs text-red-400/90 leading-relaxed font-sans">
-                <ShieldAlert className="w-4 h-4 text-red-400 shrink-0 mt-0.5" />
-                <span>
-                  <strong>Read-only active.</strong> Your administrative account does not possess Super Admin credentials. Modifications are disabled.
-                </span>
-              </div>
-            )}
-
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div className="space-y-1">
-                <label className="text-[10px] font-bold uppercase tracking-wider text-white/40 block">R2 Access Key ID</label>
-                <input 
-                  type="text" 
-                  disabled={!isSuperAdmin}
-                  value={config.accessKeyId}
-                  onChange={e => setConfig(prev => ({ ...prev, accessKeyId: e.target.value }))}
-                  placeholder="Enter Access Key ID"
-                  className="w-full bg-white/[0.02] border border-white/[0.08] focus:border-accent disabled:opacity-40 disabled:hover:border-white/[0.08] rounded-lg px-3 py-2 text-xs font-mono text-white focus:outline-none focus:ring-0"
-                />
-              </div>
-
-              <div className="space-y-1">
-                <label className="text-[10px] font-bold uppercase tracking-wider text-white/40 block">R2 Secret Access Key</label>
-                <input 
-                  type="password" 
-                  disabled={!isSuperAdmin}
-                  value={config.secretAccessKey}
-                  onChange={e => setConfig(prev => ({ ...prev, secretAccessKey: e.target.value }))}
-                  placeholder="••••••••••••••••••••••••••••"
-                  className="w-full bg-white/[0.02] border border-white/[0.08] focus:border-accent disabled:opacity-40 disabled:hover:border-white/[0.08] rounded-lg px-3 py-2 text-xs font-mono text-white focus:outline-none focus:ring-0"
-                />
-              </div>
-            </div>
-
-            <div className="space-y-1">
-              <label className="text-[10px] font-bold uppercase tracking-wider text-white/40 block">S3 Compatibility Endpoint</label>
-              <input 
-                type="text" 
-                disabled={!isSuperAdmin}
-                value={config.endpoint}
-                onChange={e => setConfig(prev => ({ ...prev, endpoint: e.target.value }))}
-                placeholder="https://<ACCOUNT_ID>.r2.cloudflarestorage.com"
-                className="w-full bg-white/[0.02] border border-white/[0.08] focus:border-accent disabled:opacity-40 disabled:hover:border-white/[0.08] rounded-lg px-3 py-2 text-xs font-mono text-white focus:outline-none focus:ring-0"
-              />
-            </div>
-
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div className="space-y-1">
-                <label className="text-[10px] font-bold uppercase tracking-wider text-white/40 block">Bucket Name</label>
-                <input 
-                  type="text" 
-                  disabled={!isSuperAdmin}
-                  value={config.bucketName}
-                  onChange={e => setConfig(prev => ({ ...prev, bucketName: e.target.value }))}
-                  placeholder="e.g. forke-assets"
-                  className="w-full bg-white/[0.02] border border-white/[0.08] focus:border-accent disabled:opacity-40 disabled:hover:border-white/[0.08] rounded-lg px-3 py-2 text-xs font-mono text-white focus:outline-none focus:ring-0"
-                />
-              </div>
-
-              <div className="space-y-1">
-                <label className="text-[10px] font-bold uppercase tracking-wider text-white/40 block">Public Domain URL</label>
-                <input 
-                  type="text" 
-                  disabled={!isSuperAdmin}
-                  value={config.publicUrl}
-                  onChange={e => setConfig(prev => ({ ...prev, publicUrl: e.target.value }))}
-                  placeholder="https://pub-xxxxxx.r2.dev"
-                  className="w-full bg-white/[0.02] border border-white/[0.08] focus:border-accent disabled:opacity-40 disabled:hover:border-white/[0.08] rounded-lg px-3 py-2 text-xs font-mono text-white focus:outline-none focus:ring-0"
-                />
-              </div>
-            </div>
-
-            <div className="space-y-1">
-              <label className="text-[10px] font-bold uppercase tracking-wider text-white/40 block">Cloudflare API Bearer Token (For GraphQL Metrics)</label>
-              <input 
-                type="password" 
-                disabled={!isSuperAdmin}
-                value={config.apiToken}
-                onChange={e => setConfig(prev => ({ ...prev, apiToken: e.target.value }))}
-                placeholder="••••••••••••••••••••••••••••"
-                className="w-full bg-white/[0.02] border border-white/[0.08] focus:border-accent disabled:opacity-40 disabled:hover:border-white/[0.08] rounded-lg px-3 py-2 text-xs font-mono text-white focus:outline-none focus:ring-0"
-              />
-              <span className="text-[10px] text-white/30 leading-snug block">
-                Required for real-time Class A/B request telemetry and bandwidth usage analytics.
-              </span>
-            </div>
-
-            {isSuperAdmin && (
-              <div className="pt-2">
-                <button 
-                  type="submit"
-                  disabled={loading}
-                  className="px-4 py-2 bg-accent hover:bg-accent/80 disabled:bg-accent/50 rounded-lg text-xs font-semibold text-white transition-colors cursor-pointer flex items-center gap-1.5"
-                >
-                  {loading ? <RefreshCw className="w-3.5 h-3.5 animate-spin" /> : null}
-                  <span>Save Configurations</span>
-                </button>
-              </div>
-            )}
-
-          </form>
-        )}
-
         {/* Disconnected Placeholder Screen */}
-        {!config.isConfigured && activeSubTab !== 'settings' && (
-          <div className="flex flex-col items-center justify-center min-h-[350px] bg-[#0b0b0e] border border-white/[0.06] rounded-xl p-8 text-center space-y-4 font-sans max-w-2xl mx-auto my-6 shadow-xl animate-in fade-in duration-200">
+        {!config.isConfigured && (
+          <div className="flex flex-col items-center justify-center min-h-[350px] bg-white/[0.018] border border-[var(--color-border)] rounded-xl p-8 text-center space-y-4 font-sans max-w-2xl mx-auto my-6 shadow-xl animate-in fade-in duration-200">
             <div className="w-12 h-12 rounded-full bg-red-500/10 border border-red-500/25 flex items-center justify-center text-red-500">
               <AlertTriangle className="w-6 h-6" />
             </div>
             <div className="space-y-1.5 max-w-sm">
               <h4 className="text-sm font-semibold text-white">Cloudflare isn't connected</h4>
-              <p className="text-xs text-white/40 leading-relaxed font-sans">
-                Real-time metrics, operations volume, and storage telemetry require a connected Cloudflare bucket configuration.
+              <p className="text-xs text-[var(--color-text-muted)] leading-relaxed font-sans">
+                Real-time metrics, operations volume, and storage telemetry require environment-level Cloudflare R2 bucket credentials.
               </p>
             </div>
-            {isSuperAdmin ? (
-              <button
-                type="button"
-                onClick={() => setActiveSubTab('settings')}
-                className="px-4 py-2 bg-accent hover:bg-accent/80 rounded-lg text-xs font-semibold text-white transition-colors cursor-pointer"
-              >
-                Configure R2 settings
-              </button>
-            ) : (
-              <div className="text-[10px] text-white/30 bg-white/[0.02] border border-white/[0.04] px-3 py-1.5 rounded-lg flex items-center gap-1.5 font-mono">
-                <Lock className="w-3.5 h-3.5" />
-                CONTACT SUPER ADMIN FOR CONFIGURATION
-              </div>
-            )}
+            <div className="text-[10px] text-white/40 bg-white/[0.03] border border-[var(--color-border)] px-3 py-1.5 rounded-lg flex items-center gap-1.5 font-mono">
+              <Lock className="w-3.5 h-3.5" />
+              CONFIGURE CREDENTIALS VIA ENVIRONMENT VARIABLES
+            </div>
           </div>
         )}
-
       </div>
-
     </div>
   )
 }

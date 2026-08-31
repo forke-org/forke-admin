@@ -55,7 +55,16 @@ function relativeTime(iso: string): string {
 }
 
 function clockTime(iso: string): string {
-  return new Date(iso).toLocaleTimeString('en-IN', { hour12: false })
+  try {
+    return new Date(iso).toLocaleTimeString(undefined, {
+      hour: 'numeric',
+      minute: '2-digit',
+      second: '2-digit',
+      hour12: true,
+    })
+  } catch {
+    return iso
+  }
 }
 
 interface ActivityFeedPanelProps {
@@ -197,10 +206,8 @@ export default function ActivityFeedPanel({ currentAdmin }: ActivityFeedPanelPro
       <div className="shrink-0 space-y-4 pb-4">
         <div className="flex items-start justify-between gap-4 flex-wrap">
           <div>
-            <h1 className="text-xl font-medium text-white tracking-tight flex items-center gap-2">
-              <Terminal className="w-5 h-5 text-accent" /> Activity
-            </h1>
-            <p className="text-[13px] text-[var(--color-text-muted)] mt-0.5">
+            <h2 className="text-base font-medium text-white">Activity</h2>
+            <p className="mt-0.5 text-xs text-[var(--color-text-muted)]">
               Live audit trail of admin actions and platform events.
             </p>
           </div>

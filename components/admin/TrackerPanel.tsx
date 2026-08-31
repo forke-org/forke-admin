@@ -10,7 +10,7 @@
  * commercial license from Forke Inc. is strictly prohibited.
  */
 
-import React, { useCallback, useEffect, useState } from 'react'
+import React, { useCallback, useEffect, useState, useMemo } from 'react'
 import { MousePointerClick, Users, Target, FileText, ExternalLink, RefreshCw } from 'lucide-react'
 import { getTrackerData, getSignupSourceBreakdown, type TrackerData } from '@/lib/admin-dashboard-actions'
 import { Skeleton } from '@/components/ui/Skeleton'
@@ -40,14 +40,61 @@ function shortUrl(url: string): string {
   }
 }
 
+function parseDate(iso: string | Date | null | undefined): Date | null {
+  if (!iso) return null
+  if (iso instanceof Date) return isNaN(iso.getTime()) ? null : iso
+  let str = String(iso).trim()
+  if (/^\d{4}-\d{2}-\d{2}[ T]\d{2}:\d{2}:\d{2}(\.\d+)?$/.test(str)) {
+    str = str.replace(' ', 'T') + 'Z'
+  }
+  const d = new Date(str)
+  return isNaN(d.getTime()) ? null : d
+}
+
 function timeAgo(iso: string): string {
-  const diff = Date.now() - new Date(iso).getTime()
-  const m = Math.floor(diff / 60000)
-  if (m < 1) return 'just now'
+  const d = parseDate(iso)
+  if (!d) return '—'
+  const diff = Date.now() - d.getTime()
+  if (diff < 0) return 'just now'
+  const s = Math.floor(diff / 1000)
+  if (s < 60) return `${Math.max(1, s)}s ago`
+  const m = Math.floor(s / 60)
   if (m < 60) return `${m}m ago`
   const h = Math.floor(m / 60)
   if (h < 24) return `${h}h ago`
   return `${Math.floor(h / 24)}d ago`
+}
+
+function formatLocalDateTime(iso: string | Date | null | undefined): string {
+  const d = parseDate(iso)
+  if (!d) return '—'
+  try {
+    return new Intl.DateTimeFormat(undefined, {
+      month: 'short',
+      day: 'numeric',
+      year: 'numeric',
+      hour: 'numeric',
+      minute: '2-digit',
+      second: '2-digit',
+      hour12: true,
+    }).format(d)
+  } catch {
+    return String(iso)
+  }
+}
+
+function formatLocalTimeOnly(iso: string | Date | null | undefined): string {
+  const d = parseDate(iso)
+  if (!d) return '—'
+  try {
+    return new Intl.DateTimeFormat(undefined, {
+      hour: 'numeric',
+      minute: '2-digit',
+      hour12: true,
+    }).format(d)
+  } catch {
+    return String(iso)
+  }
 }
 
 function Card({ title, subtitle, children }: { title: string; subtitle?: string; children: React.ReactNode }) {
@@ -260,6 +307,32 @@ export default function TrackerPanel() {
 
   const { stats, series, funnel, landingPages, referrers, countries, recent } = data
 
+  const chartSeries = useMemo(() => {
+    if (days === -1) return series
+    const numDays = days
+    const map = new Map<string, number>()
+    for (const item of series) {
+      map.set(item.day, (map.get(item.day) || 0) + item.clicks)
+    }
+
+    const result: Array<{ day: string; clicks: number }> = []
+    const today = new Date()
+
+    for (let i = numDays - 1; i >= 0; i--) {
+      const d = new Date(today)
+      d.setDate(today.getDate() - i)
+      const y = d.getFullYear()
+      const m = String(d.getMonth() + 1).padStart(2, '0')
+      const dayStr = String(d.getDate()).padStart(2, '0')
+      const key = `${y}-${m}-${dayStr}`
+      result.push({
+        day: key,
+        clicks: map.get(key) || 0,
+      })
+    }
+    return result
+  }, [series, days])
+
   return (
     <div className="flex flex-col min-h-0 flex-grow gap-4 overflow-y-auto pr-1">
       {/* Header + range selector */}
@@ -305,9 +378,8 @@ export default function TrackerPanel() {
             <Skeleton className="h-20 rounded-xl" />
             <Skeleton className="h-20 rounded-xl" />
           </div>
-          <Skeleton className="h-24 w-full rounded-xl" />
-          <Skeleton className="h-48 w-full rounded-xl" />
-          <Skeleton className="h-64 w-full rounded-xl" />
+          <Skeleton className="h-48 rounded-xl" />
+          <Skeleton className="h-64 rounded-xl" />
         </div>
       ) : (
         <>
@@ -337,7 +409,7 @@ export default function TrackerPanel() {
             title="Clicks over time"
             subtitle={days === -1 ? 'Daily tracked clicks · all time' : `Daily tracked clicks · last ${days} days`}
           >
-            {series.length > 0 ? (
+            {chartSeries.length > 0 ? (
               <div className="relative">
                 {/* Instant custom tooltip (no native-title delay) */}
                 {hoverBar && (
@@ -352,21 +424,21 @@ export default function TrackerPanel() {
                 <div className="overflow-x-auto overflow-y-hidden pb-1 -mx-1 px-1">
                   <div
                     className="flex items-end gap-[2px] sm:gap-[3px] h-32"
-                    style={{ minWidth: series.length > 25 ? `${Math.max(series.length * 6, 280)}px` : '100%' }}
+                    style={{ minWidth: chartSeries.length > 25 ? `${Math.max(chartSeries.length * 6, 280)}px` : '100%' }}
                     onMouseLeave={() => setHoverBar(null)}
                   >
                     {(() => {
-                      const max = Math.max(...series.map((d) => d.clicks), 1)
-                      return series.map((d, i) => (
+                      const max = Math.max(...chartSeries.map((d) => d.clicks), 1)
+                      return chartSeries.map((d, i) => (
                         <div
                           key={d.day}
                           className="flex-1 min-w-[3px] rounded-t bg-accent/60 hover:bg-accent active:bg-accent transition-colors cursor-pointer"
                           style={{ height: `${Math.max((d.clicks / max) * 100, 2)}%` }}
                           onMouseEnter={() =>
-                            setHoverBar({ day: d.day, clicks: d.clicks, x: ((i + 0.5) / series.length) * 100 })
+                            setHoverBar({ day: d.day, clicks: d.clicks, x: ((i + 0.5) / chartSeries.length) * 100 })
                           }
                           onTouchStart={() =>
-                            setHoverBar({ day: d.day, clicks: d.clicks, x: ((i + 0.5) / series.length) * 100 })
+                            setHoverBar({ day: d.day, clicks: d.clicks, x: ((i + 0.5) / chartSeries.length) * 100 })
                           }
                         />
                       ))
@@ -374,8 +446,8 @@ export default function TrackerPanel() {
                   </div>
                 </div>
                 <div className="flex justify-between mt-2 text-[10px] font-mono text-[var(--color-text-muted)]">
-                  <span>{series[0]?.day}</span>
-                  <span>{series[series.length - 1]?.day}</span>
+                  <span>{chartSeries[0]?.day}</span>
+                  <span>{chartSeries[chartSeries.length - 1]?.day}</span>
                 </div>
               </div>
             ) : (
@@ -436,7 +508,10 @@ export default function TrackerPanel() {
                             <span className="font-mono text-white/50 truncate flex-grow" title={r.referrer || r.landingPath || ''}>
                               {r.landingPath || '/'}{r.country ? ` · ${countryName(r.country)}` : ''}
                             </span>
-                            <span className="font-mono text-[var(--color-text-muted)] shrink-0">{timeAgo(r.createdAt)}</span>
+                            <div className="flex items-center gap-2 shrink-0 font-mono text-right" title={`Local time: ${formatLocalDateTime(r.createdAt)}`}>
+                              <span className="text-[11px] text-white/35 hidden sm:inline">{formatLocalTimeOnly(r.createdAt)}</span>
+                              <span className="text-[var(--color-text-muted)] text-[11px]">{timeAgo(r.createdAt)}</span>
+                            </div>
                           </div>
                         ))}
                       </div>
