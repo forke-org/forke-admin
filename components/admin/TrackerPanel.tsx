@@ -212,12 +212,12 @@ function SignupSourceCard({
   })
   return (
     <Card
-      title="Signups by source (all-time)"
-      subtitle="Every real signup across users + subscribers, grouped by channel. These are confirmed conversions — click data wasn't recorded before the tracker, so no rate is shown here."
+      title="Subscribers by source (all-time)"
+      subtitle="Every waitlist subscriber, grouped by channel. These are confirmed conversions — click data wasn't recorded before the tracker, so no rate is shown here."
     >
       <div className="flex items-baseline gap-2 mb-4">
         <span className="text-2xl font-mono text-white">{signupTotal.toLocaleString()}</span>
-        <span className="text-xs text-[var(--color-text-muted)]">total signups · {signupSources.length} channels</span>
+        <span className="text-xs text-[var(--color-text-muted)]">total subscribers · {signupSources.length} channels</span>
       </div>
       <PagedBarRows rows={rows} />
     </Card>
@@ -278,7 +278,9 @@ export default function TrackerPanel() {
                 onClick={() => setDays(r.days)}
                 className={cn(
                   'px-2.5 py-1 rounded-md text-xs font-mono transition-colors',
-                  days === r.days ? 'bg-white/[0.06] text-white' : 'text-[var(--color-text-muted)] hover:text-white'
+                  days === r.days
+                    ? 'bg-accent/15 text-accent font-semibold'
+                    : 'text-[var(--color-text-muted)] hover:text-white'
                 )}
               >
                 {r.label}
@@ -287,7 +289,7 @@ export default function TrackerPanel() {
           </div>
           <button
             onClick={() => load(days)}
-            className="h-7 w-7 grid place-items-center rounded-lg border border-[var(--color-border)] text-[var(--color-text-muted)] hover:bg-white/[0.05] hover:text-white transition-colors"
+            className="p-1.5 rounded-lg border border-[var(--color-border)] text-[var(--color-text-muted)] hover:text-white hover:bg-white/[0.03] transition-colors"
             title="Refresh"
           >
             <RefreshCw className={cn('w-3.5 h-3.5', isLoading && 'animate-spin')} />
@@ -296,7 +298,13 @@ export default function TrackerPanel() {
       </div>
 
       {isLoading ? (
-        <div className="grid grid-cols-1 gap-4">
+        <div className="space-y-4">
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
+            <Skeleton className="h-20 rounded-xl" />
+            <Skeleton className="h-20 rounded-xl" />
+            <Skeleton className="h-20 rounded-xl" />
+            <Skeleton className="h-20 rounded-xl" />
+          </div>
           <Skeleton className="h-24 w-full rounded-xl" />
           <Skeleton className="h-48 w-full rounded-xl" />
           <Skeleton className="h-64 w-full rounded-xl" />
@@ -308,10 +316,10 @@ export default function TrackerPanel() {
             {[
               { icon: MousePointerClick, label: 'Clicks', value: stats.clicks.toLocaleString() },
               { icon: Users, label: 'Unique visitors', value: stats.visitors.toLocaleString() },
-              // Total real signups (all-time) — matches the "total signups" figure in
+              // Total real subscribers (all-time) — matches the "total subscribers" figure in
               // the breakdown below. The smaller click-attributed subset lives in the
               // funnel, so the headline never contradicts the breakdown total.
-              { icon: Target, label: 'Signups (all-time)', value: signupTotal.toLocaleString() },
+              { icon: Target, label: 'Subscribers (all-time)', value: signupTotal.toLocaleString() },
               { icon: Target, label: 'Conversion rate', value: `${stats.rate}%` },
             ].map((s) => (
               <div key={s.label} className="rounded-xl bg-white/[0.018] border border-[var(--color-border)] px-4 py-3">
@@ -325,33 +333,45 @@ export default function TrackerPanel() {
           </div>
 
           {/* Clicks over time */}
-          <Card title="Clicks over time" subtitle={`Daily tracked clicks · last ${days} days`}>
+          <Card
+            title="Clicks over time"
+            subtitle={days === -1 ? 'Daily tracked clicks · all time' : `Daily tracked clicks · last ${days} days`}
+          >
             {series.length > 0 ? (
               <div className="relative">
                 {/* Instant custom tooltip (no native-title delay) */}
                 {hoverBar && (
                   <div
                     className="pointer-events-none absolute -top-1 z-10 -translate-x-1/2 -translate-y-full whitespace-nowrap rounded-md border border-[var(--color-border)] bg-[#111] px-2.5 py-1.5 text-[11px] font-mono text-white shadow-lg"
-                    style={{ left: `${hoverBar.x}%` }}
+                    style={{ left: `${Math.min(Math.max(hoverBar.x, 8), 92)}%` }}
                   >
                     <span className="text-accent">{hoverBar.clicks}</span> click{hoverBar.clicks === 1 ? '' : 's'}
                     <span className="text-[var(--color-text-muted)]"> · {hoverBar.day}</span>
                   </div>
                 )}
-                <div className="flex items-end gap-[3px] h-32" onMouseLeave={() => setHoverBar(null)}>
-                  {(() => {
-                    const max = Math.max(...series.map((d) => d.clicks), 1)
-                    return series.map((d, i) => (
-                      <div
-                        key={d.day}
-                        className="flex-1 min-w-[2px] rounded-t bg-accent/60 hover:bg-accent transition-colors cursor-pointer"
-                        style={{ height: `${Math.max((d.clicks / max) * 100, 2)}%` }}
-                        onMouseEnter={() =>
-                          setHoverBar({ day: d.day, clicks: d.clicks, x: ((i + 0.5) / series.length) * 100 })
-                        }
-                      />
-                    ))
-                  })()}
+                <div className="overflow-x-auto overflow-y-hidden pb-1 -mx-1 px-1">
+                  <div
+                    className="flex items-end gap-[2px] sm:gap-[3px] h-32"
+                    style={{ minWidth: series.length > 25 ? `${Math.max(series.length * 6, 280)}px` : '100%' }}
+                    onMouseLeave={() => setHoverBar(null)}
+                  >
+                    {(() => {
+                      const max = Math.max(...series.map((d) => d.clicks), 1)
+                      return series.map((d, i) => (
+                        <div
+                          key={d.day}
+                          className="flex-1 min-w-[3px] rounded-t bg-accent/60 hover:bg-accent active:bg-accent transition-colors cursor-pointer"
+                          style={{ height: `${Math.max((d.clicks / max) * 100, 2)}%` }}
+                          onMouseEnter={() =>
+                            setHoverBar({ day: d.day, clicks: d.clicks, x: ((i + 0.5) / series.length) * 100 })
+                          }
+                          onTouchStart={() =>
+                            setHoverBar({ day: d.day, clicks: d.clicks, x: ((i + 0.5) / series.length) * 100 })
+                          }
+                        />
+                      ))
+                    })()}
+                  </div>
                 </div>
                 <div className="flex justify-between mt-2 text-[10px] font-mono text-[var(--color-text-muted)]">
                   <span>{series[0]?.day}</span>

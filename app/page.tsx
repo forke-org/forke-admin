@@ -2168,42 +2168,6 @@ export default function AdminDashboard() {
           {activeTab === 'subscribers' && (
             <div className="flex flex-col min-h-0 flex-grow gap-4 overflow-y-auto pr-1">
 
-            {/* Sources breakdown — where signups are coming from */}
-            {!isLoading && sourceBreakdown.length > 0 && (
-              <div className="rounded-xl bg-white/[0.018] border border-[var(--color-border)] p-5 shrink-0">
-                <div className="flex items-center justify-between gap-4 mb-4">
-                  <div className="min-w-0">
-                    <h3 className="text-sm font-medium text-white">Signup Sources</h3>
-                    <p className="text-xs text-[var(--color-text-muted)] mt-0.5">
-                      Tag your shared links with <span className="font-mono text-white/70">?source=twitter</span> to see which channels convert.
-                    </p>
-                  </div>
-                  <span className="text-xs font-mono text-[var(--color-text-muted)] shrink-0">
-                    {subscribersList.length} total
-                  </span>
-                </div>
-                <div className="space-y-2.5">
-                  {sourceBreakdown.map(({ source, count }) => {
-                    const pct = subscribersList.length > 0 ? Math.round((count / subscribersList.length) * 100) : 0
-                    return (
-                      <div key={source} className="flex items-center gap-3">
-                        <span className="w-28 shrink-0 text-xs font-mono text-white/70 truncate" title={source}>{source}</span>
-                        <div className="flex-grow h-2 rounded-full bg-white/[0.04] overflow-hidden">
-                          <div
-                            className="h-full rounded-full bg-accent/70"
-                            style={{ width: `${topSourceCount > 0 ? (count / topSourceCount) * 100 : 0}%` }}
-                          />
-                        </div>
-                        <span className="w-20 shrink-0 text-right text-xs font-mono text-white/80">
-                          {count} <span className="text-[var(--color-text-muted)]">({pct}%)</span>
-                        </span>
-                      </div>
-                    )
-                  })}
-                </div>
-              </div>
-            )}
-
             <div className="rounded-xl bg-white/[0.018] border border-[var(--color-border)] overflow-hidden flex flex-col min-h-0 flex-grow">
 
               {/* Search & Action Buttons */}

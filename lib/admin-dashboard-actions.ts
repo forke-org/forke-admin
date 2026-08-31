@@ -607,17 +607,14 @@ export async function logSubscribersExportAction(count: number) {
   return { success: true }
 }
 
-// Signup-source breakdown across BOTH real users (owners + developers) and waitlist subscribers.
-// Returns counts grouped by channel so the dashboard can render a true cross-funnel donut.
+// Signup-source breakdown across waitlist subscribers.
+// Returns counts grouped by channel so the dashboard can render a true cross-funnel breakdown.
 export async function getSignupSourceBreakdown() {
   await ensureAdmin()
   try {
     const rows = await db.execute(sql`
-      SELECT source, count(*)::int AS count FROM (
-        SELECT COALESCE(NULLIF(attribution->>'source', ''), 'direct') AS source FROM public.users
-        UNION ALL
-        SELECT COALESCE(NULLIF(source, ''), 'direct') AS source FROM public.subscribers
-      ) combined
+      SELECT COALESCE(NULLIF(source, ''), 'direct') AS source, count(*)::int AS count
+      FROM public.subscribers
       GROUP BY source
       ORDER BY count DESC
     `)
@@ -736,8 +733,6 @@ export async function getTrackerData(days = 30): Promise<{ success: boolean; dat
           SELECT source, session_id FROM public.page_visits WHERE is_bot = false AND ${windowSql}
         ),
         converted AS (
-          SELECT attribution->>'sessionId' AS session_id FROM public.users WHERE attribution->>'sessionId' IS NOT NULL
-          UNION
           SELECT attribution->>'sessionId' AS session_id FROM public.subscribers WHERE attribution->>'sessionId' IS NOT NULL
         )
         SELECT c.source, count(*)::int AS clicks, count(DISTINCT conv.session_id)::int AS conversions
@@ -765,11 +760,6 @@ export async function getTrackerData(days = 30): Promise<{ success: boolean; dat
         conversions_by_country AS (
           SELECT COALESCE(NULLIF(attribution->>'country', ''), 'unknown') AS country, count(*)::int AS conversions
           FROM public.subscribers
-          WHERE attribution->>'country' IS NOT NULL
-          GROUP BY 1
-          UNION ALL
-          SELECT COALESCE(NULLIF(attribution->>'country', ''), 'unknown') AS country, count(*)::int AS conversions
-          FROM public.users
           WHERE attribution->>'country' IS NOT NULL
           GROUP BY 1
         ),
