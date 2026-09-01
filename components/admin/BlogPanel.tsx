@@ -253,14 +253,13 @@ function BlogList({ onOpen }: { onOpen: (id: string | null) => void }) {
             value={query}
             onChange={(e) => setQuery(e.target.value)}
             placeholder="Search posts…"
-            className="h-9 w-full rounded-lg border border-[var(--color-border)] bg-white/[0.02] pl-8 pr-3 text-[13px] text-white outline-none transition-colors focus:border-accent/40 placeholder:text-white/30"
+            className="h-9 w-full rounded-xl border border-[var(--color-border)] bg-white/[0.02] pl-8 pr-3 text-[13px] text-white outline-none transition-colors focus:border-accent/40 placeholder:text-white/30"
           />
         </div>
         <Select
           aria-label="Filter by status"
           value={statusFilter}
           onChange={(v) => setStatusFilter(v as StatusFilter)}
-          size="sm"
           className="w-36"
           options={[
             { value: 'all', label: 'All statuses' },

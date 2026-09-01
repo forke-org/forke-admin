@@ -22,6 +22,7 @@ import {
   createChangelogAction,
   updateChangelogAction,
   deleteChangelogAction,
+  deleteChangelogMediaAction,
   toggleChangelogPublishAction,
   type ChangelogInput
 } from '@/lib/admin-changelog-actions'
@@ -48,7 +49,7 @@ interface ChangelogRow {
   updatedAt: string
 }
 
-const TAG_PRESETS = ['CORE', 'DEVELOPER', 'PLATFORM', 'PROFILE', 'AI', 'INFRA', 'WEB', 'PLUGINS']
+const TAG_PRESETS = ['FEATURE', 'FIX', 'POLISH', 'UPDATE', 'IMPROVEMENT']
 const PER_PAGE = 10
 
 type View = { mode: 'list' } | { mode: 'edit'; id: string | null }
@@ -209,27 +210,26 @@ function ChangelogListView({ onOpen }: { onOpen: (id: string | null) => void }) 
   return (
     <div className="flex flex-grow flex-col overflow-hidden">
       {/* Header */}
-      <div className="mb-4 flex items-center justify-between gap-4">
+      <div className="mb-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
         <div>
           <h2 className="text-base font-medium text-white">Changelog</h2>
           <p className="mt-0.5 text-xs text-[var(--color-text-muted)]">
             Manage product releases, improvements, and fixes for the public site.
           </p>
         </div>
-        <Button size="sm" onClick={() => onOpen(null)} className="gap-1.5">
+        <Button size="sm" onClick={() => onOpen(null)} className="gap-1.5 self-start sm:self-auto shrink-0">
           <Plus className="h-4 w-4" /> New Changelog
         </Button>
       </div>
 
-      {/* Toolbar */}
-      <div className="mb-3 flex flex-wrap items-center gap-2.5">
-        <div className="relative flex-grow sm:max-w-xs">
+      <div className="mb-3 grid grid-cols-1 sm:grid-cols-[1fr_auto_auto] gap-2.5">
+        <div className="relative w-full">
           <Search className="pointer-events-none absolute left-2.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-[var(--color-text-muted)]" />
           <input
             value={query}
             onChange={(e) => setQuery(e.target.value)}
             placeholder="Search changelogs…"
-            className="h-9 w-full rounded-lg border border-[var(--color-border)] bg-white/[0.02] pl-8 pr-3 text-[13px] text-white outline-none transition-colors focus:border-accent/40 placeholder:text-white/30"
+            className="h-9 w-full rounded-xl border border-[var(--color-border)] bg-white/[0.02] pl-8 pr-3 text-[13px] text-white outline-none transition-colors focus:border-accent/40 placeholder:text-white/30"
           />
         </div>
 
@@ -237,8 +237,7 @@ function ChangelogListView({ onOpen }: { onOpen: (id: string | null) => void }) 
           aria-label="Filter by status"
           value={statusFilter}
           onChange={(v) => setStatusFilter(v as StatusFilter)}
-          size="sm"
-          className="w-36"
+          className="w-full sm:w-36"
           options={[
             { value: 'all', label: 'All statuses' },
             { value: 'published', label: 'Published' },
@@ -250,8 +249,7 @@ function ChangelogListView({ onOpen }: { onOpen: (id: string | null) => void }) 
           aria-label="Filter by tag"
           value={tagFilter}
           onChange={(v) => setTagFilter(v)}
-          size="sm"
-          className="w-36"
+          className="w-full sm:w-36"
           options={[
             { value: 'all', label: 'All tags' },
             ...TAG_PRESETS.map((t) => ({ value: t, label: t })),
@@ -259,7 +257,6 @@ function ChangelogListView({ onOpen }: { onOpen: (id: string | null) => void }) 
         />
       </div>
 
-      {/* Table */}
       <div className="flex-grow overflow-auto rounded-xl border border-[var(--color-border)] bg-white/[0.018]">
         <table className="w-full border-collapse text-left">
           <thead>
@@ -267,17 +264,16 @@ function ChangelogListView({ onOpen }: { onOpen: (id: string | null) => void }) 
               <th className="px-3 py-2.5 font-medium">Post</th>
               <th className="hidden px-2 py-2.5 font-medium md:table-cell">Tag</th>
               <th className="hidden px-2 py-2.5 font-medium md:table-cell">Status</th>
-              <th className="hidden px-2 py-2.5 font-medium sm:table-cell">Media</th>
               <th className="hidden px-2 py-2.5 font-medium sm:table-cell">Published (Local)</th>
               <th className="w-28 px-3 py-2.5 text-right font-medium">Actions</th>
             </tr>
           </thead>
           <tbody className="divide-y divide-[var(--color-border)]">
             {loading ? (
-              <TableLoadingRows cols={6} rows={6} />
+              <TableLoadingRows cols={5} rows={6} />
             ) : filtered.length === 0 ? (
               <tr>
-                <td colSpan={6} className="px-4 py-16 text-center">
+                <td colSpan={5} className="px-4 py-16 text-center">
                   <div className="flex flex-col items-center justify-center text-center">
                     <FileText className="mb-3 h-8 w-8 text-white/15" />
                     <p className="text-sm font-medium text-white">
@@ -295,68 +291,47 @@ function ChangelogListView({ onOpen }: { onOpen: (id: string | null) => void }) 
                   key={row.id}
                   className="group transition-colors hover:bg-white/[0.015]"
                 >
-                  {/* Post Title & Excerpt */}
-                  <td className="px-3 py-2.5">
-                    <button onClick={() => onOpen(row.id)} className="flex items-center gap-3 text-left">
-                      <div className="h-9 w-12 shrink-0 overflow-hidden rounded-md border border-[var(--color-border)] bg-white/[0.02]">
-                        {row.mediaType === 'image' && row.mediaUrl ? (
-                          // eslint-disable-next-line @next/next/no-img-element
-                          <img src={row.mediaUrl} alt="" className="h-full w-full object-cover" />
-                        ) : row.mediaType === 'video' ? (
-                          <div className="flex h-full w-full items-center justify-center text-accent">
-                            <Video className="h-3.5 w-3.5" />
-                          </div>
-                        ) : (
-                          <div className="flex h-full w-full items-center justify-center">
-                            <FileText className="h-3.5 w-3.5 text-white/15" />
-                          </div>
-                        )}
-                      </div>
-                      <div className="min-w-0">
+                  <td className="px-3 py-2.5 min-w-[200px]">
+                    <button onClick={() => onOpen(row.id)} className="flex flex-col text-left w-full">
+                      <div className="flex items-center gap-2">
                         <p className="truncate text-[13px] font-medium text-white group-hover:text-accent">
                           {row.title}
                         </p>
-                        <span className="inline-flex items-center gap-1 font-mono text-[10px] text-[var(--color-text-muted)] truncate max-w-sm">
-                          {row.slug}
+                        <span className="inline-flex md:hidden items-center rounded border border-white/10 bg-white/[0.03] px-1.5 py-0.5 font-mono text-[9px] font-semibold text-white/70 uppercase shrink-0">
+                          {row.tag || 'FEATURE'}
                         </span>
+                        {!row.isPublished && (
+                          <span className="inline-flex md:hidden items-center rounded border border-amber-500/20 bg-amber-500/10 px-1.5 py-0.5 font-mono text-[9px] font-semibold text-amber-400 shrink-0">
+                            DRAFT
+                          </span>
+                        )}
                       </div>
                     </button>
                   </td>
 
-                  {/* Tag */}
                   <td className="hidden px-2 py-2.5 md:table-cell">
                     <span className="inline-flex items-center rounded border border-white/10 bg-white/[0.03] px-2 py-0.5 font-mono text-[10px] font-semibold text-white/70 uppercase">
-                      {row.tag || 'CORE'}
+                      {row.tag || 'FEATURE'}
                     </span>
                   </td>
 
-                  {/* Status */}
                   <td className="hidden px-2 py-2.5 md:table-cell">
                     <StatusBadge isPublished={row.isPublished} />
                   </td>
 
-                  {/* Media Type */}
-                  <td className="hidden px-2 py-2.5 sm:table-cell">
-                    <span className="inline-flex items-center gap-1 font-mono text-[11px] text-[var(--color-text-muted)]">
-                      {row.mediaType !== 'none' ? row.mediaType : 'none'}
-                    </span>
-                  </td>
-
-                  {/* Published Local Date */}
                   <td className="hidden px-2 py-2.5 sm:table-cell">
                     <span className="font-mono text-[11px] text-[var(--color-text-muted)]">
                       {formatLocalDateTime(row.publishedAt)}
                     </span>
                   </td>
 
-                  {/* Actions */}
                   <td className="px-3 py-2.5">
                     <div className="flex items-center justify-end gap-1">
                       <a
-                        href={`https://www.forke.space/changelog/${row.slug}`}
+                        href={`https://www.forke.space/changelog#${row.slug}`}
                         target="_blank"
                         rel="noreferrer"
-                        title="View Live"
+                        title="View on Changelog"
                         className="flex h-8 w-8 items-center justify-center rounded-md text-[var(--color-text-muted)] transition-colors hover:bg-white/[0.06] hover:text-white"
                       >
                         <ArrowUpRight className="h-3.5 w-3.5" />
@@ -395,7 +370,6 @@ function ChangelogListView({ onOpen }: { onOpen: (id: string | null) => void }) 
         </table>
       </div>
 
-      {/* Pagination */}
       {!loading && filtered.length > PER_PAGE && (
         <div className="mt-4 flex items-center justify-between">
           <p className="text-[11px] font-mono text-[var(--color-text-muted)]">
@@ -427,12 +401,10 @@ function ChangelogListView({ onOpen }: { onOpen: (id: string | null) => void }) 
         </div>
       )}
 
-      {confirm && <ConfirmModal options={confirm} onClose={() => setConfirm(null)} />}
+      {confirm && <ConfirmModal state={confirm} onClose={() => setConfirm(null)} />}
     </div>
   )
 }
-
-// ─── EDITOR VIEW (Clean 2-Column Inline Form with Zero Emojis) ───────────────
 
 interface EditorProps {
   id: string | null
@@ -444,11 +416,11 @@ function ChangelogEditorView({ id, onBack, onSaved }: EditorProps) {
   const [loading, setLoading] = useState(!!id)
   const [saving, setSaving] = useState(false)
   const [uploading, setUploading] = useState(false)
+  const [confirm, setConfirm] = useState<ConfirmOptions | null>(null)
 
-  // Form fields
   const [title, setTitle] = useState('')
   const [slug, setSlug] = useState('')
-  const [tag, setTag] = useState('CORE')
+  const [tag, setTag] = useState('FEATURE')
   const [customTag, setCustomTag] = useState('')
   const [description, setDescription] = useState('')
   const [improvements, setImprovements] = useState<string[]>([''])
@@ -460,7 +432,6 @@ function ChangelogEditorView({ id, onBack, onSaved }: EditorProps) {
 
   const fileInputRef = useRef<HTMLInputElement>(null)
 
-  // Load existing post if editing
   useEffect(() => {
     if (!id) {
       setPublishedAt(toLocalInputString(new Date().toISOString()))
@@ -503,14 +474,14 @@ function ChangelogEditorView({ id, onBack, onSaved }: EditorProps) {
     }
   }
 
-  // Client-side image compression to WebP
   const compressImageToWebP = (file: File): Promise<Blob> => {
     return new Promise((resolve) => {
       const img = new Image()
       img.src = URL.createObjectURL(file)
       img.onload = () => {
         const canvas = document.createElement('canvas')
-        let { width, height } = img
+        let width = img.width
+        let height = img.height
         const maxDim = 1920
         if (width > maxDim || height > maxDim) {
           if (width > height) {
@@ -574,6 +545,18 @@ function ChangelogEditorView({ id, onBack, onSaved }: EditorProps) {
     }
   }
 
+  const handleClearMedia = () => {
+    if (mediaUrl) {
+      const urlToDelete = mediaUrl
+      setMediaUrl('')
+      setMediaType('none')
+      deleteChangelogMediaAction(urlToDelete).catch((err) => {
+        console.error('Failed to delete media from R2:', err)
+      })
+      toast('Media cleared and removed from R2.', 'info')
+    }
+  }
+
   const handleSave = async (publishImmediate = isPublished) => {
     if (!title.trim() || !slug.trim() || !description.trim()) {
       toast('Title, slug, and overview description are required.', 'error')
@@ -626,32 +609,72 @@ function ChangelogEditorView({ id, onBack, onSaved }: EditorProps) {
   return (
     <div className="flex flex-grow flex-col overflow-hidden">
       {/* Top action header */}
-      <div className="mb-4 flex items-center justify-between gap-4 border-b border-[var(--color-border)] pb-3">
-        <div className="flex items-center gap-3">
-          <Button variant="outline" size="sm" onClick={onBack} className="gap-1.5">
-            <ArrowLeft className="h-4 w-4" /> Back to Changelogs
-          </Button>
-          <span className="text-sm font-medium text-white">
-            {id ? 'Edit Changelog Post' : 'New Changelog Post'}
-          </span>
-        </div>
+      <div className="mb-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-[var(--color-border)] pb-3">
+        <button
+          type="button"
+          onClick={onBack}
+          className="group inline-flex items-center gap-2 text-[13px] font-medium text-[var(--color-text-muted)] hover:text-white transition-colors"
+        >
+          <ArrowLeft className="h-4 w-4 text-[var(--color-text-muted)] group-hover:text-white transition-colors" />
+          <span>Change logs</span>
+        </button>
 
-        <div className="flex items-center gap-2">
-          <Button
-            size="sm"
+        <div className="flex items-center gap-2 self-start sm:self-auto">
+          {id && (
+            <button
+              type="button"
+              disabled={saving}
+              onClick={() => {
+                setConfirm({
+                  title: 'Delete Changelog Post',
+                  message: `"${title}" will be permanently deleted. Continue?`,
+                  confirmLabel: 'Delete',
+                  tone: 'danger',
+                  onConfirm: async () => {
+                    const res = await deleteChangelogAction(id)
+                    if (res.success) {
+                      toast('Changelog post deleted.', 'success')
+                      onSaved()
+                    } else {
+                      toast(res.error || 'Failed to delete post.', 'error')
+                    }
+                  },
+                })
+              }}
+              className="h-9 px-3 rounded-xl border border-red-500/20 bg-red-500/10 text-red-400 text-xs font-medium hover:bg-red-500 hover:text-white transition-colors disabled:opacity-40 flex items-center justify-center gap-1.5"
+            >
+              <Trash2 className="h-3.5 w-3.5" />
+              <span>Delete</span>
+            </button>
+          )}
+          <button
+            type="button"
+            disabled={saving}
+            onClick={() => handleSave(false)}
+            className="h-9 px-4 rounded-xl border border-white/10 bg-white/[0.03] text-white text-xs font-medium hover:bg-white/[0.06] transition-colors disabled:opacity-40 flex items-center justify-center min-w-[95px]"
+          >
+            Save draft
+          </button>
+          <button
+            type="button"
             disabled={saving}
             onClick={() => handleSave(true)}
-            className="gap-1.5"
+            className="h-9 px-4 rounded-xl bg-accent text-black text-xs font-semibold hover:bg-accent/90 transition-colors disabled:opacity-40 flex items-center justify-center gap-1.5 shadow-sm min-w-[95px]"
           >
-            {saving ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Check className="h-3.5 w-3.5" />}
-            {id ? 'Save Changes' : 'Publish Post'}
-          </Button>
+            {saving ? (
+              <Loader2 className="h-3.5 w-3.5 animate-spin" />
+            ) : (
+              <Globe className="h-3.5 w-3.5" />
+            )}
+            <span>{id ? 'Save Changes' : 'Publish'}</span>
+          </button>
         </div>
       </div>
 
-      {/* Editor Content Form */}
-      <div className="flex-grow overflow-y-auto pr-1">
-        <div className="max-w-4xl space-y-6">
+      {/* 2-Column Split: Form (Left Half) & Live Forke Email Newsletter Template (Right Half) */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 flex-1 min-h-0 overflow-hidden">
+        {/* Left column: Editor Form (Scrollable) */}
+        <div className="overflow-y-auto pr-1 sm:pr-2 space-y-4">
           {/* Section: Title & URL */}
           <div className="space-y-3 rounded-xl border border-[var(--color-border)] bg-white/[0.015] p-4">
             <div>
@@ -672,8 +695,8 @@ function ChangelogEditorView({ id, onBack, onSaved }: EditorProps) {
               <label className="mb-1.5 block text-xs font-medium text-[var(--color-text-muted)]">
                 Slug (URL Permalink)
               </label>
-              <div className="flex items-center rounded-lg border border-[var(--color-border)] bg-white/[0.02] px-3">
-                <span className="font-mono text-xs text-white/30 select-none">
+              <div className="flex flex-col sm:flex-row sm:items-center rounded-lg border border-[var(--color-border)] bg-white/[0.02] px-3 py-1.5 sm:py-0 gap-1 sm:gap-0">
+                <span className="font-mono text-[11px] sm:text-xs text-white/30 select-none break-all sm:break-normal shrink-0">
                   https://www.forke.space/changelog/
                 </span>
                 <input
@@ -681,61 +704,45 @@ function ChangelogEditorView({ id, onBack, onSaved }: EditorProps) {
                   required
                   value={slug}
                   onChange={(e) => setSlug(e.target.value)}
-                  className="h-9 flex-1 bg-transparent px-1 font-mono text-xs text-white outline-none"
+                  className="h-8 sm:h-9 flex-1 bg-transparent px-0 sm:px-1 font-mono text-xs text-white outline-none"
                 />
               </div>
             </div>
           </div>
 
-          {/* Section: Tag & Published Date */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            {/* Tag selector */}
-            <div className="space-y-2 rounded-xl border border-[var(--color-border)] bg-white/[0.015] p-4">
-              <label className="block text-xs font-medium text-[var(--color-text-muted)]">
-                Category Tag (Pill Selector)
-              </label>
-              <div className="flex flex-wrap items-center gap-1.5">
-                {TAG_PRESETS.map((t) => {
-                  const active = tag === t && !customTag
-                  return (
-                    <button
-                      key={t}
-                      type="button"
-                      onClick={() => {
-                        setTag(t)
-                        setCustomTag('')
-                      }}
-                      className={cn(
-                        'rounded px-2.5 py-1 font-mono text-[10px] font-semibold uppercase tracking-wider transition-colors',
-                        active
-                          ? 'border border-accent/40 bg-accent text-black font-bold'
-                          : 'border border-[var(--color-border)] bg-white/[0.02] text-white/60 hover:text-white hover:bg-white/[0.05]'
-                      )}
-                    >
-                      {t}
-                    </button>
-                  )
-                })}
-                <input
-                  type="text"
-                  value={customTag}
-                  onChange={(e) => setCustomTag(e.target.value.toUpperCase())}
-                  placeholder="+ Custom Tag"
-                  className="h-6 w-24 rounded border border-dashed border-white/20 bg-transparent px-2 font-mono text-[10px] text-white uppercase outline-none focus:border-accent placeholder:text-white/30"
-                />
-              </div>
-            </div>
-
-            {/* Published Date (Local Time) */}
-            <div className="space-y-2 rounded-xl border border-[var(--color-border)] bg-white/[0.015] p-4">
-              <label className="block text-xs font-medium text-[var(--color-text-muted)]">
-                Published Date & Time (Local Timezone)
-              </label>
+          {/* Section: Category Tag */}
+          <div className="space-y-2 rounded-xl border border-[var(--color-border)] bg-white/[0.015] p-4">
+            <label className="block text-xs font-medium text-[var(--color-text-muted)]">
+              Category Tag (Pill Selector)
+            </label>
+            <div className="flex flex-wrap items-center gap-1.5">
+              {TAG_PRESETS.map((t) => {
+                const active = tag === t && !customTag
+                return (
+                  <button
+                    key={t}
+                    type="button"
+                    onClick={() => {
+                      setTag(t)
+                      setCustomTag('')
+                    }}
+                    className={cn(
+                      'rounded px-2.5 py-1 font-mono text-[10px] font-semibold uppercase tracking-wider transition-colors',
+                      active
+                        ? 'border border-accent/40 bg-accent text-black font-bold'
+                        : 'border border-[var(--color-border)] bg-white/[0.02] text-white/60 hover:text-white hover:bg-white/[0.05]'
+                    )}
+                  >
+                    {t}
+                  </button>
+                )
+              })}
               <input
-                type="datetime-local"
-                value={publishedAt}
-                onChange={(e) => setPublishedAt(e.target.value)}
-                className="h-9 w-full rounded-lg border border-[var(--color-border)] bg-white/[0.02] px-3 font-mono text-xs text-white outline-none focus:border-accent/40"
+                type="text"
+                value={customTag}
+                onChange={(e) => setCustomTag(e.target.value.toUpperCase())}
+                placeholder="+ CUSTOM TAG"
+                className="h-6 w-24 rounded border border-dashed border-white/20 bg-transparent px-2 font-mono text-[10px] text-white uppercase outline-none focus:border-accent placeholder:text-white/30"
               />
             </div>
           </div>
@@ -746,7 +753,7 @@ function ChangelogEditorView({ id, onBack, onSaved }: EditorProps) {
               Overview Description
             </label>
             <textarea
-              rows={4}
+              rows={3}
               required
               value={description}
               onChange={(e) => setDescription(e.target.value)}
@@ -764,11 +771,8 @@ function ChangelogEditorView({ id, onBack, onSaved }: EditorProps) {
               {mediaUrl && (
                 <button
                   type="button"
-                  onClick={() => {
-                    setMediaUrl('')
-                    setMediaType('none')
-                  }}
-                  className="text-[11px] font-mono text-red-400 hover:underline"
+                  onClick={handleClearMedia}
+                  className="text-[11px] font-mono text-red-400 hover:underline cursor-pointer"
                 >
                   Clear Media
                 </button>
@@ -807,13 +811,13 @@ function ChangelogEditorView({ id, onBack, onSaved }: EditorProps) {
             </div>
 
             {mediaUrl && (
-              <div className="pt-2">
+              <div className="pt-1">
                 <div className="rounded-lg border border-[var(--color-border)] bg-black/40 p-2">
                   {mediaType === 'video' || mediaUrl.match(/\.(mp4|webm|mov)$/i) ? (
-                    <video src={mediaUrl} controls className="max-h-48 rounded mx-auto" />
+                    <video src={mediaUrl} controls className="max-h-36 rounded mx-auto" />
                   ) : (
                     /* eslint-disable-next-line @next/next/no-img-element */
-                    <img src={mediaUrl} alt="" className="max-h-48 rounded object-contain mx-auto" />
+                    <img src={mediaUrl} alt="" className="max-h-36 rounded object-contain mx-auto" />
                   )}
                 </div>
               </div>
@@ -907,31 +911,142 @@ function ChangelogEditorView({ id, onBack, onSaved }: EditorProps) {
               ))}
             </div>
           </div>
+        </div>
 
-          {/* Section: Status Toggle */}
-          <div className="flex items-center justify-between rounded-xl border border-[var(--color-border)] bg-white/[0.015] p-4">
-            <div>
-              <p className="text-xs font-medium text-white">Publish Status</p>
-              <p className="text-[11px] text-[var(--color-text-muted)]">
-                {isPublished ? 'Post is visible on the public changelog.' : 'Post is saved as an unpublished draft.'}
+        {/* Right column: Exact Forke Email Newsletter Template Preview (Matching Blog Email) */}
+        <div className="hidden lg:block overflow-y-auto rounded-2xl border border-[var(--color-border)] bg-[#050505] p-4 sm:p-6" style={{ backgroundImage: 'radial-gradient(circle at 50% 6%, rgba(255,122,0,0.18) 0%, rgba(5,5,5,0) 52%)' }}>
+          {/* Central Email Card Container */}
+          <div className="max-w-[540px] w-full mx-auto rounded-[24px] border border-[rgba(255,122,0,0.16)] bg-[#0E0E10] shadow-[0_0_80px_rgba(255,122,0,0.07)] overflow-hidden text-left">
+            {/* Header Bar */}
+            <div className="px-8 py-5 border-b border-white/[0.08] flex items-center justify-between">
+              <span className="font-sans text-[22px] font-semibold tracking-[-0.04em] text-white select-none">
+                forke<span className="text-accent">*</span>
+              </span>
+              <span className="font-mono text-[10px] tracking-[0.14em] uppercase text-white/40 select-none">
+                prove skill by shipping
+              </span>
+            </div>
+
+            {/* Default Banner (as used in Readme & Official Forke Emails) */}
+            <div className="w-full border-b border-white/[0.08] overflow-hidden bg-black/40">
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img
+                src="/forke-assets/email-banners/main-banner.png"
+                alt="Forke Banner"
+                className="w-full h-auto block"
+              />
+            </div>
+
+            {/* Featured Body (Apple-Newsroom / Forke Blog Style) */}
+            <div className="px-8 py-7 text-center">
+              <p className="font-mono text-[10.5px] tracking-[0.2em] uppercase text-accent mb-3.5 select-none">
+                From the Forke changelog &middot; {customTag.trim() || tag || 'FEATURE'}
+              </p>
+
+              <h1 className="font-sans text-[26px] font-semibold tracking-[-0.035em] leading-[1.2] text-white mb-4">
+                {title.trim() || 'Interactive 3D Badge & Profile Preview'}
+              </h1>
+
+              <p className="font-sans text-[15px] leading-[1.7] text-white/70 mb-3 text-left">
+                {description.trim() || 'Here is an overview of what shipped today in Forke. Explore the latest updates, architectural improvements, and fixes across our platform.'}
+              </p>
+
+              <p className="font-mono text-[11px] text-white/35 mb-5 text-center select-none">
+                {formatLocalDateTime(publishedAt)} &middot; Release Note
+              </p>
+
+              {/* Attached Media (Image / Video Preview) */}
+              {mediaUrl && (
+                <div className="my-5">
+                  {mediaType === 'video' || mediaUrl.match(/\.(mp4|webm|mov)$/i) ? (
+                    <div className="relative block w-full rounded-[14px] overflow-hidden border border-white/10 bg-black aspect-video">
+                      <video
+                        src={mediaUrl}
+                        className="w-full h-full object-cover opacity-90"
+                      />
+                    </div>
+                  ) : (
+                    /* eslint-disable-next-line @next/next/no-img-element */
+                    <img
+                      src={mediaUrl}
+                      alt=""
+                      className="w-full max-h-72 object-cover rounded-[14px] border border-white/10"
+                    />
+                  )}
+                </div>
+              )}
+
+              {/* What's New & Improved (Callout Card) */}
+              {improvements.some((s) => s.trim()) && (
+                <div className="mb-4 rounded-xl border border-accent/20 bg-accent/[0.04] p-4 text-left">
+                  <p className="font-mono text-[10px] font-bold uppercase tracking-[0.14em] text-accent mb-2.5 flex items-center gap-1.5 select-none">
+                    <Sparkles className="h-3 w-3 text-accent" /> What&apos;s New &amp; Improved
+                  </p>
+                  <div className="space-y-2">
+                    {improvements.filter((s) => s.trim()).map((imp, i) => (
+                      <div key={i} className="flex items-start gap-2 text-[13px] text-white/90">
+                        <CheckCircle2 className="h-4 w-4 text-accent shrink-0 mt-0.5" />
+                        <span className="leading-relaxed">{imp}</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Fixes & Polish (Hairline Card) */}
+              {fixes.some((s) => s.trim()) && (
+                <div className="mb-4 rounded-xl border border-white/10 bg-white/[0.02] p-4 text-left">
+                  <p className="font-mono text-[10px] font-bold uppercase tracking-[0.14em] text-emerald-400 mb-2.5 flex items-center gap-1.5 select-none">
+                    <Check className="h-3 w-3 text-emerald-400" /> Fixes &amp; Polish
+                  </p>
+                  <div className="space-y-2">
+                    {fixes.filter((s) => s.trim()).map((fix, i) => (
+                      <div key={i} className="flex items-start gap-2 text-[13px] text-white/70">
+                        <span className="h-1.5 w-1.5 rounded-full bg-emerald-400 shrink-0 mt-2" />
+                        <span className="leading-relaxed">{fix}</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Main Changelog Page Link Button at Bottom */}
+              <div className="mt-8 pt-6 border-t border-white/[0.08] text-center">
+                <a
+                  href="https://www.forke.space/changelog"
+                  target="_blank"
+                  rel="noreferrer"
+                  className="inline-flex items-center justify-center px-6 py-3 rounded-xl bg-accent text-black font-mono text-[11px] font-bold tracking-wider uppercase hover:bg-accent/90 transition-all shadow-[0_0_25px_rgba(255,122,0,0.3)]"
+                >
+                  View all releases on forke.space &rarr;
+                </a>
+              </div>
+            </div>
+
+            {/* Footer */}
+            <div className="px-8 py-6 border-t border-white/[0.08] bg-black/20">
+              <span className="font-sans text-[16px] font-semibold tracking-[-0.04em] text-white">
+                forke<span className="text-accent">*</span>
+              </span>
+              <p className="font-sans text-[12px] leading-[1.6] text-white/40 mt-1.5 mb-4">
+                The micro-task marketplace for developers.<br />
+                <a href="mailto:support@forke.space" className="text-white/60 hover:text-white transition-colors">
+                  support@forke.space
+                </a>
+              </p>
+              <p className="font-mono text-[9px] font-semibold uppercase tracking-[0.22em] text-white/20 select-none">
+                &copy; 2026 Forke &nbsp;&middot;&nbsp; Changelog Release
+              </p>
+              <p className="font-sans text-[11px] leading-[1.6] text-white/35 mt-3">
+                You&apos;re receiving this because you subscribed to Forke updates.{' '}
+                <span className="text-white/60 underline cursor-pointer">Unsubscribe</span>.
               </p>
             </div>
-            <button
-              type="button"
-              onClick={() => setIsPublished(!isPublished)}
-              className={cn(
-                'inline-flex items-center gap-1.5 rounded-lg border px-3 py-1.5 text-xs font-medium transition-colors',
-                isPublished
-                  ? 'border-emerald-500/30 bg-emerald-500/10 text-emerald-400 hover:bg-emerald-500/20'
-                  : 'border-amber-500/30 bg-amber-500/10 text-amber-400 hover:bg-amber-500/20'
-              )}
-            >
-              {isPublished ? <Globe className="h-3.5 w-3.5" /> : <CircleDot className="h-3.5 w-3.5" />}
-              {isPublished ? 'Published' : 'Draft'}
-            </button>
           </div>
         </div>
       </div>
+
+      {confirm && <ConfirmModal state={confirm} onClose={() => setConfirm(null)} />}
     </div>
   )
 }

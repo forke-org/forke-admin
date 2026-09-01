@@ -132,7 +132,18 @@ export async function updateChangelogAction(id: string, input: Partial<Changelog
     if (input.mediaType !== undefined) updates.mediaType = input.mediaType
     if (input.mediaUrl !== undefined) updates.mediaUrl = input.mediaUrl?.trim() || null
     if (input.isPublished !== undefined) updates.isPublished = input.isPublished
-    if (input.publishedAt !== undefined) updates.publishedAt = new Date(input.publishedAt)
+
+    // Fetch existing record to preserve publishedAt date
+    const [existing] = await db.select().from(changelogs).where(eq(changelogs.id, id)).limit(1)
+    if (existing) {
+      if (existing.isPublished && existing.publishedAt) {
+        // Once published, never overwrite publishedAt date on edits
+        delete updates.publishedAt
+      } else if (input.isPublished && !existing.isPublished) {
+        // First time publishing this draft
+        updates.publishedAt = input.publishedAt ? new Date(input.publishedAt) : new Date()
+      }
+    }
 
     const [updated] = await db
       .update(changelogs)
@@ -158,10 +169,30 @@ export async function updateChangelogAction(id: string, input: Partial<Changelog
   }
 }
 
+export async function deleteChangelogMediaAction(mediaUrl: string) {
+  await ensureAdmin()
+  try {
+    if (!mediaUrl) return { success: true }
+    const { deleteFileByUrl } = await import('@/lib/r2')
+    const deleted = await deleteFileByUrl(mediaUrl)
+    return { success: true, deleted }
+  } catch (err: any) {
+    console.error('Failed to delete media from R2:', err)
+    return { success: false, error: err.message || 'Delete failed' }
+  }
+}
+
 export async function deleteChangelogAction(id: string) {
   await ensureAdmin()
   try {
-    const existing = await db.query.changelogs.findFirst({ where: eq(changelogs.id, id) })
+    const [existing] = await db.select().from(changelogs).where(eq(changelogs.id, id)).limit(1)
+    if (existing?.mediaUrl) {
+      const { deleteFileByUrl } = await import('@/lib/r2')
+      await deleteFileByUrl(existing.mediaUrl).catch((err) => {
+        console.error('Failed to delete media from R2 upon changelog deletion:', err)
+      })
+    }
+
     await db.delete(changelogs).where(eq(changelogs.id, id))
 
     await logAudit({
@@ -172,9 +203,9 @@ export async function deleteChangelogAction(id: string) {
 
     revalidatePath('/changelog')
     return { success: true }
-  } catch (error) {
+  } catch (error: any) {
     console.error('Failed to delete changelog:', error)
-    return { success: false, error: 'Database deletion failed.' }
+    return { success: false, error: error?.message || 'Database deletion failed.' }
   }
 }
 

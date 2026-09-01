@@ -27,20 +27,23 @@ export interface ConfirmOptions {
  */
 export default function ConfirmModal({
   state,
+  options,
   onClose,
 }: {
-  state: ConfirmOptions | null
+  state?: ConfirmOptions | null
+  options?: ConfirmOptions | null
   onClose: () => void
 }) {
+  const current = state ?? options ?? null
   const [isWorking, setIsWorking] = useState(false)
 
-  if (!state) return null
+  if (!current) return null
 
   async function run() {
-    if (!state) return
+    if (!current) return
     setIsWorking(true)
     try {
-      await state.onConfirm()
+      await current.onConfirm()
       onClose()
     } catch (err) {
       console.error('Confirm action failed:', err)
@@ -54,10 +57,10 @@ export default function ConfirmModal({
       <div className="w-full max-w-sm bg-[#0c0c0e] border border-[var(--color-border)] rounded-xl p-6 shadow-2xl relative animate-in zoom-in-95 duration-200">
         <div className="space-y-4 text-left">
           <div className="border-b border-[var(--color-border)] pb-3">
-            <h3 className="text-base font-medium text-white">{state.title}</h3>
+            <h3 className="text-base font-medium text-white">{current.title}</h3>
           </div>
           <p className="text-[13px] leading-relaxed text-[var(--color-text-muted)] whitespace-pre-line">
-            {state.message}
+            {current.message}
           </p>
           <div className="flex items-center justify-end gap-2 pt-2 border-t border-[var(--color-border)]">
             <button
@@ -73,7 +76,7 @@ export default function ConfirmModal({
               onClick={run}
               disabled={isWorking}
               className={`h-8 px-3 rounded-lg text-xs font-medium transition-colors flex items-center gap-1.5 disabled:opacity-50 disabled:cursor-not-allowed ${
-                state.tone === 'danger'
+                current.tone === 'danger'
                   ? 'bg-red-500/10 border border-red-500/20 text-red-400 hover:bg-red-500 hover:text-white'
                   : 'bg-accent text-black'
               }`}
@@ -84,7 +87,7 @@ export default function ConfirmModal({
                   <span>Working...</span>
                 </>
               ) : (
-                <span>{state.confirmLabel || 'Confirm'}</span>
+                <span>{current.confirmLabel || 'Confirm'}</span>
               )}
             </button>
           </div>

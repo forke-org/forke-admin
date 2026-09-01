@@ -83,8 +83,8 @@ export function Select({
         aria-expanded={open}
         onClick={() => setOpen((o) => !o)}
         className={cn(
-          'flex w-full items-center justify-between gap-2 rounded-lg border border-white/[0.08] bg-white/[0.02] text-white transition-colors hover:border-white/15 focus:border-accent/50 focus:outline-none disabled:cursor-not-allowed disabled:opacity-40',
-          size === 'sm' ? 'h-7 px-2 text-[11px]' : 'h-9 px-3 text-xs',
+          'flex w-full items-center justify-between gap-2 rounded-xl border border-[var(--color-border)] bg-white/[0.02] text-white transition-colors hover:border-white/15 focus:border-accent/50 focus:outline-none disabled:cursor-not-allowed disabled:opacity-40',
+          size === 'sm' ? 'h-7 px-2.5 text-[11px]' : 'h-9 px-3 text-xs',
           className
         )}
       >

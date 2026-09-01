@@ -732,21 +732,32 @@ export async function getTrackerData(days = 30): Promise<{ success: boolean; dat
         GROUP BY 1 ORDER BY 1 ASC
       `),
       db.execute(sql`
-        WITH clicks AS (
+        WITH clicks_by_source AS (
           SELECT 
             CASE 
               WHEN source = 'direct' AND referrer ~* 'google|bing|yahoo|duckduckgo|brave|ecosia|baidu|startpage|kagi' THEN 'organic'
-              ELSE source 
+              ELSE COALESCE(NULLIF(source, ''), 'direct')
             END AS source,
-            session_id 
-          FROM public.page_visits WHERE is_bot = false AND ${windowSql}
+            count(*)::int AS clicks
+          FROM public.page_visits
+          WHERE is_bot = false AND ${windowSql}
+          GROUP BY 1
         ),
-        converted AS (
-          SELECT attribution->>'sessionId' AS session_id FROM public.subscribers WHERE attribution->>'sessionId' IS NOT NULL
+        conv_by_source AS (
+          SELECT 
+            COALESCE(NULLIF(source, ''), 'direct') AS source,
+            count(*)::int AS conversions
+          FROM public.subscribers
+          WHERE ${isAllTime ? sql`1=1` : sql`created_at >= now() - (${days} || ' days')::interval`}
+          GROUP BY 1
         )
-        SELECT c.source, count(*)::int AS clicks, count(DISTINCT conv.session_id)::int AS conversions
-        FROM clicks c LEFT JOIN converted conv ON conv.session_id = c.session_id
-        GROUP BY c.source ORDER BY clicks DESC
+        SELECT 
+          COALESCE(c.source, v.source) AS source,
+          COALESCE(c.clicks, 0)::int AS clicks,
+          COALESCE(v.conversions, 0)::int AS conversions
+        FROM clicks_by_source c
+        FULL OUTER JOIN conv_by_source v ON v.source = c.source
+        ORDER BY clicks DESC, conversions DESC
       `),
       db.execute(sql`
         SELECT COALESCE(NULLIF(landing_path, ''), '/') AS path, count(*)::int AS clicks
@@ -818,13 +829,15 @@ export async function getTrackerData(days = 30): Promise<{ success: boolean; dat
     })
     const totalConversions = funnel.reduce((a, r) => a + r.conversions, 0)
     const totalClicks = Number(s.clicks || 0)
+    const totalVisitors = Number(s.visitors || 0)
+    const baseCount = totalVisitors > 0 ? totalVisitors : totalClicks
 
     const data: TrackerData = {
       stats: {
         clicks: totalClicks,
-        visitors: Number(s.visitors || 0),
+        visitors: totalVisitors,
         conversions: totalConversions,
-        rate: totalClicks > 0 ? Math.round((totalConversions / totalClicks) * 1000) / 10 : 0,
+        rate: baseCount > 0 ? Math.round((totalConversions / baseCount) * 1000) / 10 : 0,
       },
       series: (seriesRows as any[]).map((r) => ({ day: r.day as string, clicks: Number(r.clicks) })),
       funnel,
