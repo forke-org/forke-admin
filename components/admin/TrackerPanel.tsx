@@ -11,7 +11,7 @@
  */
 
 import React, { useCallback, useEffect, useState, useMemo } from 'react'
-import { MousePointerClick, Users, Target, FileText, ExternalLink, RefreshCw } from 'lucide-react'
+import { MousePointerClick, Users, Target, FileText, ExternalLink, RefreshCw, ChevronLeft, ChevronRight } from 'lucide-react'
 import { getTrackerData, getSignupSourceBreakdown, type TrackerData } from '@/lib/admin-dashboard-actions'
 import { Skeleton } from '@/components/ui/Skeleton'
 import { cn } from '@/lib/utils/cn'
@@ -179,23 +179,32 @@ function PagedBarRows({
       <div className="space-y-2.5">{slice}</div>
       {totalPages > 1 && (
         <div className="flex items-center justify-between mt-3 pt-3 border-t border-[var(--color-border)]">
-          <button
-            onClick={() => setPage((x) => Math.max(0, x - 1))}
-            disabled={p === 0}
-            className="text-[11px] font-mono text-[var(--color-text-muted)] hover:text-white disabled:opacity-30 transition-colors"
-          >
-            ← Prev
-          </button>
-          <span className="text-[11px] font-mono text-[var(--color-text-muted)]">
-            {p * LIST_PAGE_SIZE + 1}–{Math.min((p + 1) * LIST_PAGE_SIZE, rows.length)} of {rows.length}
-          </span>
-          <button
-            onClick={() => setPage((x) => Math.min(totalPages - 1, x + 1))}
-            disabled={p >= totalPages - 1}
-            className="text-[11px] font-mono text-[var(--color-text-muted)] hover:text-white disabled:opacity-30 transition-colors"
-          >
-            Next →
-          </button>
+          <p className="text-[11px] font-mono text-[var(--color-text-muted)]">
+            Showing <span className="text-white">{p * LIST_PAGE_SIZE + 1}</span>–
+            <span className="text-white">{Math.min((p + 1) * LIST_PAGE_SIZE, rows.length)}</span> of{' '}
+            <span className="text-white">{rows.length}</span>
+          </p>
+          <div className="flex items-center gap-1">
+            <button
+              onClick={() => setPage((x) => Math.max(0, x - 1))}
+              disabled={p === 0}
+              className="flex h-6 w-6 items-center justify-center rounded-md border border-[var(--color-border)] text-[var(--color-text-muted)] transition-colors hover:text-white disabled:opacity-30 disabled:pointer-events-none cursor-pointer"
+              title="Previous page"
+            >
+              <ChevronLeft className="h-3.5 w-3.5" />
+            </button>
+            <span className="px-1.5 font-mono text-[11px] text-white select-none">
+              {p + 1} / {totalPages}
+            </span>
+            <button
+              onClick={() => setPage((x) => Math.min(totalPages - 1, x + 1))}
+              disabled={p >= totalPages - 1}
+              className="flex h-6 w-6 items-center justify-center rounded-md border border-[var(--color-border)] text-[var(--color-text-muted)] transition-colors hover:text-white disabled:opacity-30 disabled:pointer-events-none cursor-pointer"
+              title="Next page"
+            >
+              <ChevronRight className="h-3.5 w-3.5" />
+            </button>
+          </div>
         </div>
       )}
     </div>
@@ -523,23 +532,32 @@ export default function TrackerPanel() {
                       </div>
                       {totalPages > 1 && (
                         <div className="flex items-center justify-between mt-3 pt-3 border-t border-[var(--color-border)]">
-                          <button
-                            onClick={() => setRecentPage((p) => Math.max(0, p - 1))}
-                            disabled={page === 0}
-                            className="text-[11px] font-mono text-[var(--color-text-muted)] hover:text-white disabled:opacity-30 disabled:hover:text-[var(--color-text-muted)] transition-colors"
-                          >
-                            ← Prev
-                          </button>
-                          <span className="text-[11px] font-mono text-[var(--color-text-muted)]">
-                            {page + 1} / {totalPages} · showing latest {recent.length}
-                          </span>
-                          <button
-                            onClick={() => setRecentPage((p) => Math.min(totalPages - 1, p + 1))}
-                            disabled={page >= totalPages - 1}
-                            className="text-[11px] font-mono text-[var(--color-text-muted)] hover:text-white disabled:opacity-30 disabled:hover:text-[var(--color-text-muted)] transition-colors"
-                          >
-                            Next →
-                          </button>
+                          <p className="text-[11px] font-mono text-[var(--color-text-muted)]">
+                            Showing <span className="text-white">{page * 10 + 1}</span>–
+                            <span className="text-white">{Math.min((page + 1) * 10, recent.length)}</span> of{' '}
+                            <span className="text-white">{recent.length}</span>
+                          </p>
+                          <div className="flex items-center gap-1">
+                            <button
+                              onClick={() => setRecentPage((p) => Math.max(0, p - 1))}
+                              disabled={page === 0}
+                              className="flex h-6 w-6 items-center justify-center rounded-md border border-[var(--color-border)] text-[var(--color-text-muted)] transition-colors hover:text-white disabled:opacity-30 disabled:pointer-events-none cursor-pointer"
+                              title="Previous page"
+                            >
+                              <ChevronLeft className="h-3.5 w-3.5" />
+                            </button>
+                            <span className="px-1.5 font-mono text-[11px] text-white select-none">
+                              {page + 1} / {totalPages}
+                            </span>
+                            <button
+                              onClick={() => setRecentPage((p) => Math.min(totalPages - 1, p + 1))}
+                              disabled={page >= totalPages - 1}
+                              className="flex h-6 w-6 items-center justify-center rounded-md border border-[var(--color-border)] text-[var(--color-text-muted)] transition-colors hover:text-white disabled:opacity-30 disabled:pointer-events-none cursor-pointer"
+                              title="Next page"
+                            >
+                              <ChevronRight className="h-3.5 w-3.5" />
+                            </button>
+                          </div>
                         </div>
                       )}
                     </>

@@ -96,8 +96,10 @@ import {
   getPendingBroadcastApprovalsAction,
   approveBroadcastAction,
   dismissBroadcastAction,
+  getBroadcastEmailPreviewHtmlAction,
   type BroadcastApprovalItem
 } from '@/lib/actions/broadcast-actions'
+import EmailSneakPeekModal from '@/components/shared/EmailSneakPeekModal'
 import DatabaseConsole from '@/components/admin/DatabaseConsole'
 import BlogPanel from '@/components/admin/BlogPanel'
 import VmOverviewPanel from '@/components/admin/VmOverviewPanel'
@@ -283,6 +285,11 @@ export default function AdminDashboard() {
   const [broadcastSubCount, setBroadcastSubCount] = useState<number>(0)
   const [approvingBroadcastId, setApprovingBroadcastId] = useState<string | null>(null)
   const [dismissingBroadcastId, setDismissingBroadcastId] = useState<string | null>(null)
+  const [previewModalOpen, setPreviewModalOpen] = useState(false)
+  const [previewSubject, setPreviewSubject] = useState('')
+  const [previewHtml, setPreviewHtml] = useState('')
+  const [previewLoading, setPreviewLoading] = useState(false)
+  const [previewApprovalItem, setPreviewApprovalItem] = useState<BroadcastApprovalItem | null>(null)
 
   // Current admin session info
   const [currentAdmin, setCurrentAdmin] = useState<any>(null)
@@ -482,6 +489,39 @@ export default function AdminDashboard() {
       toast('Network error while dismissing broadcast.', 'error')
     } finally {
       setDismissingBroadcastId(null)
+    }
+  }
+
+  const handlePreviewBroadcast = async (item: BroadcastApprovalItem) => {
+    setPreviewApprovalItem(item)
+    setPreviewModalOpen(true)
+    setPreviewLoading(true)
+    try {
+      const res = await getBroadcastEmailPreviewHtmlAction({
+        type: item.type,
+        title: item.title,
+        slug: item.slug,
+        tag: item.tag || undefined,
+        description: item.description || undefined,
+        excerpt: item.excerpt || undefined,
+        improvements: item.improvements || undefined,
+        fixes: item.fixes || undefined,
+        mediaUrl: item.mediaUrl,
+        mediaType: item.mediaType as any,
+        authorName: item.authorName,
+        readingMinutes: item.readingMinutes,
+        coverImage: item.coverImage,
+      })
+      if (res.success) {
+        setPreviewHtml(res.html)
+        setPreviewSubject(res.subject)
+      } else {
+        toast(res.error || 'Failed to generate email preview.', 'error')
+      }
+    } catch {
+      toast('Failed to load email preview.', 'error')
+    } finally {
+      setPreviewLoading(false)
     }
   }
 
@@ -1829,18 +1869,18 @@ export default function AdminDashboard() {
               </div>
 
               {/* ==================== NOTIFICATIONS: BROADCAST EMAIL APPROVALS (MINIMAL) ==================== */}
-              <div className="p-5 sm:p-6 rounded-xl bg-white/[0.015] border border-[var(--color-border)] space-y-3.5">
+              <div className="p-4 sm:p-6 rounded-xl bg-white/[0.015] border border-[var(--color-border)] space-y-3.5 overflow-hidden">
                 <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 border-b border-[var(--color-border)] pb-3.5">
                   <div className="flex items-center gap-2.5">
-                    <Mail className="h-4 w-4 text-white/50" />
-                    <div className="flex items-center gap-2">
+                    <Mail className="h-4 w-4 text-white/50 shrink-0" />
+                    <div className="flex items-center gap-2 flex-wrap">
                       <h3 className="text-sm font-medium text-white">Broadcast Email Approvals</h3>
                       {broadcastApprovals.length > 0 ? (
-                        <span className="rounded px-2 py-0.5 font-mono text-[10px] bg-white/[0.04] border border-white/10 text-white/80">
+                        <span className="rounded px-2 py-0.5 font-mono text-[10px] bg-white/[0.04] border border-white/10 text-white/80 shrink-0">
                           {broadcastApprovals.length} pending
                         </span>
                       ) : (
-                        <span className="rounded px-2 py-0.5 font-mono text-[10px] text-white/30">
+                        <span className="rounded px-2 py-0.5 font-mono text-[10px] text-white/30 shrink-0">
                           all cleared
                         </span>
                       )}
@@ -1857,7 +1897,7 @@ export default function AdminDashboard() {
                 {broadcastApprovals.length === 0 ? (
                   <div className="py-3.5 px-4 rounded-lg bg-white/[0.01] border border-white/[0.04] flex items-center justify-between text-xs text-white/40 font-mono">
                     <span className="flex items-center gap-2">
-                      <Check className="h-3.5 w-3.5 text-white/30" />
+                      <Check className="h-3.5 w-3.5 text-white/30 shrink-0" />
                       No pending approvals. Broadcast announcements will appear here upon publishing.
                     </span>
                     <span className="text-[10px] text-white/20 hidden sm:inline">Zero auto-send policy</span>
@@ -1870,7 +1910,7 @@ export default function AdminDashboard() {
                       return (
                         <div
                           key={approval.id}
-                          className="rounded-lg border border-white/[0.06] bg-white/[0.01] p-3.5 sm:p-4 hover:border-white/10 transition-colors flex flex-col lg:flex-row lg:items-center justify-between gap-3.5"
+                          className="rounded-lg border border-white/[0.06] bg-white/[0.01] p-3 sm:p-4 hover:border-white/10 transition-colors flex flex-col lg:flex-row lg:items-center justify-between gap-3.5"
                         >
                           <div className="space-y-1 min-w-0 flex-1">
                             <div className="flex flex-wrap items-center gap-2">
@@ -1904,36 +1944,46 @@ export default function AdminDashboard() {
                             )}
                           </div>
 
-                          <div className="flex items-center gap-2 shrink-0 self-end lg:self-center">
+                          <div className="flex flex-wrap sm:flex-nowrap items-center gap-2 w-full lg:w-auto justify-end pt-1 lg:pt-0">
+                            <button
+                              type="button"
+                              onClick={() => handlePreviewBroadcast(approval)}
+                              className="h-8 min-h-[32px] max-h-[32px] px-3.5 sm:min-w-[92px] rounded-lg border border-white/10 bg-white/[0.02] text-xs font-medium text-white/70 hover:text-white hover:bg-white/[0.06] hover:border-white/20 transition-colors flex items-center gap-1.5 cursor-pointer flex-1 sm:flex-none justify-center shrink-0 box-border leading-none"
+                              title="Preview how this email looks"
+                            >
+                              <Eye className="h-3.5 w-3.5 text-white/60 shrink-0" />
+                              <span className="leading-none">Preview</span>
+                            </button>
+
                             <button
                               type="button"
                               disabled={isApproving || isDismissing}
                               onClick={() => handleDismissBroadcast(approval)}
-                              className="h-8 px-3 rounded-lg border border-white/10 bg-transparent text-xs font-mono text-white/40 hover:text-white hover:border-white/20 transition-colors disabled:opacity-40 flex items-center gap-1.5 cursor-pointer"
+                              className="h-8 min-h-[32px] max-h-[32px] px-3.5 sm:min-w-[92px] rounded-lg border border-red-500/20 bg-red-500/10 text-xs font-medium text-red-400 hover:text-red-300 hover:bg-red-500/20 hover:border-red-500/30 transition-colors disabled:opacity-40 flex items-center gap-1.5 cursor-pointer flex-1 sm:flex-none justify-center shrink-0 box-border leading-none"
                             >
                               {isDismissing ? (
-                                <Loader2 className="h-3 w-3 animate-spin" />
+                                <Loader2 className="h-3.5 w-3.5 animate-spin shrink-0" />
                               ) : (
-                                <X className="h-3 w-3" />
+                                <X className="h-3.5 w-3.5 shrink-0" />
                               )}
-                              <span>Dismiss</span>
+                              <span className="leading-none">Dismiss</span>
                             </button>
 
                             <button
                               type="button"
                               disabled={isApproving || isDismissing}
                               onClick={() => handleApproveBroadcast(approval)}
-                              className="h-8 px-3.5 rounded-lg bg-white text-black text-xs font-medium hover:bg-white/90 transition-colors disabled:opacity-40 flex items-center gap-1.5 shadow-sm cursor-pointer min-w-[145px] justify-center"
+                              className="h-8 min-h-[32px] max-h-[32px] px-3.5 sm:min-w-[92px] rounded-lg border border-white bg-white text-black text-xs font-medium hover:bg-white/90 hover:border-white/90 transition-colors disabled:opacity-40 flex items-center gap-1.5 shadow-sm cursor-pointer flex-1 sm:flex-none justify-center shrink-0 box-border leading-none"
                             >
                               {isApproving ? (
                                 <>
-                                  <Loader2 className="h-3 w-3 animate-spin" />
-                                  <span>Broadcasting…</span>
+                                  <Loader2 className="h-3.5 w-3.5 animate-spin shrink-0" />
+                                  <span className="leading-none">Approving…</span>
                                 </>
                               ) : (
                                 <>
-                                  <Send className="h-3 w-3" />
-                                  <span>Approve &amp; Broadcast</span>
+                                  <Send className="h-3.5 w-3.5 shrink-0" />
+                                  <span className="leading-none">Approve</span>
                                 </>
                               )}
                             </button>
@@ -1944,6 +1994,32 @@ export default function AdminDashboard() {
                   </div>
                 )}
               </div>
+
+              {/* Email Sneak Peek Modal */}
+              <EmailSneakPeekModal
+                isOpen={previewModalOpen}
+                onClose={() => {
+                  setPreviewModalOpen(false)
+                  setPreviewApprovalItem(null)
+                }}
+                subject={previewSubject}
+                html={previewHtml}
+                loading={previewLoading}
+                audienceCount={broadcastSubCount}
+                onApprove={
+                  previewApprovalItem
+                    ? () => {
+                        const item = previewApprovalItem
+                        setPreviewModalOpen(false)
+                        setPreviewApprovalItem(null)
+                        handleApproveBroadcast(item)
+                      }
+                    : undefined
+                }
+                approving={
+                  previewApprovalItem ? approvingBroadcastId === previewApprovalItem.id : false
+                }
+              />
 
             </div>
           )}

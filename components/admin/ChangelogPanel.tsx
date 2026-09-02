@@ -16,7 +16,7 @@ import {
   CheckCircle2, Upload, Video, Image as ImageIcon, X, ExternalLink,
   Calendar, Tag, ArrowUpRight, RefreshCw, FileText, Check, Clock,
   ChevronLeft, ChevronRight, ArrowLeft, Loader2, CircleDot, Layers,
-  Copy, Mail
+  Copy, Mail, Maximize2
 } from 'lucide-react'
 import {
   getChangelogsAdmin,
@@ -29,6 +29,8 @@ import {
   bulkSetChangelogPublishAction,
   type ChangelogInput
 } from '@/lib/admin-changelog-actions'
+import { getBroadcastEmailPreviewHtmlAction } from '@/lib/actions/broadcast-actions'
+import EmailSneakPeekModal from '@/components/shared/EmailSneakPeekModal'
 import { Button } from '@/components/ui/Button'
 import { Select } from '@/components/ui/Select'
 import { toast } from '@/components/shared/Toast'
@@ -225,6 +227,39 @@ function ChangelogListView({
 
   const [selected, setSelected] = useState<Set<string>>(new Set())
   const [bulkBusy, setBulkBusy] = useState(false)
+
+  const [emailPreviewOpen, setEmailPreviewOpen] = useState(false)
+  const [emailPreviewSubject, setEmailPreviewSubject] = useState('')
+  const [emailPreviewHtml, setEmailPreviewHtml] = useState('')
+  const [emailPreviewLoading, setEmailPreviewLoading] = useState(false)
+
+  const handlePreviewEmail = async (row: ChangelogRow) => {
+    setEmailPreviewOpen(true)
+    setEmailPreviewLoading(true)
+    try {
+      const res = await getBroadcastEmailPreviewHtmlAction({
+        type: 'changelog',
+        title: row.title,
+        slug: row.slug,
+        tag: row.tag,
+        description: row.description,
+        improvements: row.improvements,
+        fixes: row.fixes,
+        mediaUrl: row.mediaUrl,
+        mediaType: row.mediaType,
+      })
+      if (res.success) {
+        setEmailPreviewHtml(res.html)
+        setEmailPreviewSubject(res.subject)
+      } else {
+        toast(res.error || 'Failed to generate email preview.', 'error')
+      }
+    } catch {
+      toast('Failed to load email preview.', 'error')
+    } finally {
+      setEmailPreviewLoading(false)
+    }
+  }
 
   const load = useCallback(async () => {
     setLoading(true)
@@ -628,6 +663,15 @@ function ChangelogListView({
         </div>
       )}
 
+      {/* Email Sneak Peek Modal */}
+      <EmailSneakPeekModal
+        isOpen={emailPreviewOpen}
+        onClose={() => setEmailPreviewOpen(false)}
+        subject={emailPreviewSubject}
+        html={emailPreviewHtml}
+        loading={emailPreviewLoading}
+      />
+
       {confirm && <ConfirmModal state={confirm} onClose={() => setConfirm(null)} />}
     </div>
   )
@@ -656,6 +700,40 @@ function ChangelogEditorView({ id, onBack, onSaved }: EditorProps) {
   const [mediaUrl, setMediaUrl] = useState('')
   const [publishedAt, setPublishedAt] = useState('')
   const [isPublished, setIsPublished] = useState(true)
+
+  const [emailPreviewOpen, setEmailPreviewOpen] = useState(false)
+  const [emailPreviewSubject, setEmailPreviewSubject] = useState('')
+  const [emailPreviewHtml, setEmailPreviewHtml] = useState('')
+  const [emailPreviewLoading, setEmailPreviewLoading] = useState(false)
+  const [lightboxOpen, setLightboxOpen] = useState(false)
+
+  const handleOpenEmailPreview = async () => {
+    setEmailPreviewOpen(true)
+    setEmailPreviewLoading(true)
+    try {
+      const res = await getBroadcastEmailPreviewHtmlAction({
+        type: 'changelog',
+        title: title || 'Untitled Release',
+        slug: slug || '',
+        tag: customTag.trim() || tag || 'FEATURE',
+        description: description || '',
+        improvements: improvements.filter((s) => s.trim()),
+        fixes: fixes.filter((s) => s.trim()),
+        mediaUrl: mediaUrl.trim() || null,
+        mediaType: (mediaType as any) || 'none',
+      })
+      if (res.success) {
+        setEmailPreviewHtml(res.html)
+        setEmailPreviewSubject(res.subject)
+      } else {
+        toast(res.error || 'Failed to generate email preview.', 'error')
+      }
+    } catch {
+      toast('Failed to generate email preview.', 'error')
+    } finally {
+      setEmailPreviewLoading(false)
+    }
+  }
 
   const fileInputRef = useRef<HTMLInputElement>(null)
 
@@ -883,6 +961,15 @@ function ChangelogEditorView({ id, onBack, onSaved }: EditorProps) {
               <span>Delete</span>
             </button>
           )}
+          <button
+            type="button"
+            onClick={handleOpenEmailPreview}
+            className="h-9 px-3 rounded-xl border border-white/10 bg-white/[0.03] text-white/70 hover:text-white hover:bg-white/[0.06] text-xs font-medium transition-colors flex items-center justify-center gap-1.5 cursor-pointer"
+            title="Preview how the email will look"
+          >
+            <Eye className="h-3.5 w-3.5" />
+            <span>Preview Email</span>
+          </button>
           <button
             type="button"
             disabled={saving}
@@ -1129,7 +1216,13 @@ function ChangelogEditorView({ id, onBack, onSaved }: EditorProps) {
             </div>
 
             {/* 16:9 Mockup Frame */}
-            <div className="relative aspect-video w-full rounded-lg border border-[var(--color-border)] bg-black/40 overflow-hidden flex items-center justify-center">
+            <div 
+              className={cn(
+                'relative aspect-video w-full rounded-lg border border-[var(--color-border)] bg-black/40 overflow-hidden flex items-center justify-center',
+                mediaUrl && 'group cursor-pointer'
+              )}
+              onClick={() => mediaUrl && setLightboxOpen(true)}
+            >
               {mediaUrl ? (
                 mediaType === 'video' || mediaUrl.match(/\.(mp4|webm|mov)$/i) ? (
                   <video src={mediaUrl} controls className="w-full h-full object-cover" />
@@ -1144,6 +1237,14 @@ function ChangelogEditorView({ id, onBack, onSaved }: EditorProps) {
                   </div>
                   <span className="text-xs font-medium text-white/40">16:9 Mockup Frame</span>
                   <span className="text-[10px] font-mono text-white/20 mt-0.5">No media attached</span>
+                </div>
+              )}
+
+              {/* ENLARGE badge on bottom right: only visible on hover */}
+              {mediaUrl && (
+                <div className="absolute bottom-2.5 right-2.5 z-10 flex items-center gap-1.5 px-2 py-0.5 rounded bg-black/75 border border-white/20 text-[9px] font-mono font-bold tracking-widest text-white/90 uppercase backdrop-blur-md opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none">
+                  <Maximize2 className="w-2.5 h-2.5 text-accent" />
+                  <span>ENLARGE</span>
                 </div>
               )}
             </div>
@@ -1249,6 +1350,53 @@ function ChangelogEditorView({ id, onBack, onSaved }: EditorProps) {
         </div>
       </div>
     </div>
+
+    {/* Email Sneak Peek Modal */}
+    <EmailSneakPeekModal
+      isOpen={emailPreviewOpen}
+      onClose={() => setEmailPreviewOpen(false)}
+      subject={emailPreviewSubject}
+      html={emailPreviewHtml}
+      loading={emailPreviewLoading}
+    />
+
+    {/* Fullscreen Lightbox Modal */}
+    {lightboxOpen && mediaUrl && (
+      <div
+        className="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-8 bg-black/50 backdrop-blur-md animate-in fade-in duration-200"
+        onClick={() => setLightboxOpen(false)}
+      >
+        <div
+          className="relative max-w-5xl w-full max-h-[92vh] flex items-center justify-center"
+          onClick={(e) => e.stopPropagation()}
+        >
+          <div className="relative inline-block max-w-full max-h-[85vh]">
+            <button
+              onClick={() => setLightboxOpen(false)}
+              className="absolute top-3 right-3 z-30 flex items-center justify-center h-8 w-8 rounded-full bg-black/60 hover:bg-black/85 border border-white/25 text-white/80 hover:text-white backdrop-blur-md transition-all cursor-pointer shadow-lg"
+              title="Close"
+            >
+              <X className="w-4 h-4" />
+            </button>
+            {mediaType === 'video' || mediaUrl.match(/\.(mp4|webm|mov)$/i) ? (
+              <video
+                src={mediaUrl}
+                controls
+                autoPlay
+                className="w-auto h-auto max-w-full max-h-[85vh] object-contain rounded-xl border border-white/15 shadow-[0_25px_70px_rgba(0,0,0,0.9)] block"
+              />
+            ) : (
+              /* eslint-disable-next-line @next/next/no-img-element */
+              <img
+                src={mediaUrl}
+                alt="Enlarged Media"
+                className="w-auto h-auto max-w-full max-h-[85vh] object-contain rounded-xl border border-white/15 shadow-[0_25px_70px_rgba(0,0,0,0.9)] block"
+              />
+            )}
+          </div>
+        </div>
+      </div>
+    )}
 
     {confirm && <ConfirmModal state={confirm} onClose={() => setConfirm(null)} />}
     </div>

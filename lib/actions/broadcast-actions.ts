@@ -354,3 +354,72 @@ export async function dismissBroadcastAction(id: string): Promise<{ success: boo
     }
   }
 }
+
+/**
+ * Generate the exact email HTML preview for an approval or changelog.
+ */
+export async function getBroadcastEmailPreviewHtmlAction(params: {
+  type: 'blog' | 'changelog'
+  title: string
+  slug?: string
+  tag?: string
+  description?: string
+  excerpt?: string
+  improvements?: string[]
+  fixes?: string[]
+  mediaUrl?: string | null
+  mediaType?: 'none' | 'image' | 'video'
+  authorName?: string | null
+  readingMinutes?: number | null
+  coverImage?: string | null
+}): Promise<{ success: boolean; html: string; subject: string; error?: string }> {
+  try {
+    await ensureAdmin()
+    const { buildBlogEmail, buildChangelogEmail } = await import('@/lib/email')
+
+    if (params.type === 'blog') {
+      const baseUrl = 'https://www.forke.space'
+      const blogUrl = params.slug ? `${baseUrl}/blog/${params.slug}` : `${baseUrl}/blog`
+      const html = buildBlogEmail({
+        title: params.title,
+        url: blogUrl,
+        excerpt: params.excerpt || params.description || '',
+        coverImage: params.coverImage || params.mediaUrl || undefined,
+        authorName: params.authorName || 'The Forke Team',
+        readingMinutes: params.readingMinutes || 3,
+        unsubscribe: true,
+      })
+      return {
+        success: true,
+        html,
+        subject: `New on Forke: ${params.title}`,
+      }
+    } else {
+      const html = buildChangelogEmail({
+        title: params.title,
+        slug: params.slug || '',
+        tag: params.tag || 'FEATURE',
+        description: params.description || params.excerpt || '',
+        improvements: params.improvements || [],
+        fixes: params.fixes || [],
+        mediaUrl: params.mediaUrl || undefined,
+        mediaType: params.mediaType || 'none',
+        unsubscribe: true,
+      })
+      return {
+        success: true,
+        html,
+        subject: `New in Forke: ${params.title}`,
+      }
+    }
+  } catch (err: any) {
+    console.error('Failed to generate broadcast email preview:', err)
+    return {
+      success: false,
+      html: '',
+      subject: '',
+      error: err.message || 'Failed to generate preview',
+    }
+  }
+}
+

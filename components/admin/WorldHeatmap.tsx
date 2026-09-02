@@ -13,7 +13,7 @@
 import React, { useMemo, useState } from 'react'
 import dynamic from 'next/dynamic'
 import Image from 'next/image'
-import { Search, X, Globe2 } from 'lucide-react'
+import { Search, X, Globe2, ChevronLeft, ChevronRight } from 'lucide-react'
 
 // Composed geo view: 3D globe (left) + searchable, paginated country table (right).
 // Click a row to rotate the globe to that country and pin a detail box.
@@ -169,7 +169,7 @@ export default function WorldHeatmap({ data }: { data: CountryDatum[] }) {
       {/* Responsive Dual-Panel Grid */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 items-stretch">
         {/* Left Column: 3D Globe Card */}
-        <div className="relative rounded-xl bg-white/[0.015] border border-[var(--color-border)] p-2 h-[340px] sm:h-[420px] lg:h-[500px] flex items-center justify-center overflow-hidden">
+        <div className="relative rounded-xl bg-white/[0.015] border border-[var(--color-border)] p-2 h-[340px] sm:h-[420px] lg:h-full lg:min-h-[530px] flex items-center justify-center overflow-hidden">
           <GlobeView data={data} focusIso={selected} onHover={setHover} metric={sortBy} />
 
           {/* Selected-country detail box */}
@@ -257,7 +257,7 @@ export default function WorldHeatmap({ data }: { data: CountryDatum[] }) {
         </div>
 
         {/* Right Column: Country Table Card (No Share Column, Generous Room for Country Names) */}
-        <div className="rounded-xl bg-white/[0.015] border border-[var(--color-border)] p-3 sm:p-4 flex flex-col min-h-[440px] lg:h-[500px] justify-between">
+        <div className="rounded-xl bg-white/[0.015] border border-[var(--color-border)] p-3 sm:p-4 flex flex-col min-h-[460px] lg:min-h-[530px] justify-between">
           <div>
             {/* Header Controls: Search & Segmented Sort (Stacked & Full-Width on Mobile, Inline on Desktop) */}
             <div className="flex flex-col sm:flex-row sm:items-center gap-2 mb-2.5">
@@ -348,7 +348,7 @@ export default function WorldHeatmap({ data }: { data: CountryDatum[] }) {
                       key={r.iso}
                       onClick={() => setSelected(isSel ? null : r.iso)}
                       className={
-                        'w-full flex items-center px-2 sm:px-3 py-2.5 rounded-lg transition-all text-left ' +
+                        'w-full flex items-center px-2 sm:px-3 py-1.5 sm:py-2 rounded-lg transition-all text-left ' +
                         (isSel
                           ? 'bg-accent/[0.08] border border-accent/30 shadow-[0_0_12px_rgba(255,122,0,0.06)]'
                           : 'border border-transparent hover:bg-white/[0.03]')
@@ -385,26 +385,33 @@ export default function WorldHeatmap({ data }: { data: CountryDatum[] }) {
           </div>
 
           {/* Pagination Footer Flush at Bottom */}
-          <div className="flex items-center justify-between pt-2.5 border-t border-[var(--color-border)] mt-2">
-            <button
-              onClick={() => setPage((p) => Math.max(0, p - 1))}
-              disabled={safePage === 0 || rows.length === 0}
-              className="px-2 py-0.5 rounded text-[11px] font-mono border border-[var(--color-border)] text-white/60 hover:text-white hover:bg-white/[0.04] disabled:opacity-25 disabled:hover:bg-transparent transition-all cursor-pointer"
-            >
-              ← Prev
-            </button>
-            <span className="text-[11px] font-mono text-white/40">
-              {rows.length > 0
-                ? `${safePage * PAGE_SIZE + 1}–${Math.min((safePage + 1) * PAGE_SIZE, rows.length)} of ${rows.length}`
-                : '0'}
-            </span>
-            <button
-              onClick={() => setPage((p) => Math.min(totalPages - 1, p + 1))}
-              disabled={safePage >= totalPages - 1 || rows.length === 0}
-              className="px-2 py-0.5 rounded text-[11px] font-mono border border-[var(--color-border)] text-white/60 hover:text-white hover:bg-white/[0.04] disabled:opacity-25 disabled:hover:bg-transparent transition-all cursor-pointer"
-            >
-              Next →
-            </button>
+          <div className="flex items-center justify-between pt-3 border-t border-[var(--color-border)] mt-auto shrink-0">
+            <p className="text-[11px] font-mono text-[var(--color-text-muted)]">
+              Showing <span className="text-white">{rows.length > 0 ? safePage * PAGE_SIZE + 1 : 0}</span>–
+              <span className="text-white">{Math.min((safePage + 1) * PAGE_SIZE, rows.length)}</span> of{' '}
+              <span className="text-white">{rows.length}</span>
+            </p>
+            <div className="flex items-center gap-1">
+              <button
+                onClick={() => setPage((p) => Math.max(0, p - 1))}
+                disabled={safePage === 0 || rows.length === 0}
+                className="flex h-6 w-6 items-center justify-center rounded-md border border-[var(--color-border)] text-[var(--color-text-muted)] transition-colors hover:text-white disabled:opacity-30 disabled:pointer-events-none cursor-pointer"
+                title="Previous page"
+              >
+                <ChevronLeft className="h-3.5 w-3.5" />
+              </button>
+              <span className="px-1.5 font-mono text-[11px] text-white select-none">
+                {safePage + 1} / {totalPages}
+              </span>
+              <button
+                onClick={() => setPage((p) => Math.min(totalPages - 1, p + 1))}
+                disabled={safePage >= totalPages - 1 || rows.length === 0}
+                className="flex h-6 w-6 items-center justify-center rounded-md border border-[var(--color-border)] text-[var(--color-text-muted)] transition-colors hover:text-white disabled:opacity-30 disabled:pointer-events-none cursor-pointer"
+                title="Next page"
+              >
+                <ChevronRight className="h-3.5 w-3.5" />
+              </button>
+            </div>
           </div>
         </div>
       </div>

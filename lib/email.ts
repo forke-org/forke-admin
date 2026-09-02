@@ -57,7 +57,7 @@ function wordmark(size = 22): string {
 /** Section heading: sans-medium with one serif-italic accent word/clause. */
 function heading(lead: string, accent: string, size = 30): string {
   return `
-    <h1 style="font-family:${BRAND.sans};font-size:${size}px;font-weight:500;letter-spacing:-0.035em;line-height:1.1;color:${BRAND.textHigh};margin:0 0 18px 0;">
+    <h1 class="email-headline" style="font-family:${BRAND.sans};font-size:${size}px;font-weight:500;letter-spacing:-0.035em;line-height:1.1;color:${BRAND.textHigh};margin:0 0 18px 0;">
       ${lead} <span style="font-family:${BRAND.serif};font-style:italic;font-weight:400;color:${BRAND.accent};letter-spacing:0;">${accent}</span>
     </h1>
   `
@@ -198,7 +198,16 @@ function emailShell(opts: {
   `
 
   const combinedStyle = `
-    @media only screen and (max-width: 480px) {
+    .social-icon-img { display: block !important; margin: 0 auto !important; width: 18px !important; height: 18px !important; max-width: 18px !important; max-height: 18px !important; }
+    @media only screen and (max-width: 620px) {
+      .email-outer-td { padding: 20px 8px !important; }
+      .email-card-table { width: 100% !important; max-width: 100% !important; border-radius: 16px !important; }
+      .email-header-td { padding: 14px 16px !important; }
+      .email-body-td { padding: 24px 16px !important; }
+      .email-footer-td { padding: 20px 16px !important; }
+      .email-media-td { padding: 0 12px !important; }
+      .email-highlights-col { display: block !important; width: 100% !important; box-sizing: border-box !important; padding: 10px 12px !important; }
+      .email-headline { font-size: 22px !important; line-height: 1.25 !important; }
       .nrow { direction: ltr !important; }
       .nrow .ncol { display: block !important; width: 100% !important; min-width: 0 !important; }
       .nrow .nthumb { margin-bottom: 12px !important; }
@@ -223,12 +232,12 @@ function emailShell(opts: {
     <!-- "Glow Halo" canvas: a soft orange radial glow blooms from the top, behind the card -->
     <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="background:${BRAND.canvas};background-image:radial-gradient(circle at 50% 6%, rgba(255,122,0,0.18) 0%, rgba(5,5,5,0) 52%);">
       <tr>
-        <td align="center" style="padding:52px 16px;">
-          <table role="presentation" width="${cardW}" cellpadding="0" cellspacing="0" border="0" style="max-width:${cardW}px;width:100%;background:${BRAND.card};border:1px solid rgba(255,122,0,0.16);border-radius:24px;overflow:hidden;box-shadow:0 0 80px rgba(255,122,0,0.07);">
+        <td align="center" class="email-outer-td" style="padding:52px 16px;">
+          <table role="presentation" class="email-card-table" width="${cardW}" cellpadding="0" cellspacing="0" border="0" style="max-width:${cardW}px;width:100%;background:${BRAND.card};border:1px solid rgba(255,122,0,0.16);border-radius:24px;overflow:hidden;box-shadow:0 0 80px rgba(255,122,0,0.07);">
 
             <!-- Header bar: wordmark + tiny mono tag -->
             <tr>
-              <td style="padding:22px 32px;border-bottom:1px solid ${BRAND.hairlineSoft};">
+              <td class="email-header-td" style="padding:22px 32px;border-bottom:1px solid ${BRAND.hairlineSoft};">
                 <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0">
                   <tr>
                     <td align="left" style="vertical-align:middle;">${wordmark(22)}</td>
@@ -242,7 +251,7 @@ function emailShell(opts: {
 
             <!-- Body -->
             <tr>
-              <td style="padding:${opts.fullBleedBody ? '0' : '40px 32px 36px 32px'};">
+              <td class="email-body-td" style="padding:${opts.fullBleedBody ? '0' : '40px 32px 36px 32px'};">
                 ${opts.bodyHtml}
               </td>
             </tr>
@@ -252,7 +261,7 @@ function emailShell(opts: {
 
             <!-- Footer -->
             <tr>
-              <td style="padding:24px 32px 30px 32px;border-top:1px solid ${BRAND.hairlineSoft};">
+              <td class="email-footer-td" style="padding:24px 32px 30px 32px;border-top:1px solid ${BRAND.hairlineSoft};">
                 <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0">
                   <tr>
                     <td align="left" style="vertical-align:top;">
@@ -608,7 +617,23 @@ function blogRecentRow(r: BlogEmailRecent, imgRight: boolean): string {
 /** Footer-style social row: Instagram · LinkedIn · GitHub bordered icon tiles. */
 function blogSocials(): string {
   const tile = (href: string, imgSrc: string, alt: string) => {
-    return `<td style="padding:0 5px;"><a href="${href}" target="_blank" style="display:inline-block;width:42px;height:42px;border:1px solid ${BRAND.hairline};border-radius:11px;background:rgba(255,255,255,0.02);text-align:center;line-height:42px;text-decoration:none;"><img src="${imgSrc}" width="18" height="18" alt="${alt}" style="vertical-align:middle;border:0;display:inline-block;" /></a></td>`
+    return `<td style="padding:0 5px 0 0;">
+      <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="38" height="38" style="width:38px;height:38px;border:1px solid ${BRAND.hairline};border-radius:10px;background:rgba(255,255,255,0.02);border-collapse:separate;">
+        <tr>
+          <td align="center" valign="middle" width="38" height="38" style="width:38px;height:38px;padding:0;text-align:center;vertical-align:middle;line-height:0;">
+            <a href="${href}" target="_blank" style="display:block;width:38px;height:38px;text-align:center;text-decoration:none;line-height:38px;">
+              <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" height="100%" style="width:100%;height:100%;">
+                <tr>
+                  <td align="center" valign="middle" style="padding:0;text-align:center;vertical-align:middle;line-height:0;">
+                    <img src="${imgSrc}" width="18" height="18" alt="${alt}" class="social-icon-img" style="display:block;margin:0 auto;border:0;width:18px;height:18px;max-width:18px;max-height:18px;outline:none;text-decoration:none;" />
+                  </td>
+                </tr>
+              </table>
+            </a>
+          </td>
+        </tr>
+      </table>
+    </td>`
   }
   return `
     <table role="presentation" cellpadding="0" cellspacing="0" border="0" align="left">
@@ -718,7 +743,7 @@ export function buildChangelogEmail(data: ChangelogEmailData): string {
   if (improvementsList.length > 0 || fixesList.length > 0) {
     const impSection =
       improvementsList.length > 0
-        ? `<td style="vertical-align:top;padding:12px;width:50%;">
+        ? `<td class="email-highlights-col" style="vertical-align:top;padding:12px;width:50%;">
             <p style="font-family:${BRAND.mono};font-size:10px;font-weight:600;letter-spacing:0.14em;text-transform:uppercase;color:${BRAND.accent};margin:0 0 10px;">IMPROVEMENTS</p>
             <ul style="margin:0;padding-left:14px;color:${BRAND.textBody};font-family:${BRAND.sans};font-size:13px;line-height:1.6;">
               ${improvementsList.map((item) => `<li style="margin-bottom:6px;">${item}</li>`).join('')}
@@ -728,7 +753,7 @@ export function buildChangelogEmail(data: ChangelogEmailData): string {
 
     const fixSection =
       fixesList.length > 0
-        ? `<td style="vertical-align:top;padding:12px;width:50%;">
+        ? `<td class="email-highlights-col" style="vertical-align:top;padding:12px;width:50%;">
             <p style="font-family:${BRAND.mono};font-size:10px;font-weight:600;letter-spacing:0.14em;text-transform:uppercase;color:#34D399;margin:0 0 10px;">FIXES</p>
             <ul style="margin:0;padding-left:14px;color:${BRAND.textBody};font-family:${BRAND.sans};font-size:13px;line-height:1.6;">
               ${fixesList.map((item) => `<li style="margin-bottom:6px;">${item}</li>`).join('')}
@@ -744,7 +769,7 @@ export function buildChangelogEmail(data: ChangelogEmailData): string {
   }
 
   const mediaRow = data.mediaUrl
-    ? `<tr><td style="padding:0 24px;line-height:0;font-size:0;"><div style="border-radius:12px;overflow:hidden;border:1px solid ${BRAND.hairlineSoft};">${blogImg(data.mediaUrl, data.title, changelogUrl, 12)}</div></td></tr>`
+    ? `<tr><td class="email-media-td" style="padding:0 24px;line-height:0;font-size:0;"><div style="border-radius:12px;overflow:hidden;border:1px solid ${BRAND.hairlineSoft};">${blogImg(data.mediaUrl, data.title, changelogUrl, 12)}</div></td></tr>`
     : ''
 
   const footerExtra = data.unsubscribe

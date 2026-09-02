@@ -280,41 +280,70 @@ export default function ActivityFeedPanel({ currentAdmin }: ActivityFeedPanelPro
           </span>
         </div>
 
-        <div className="flex-grow min-h-0 overflow-y-auto p-2 font-mono text-[12px] leading-relaxed">
+        <div className="flex-grow min-h-0 overflow-y-auto px-1 py-1 font-mono text-[11px] leading-tight">
           {loading && events.length === 0 ? (
-            <div className="p-2 space-y-2">
-              {[...Array(8)].map((_, i) => (
-                <div key={i} className="flex items-center gap-3 px-2 py-2">
-                  <Skeleton className="h-3 w-16 shrink-0" />
-                  <Skeleton className="h-3 w-20 shrink-0" />
-                  <Skeleton className="h-3 flex-grow" style={{ maxWidth: `${50 + ((i * 7) % 40)}%` }} />
+            <div className="p-2 space-y-1">
+              {[...Array(16)].map((_, i) => (
+                <div key={i} className="flex items-center gap-2.5 px-2 py-1">
+                  <Skeleton className="h-2.5 w-16 shrink-0" />
+                  <Skeleton className="h-2.5 w-16 shrink-0" />
+                  <Skeleton className="h-2.5 flex-grow" style={{ maxWidth: `${50 + ((i * 7) % 40)}%` }} />
                 </div>
               ))}
             </div>
           ) : events.length === 0 ? (
-            <div className="h-full flex items-center justify-center text-white/25 text-xs">No activity in this view yet.</div>
+            <div className="h-full flex items-center justify-center text-white/25 text-xs font-mono">No activity in this view yet.</div>
           ) : (
-            <div className="divide-y divide-white/[0.03]">
+            <div className="divide-y divide-white/[0.02]">
               {events.map((e) => {
                 const c = CATEGORY[e.category] ?? CATEGORY.system
                 const Icon = c.icon
                 return (
-                  <div key={e.id} className="flex items-center gap-3 px-2 py-1.5 hover:bg-white/[0.015] rounded group">
-                    <span className="text-white/25 shrink-0 tabular-nums w-[68px]" title={new Date(e.createdAt).toLocaleString()}>
+                  <div
+                    key={e.id}
+                    className="flex items-center gap-2.5 px-2.5 py-1 hover:bg-white/[0.025] transition-colors rounded group text-[11px] leading-normal"
+                  >
+                    {/* Timestamp */}
+                    <span
+                      className="text-white/30 shrink-0 tabular-nums w-[74px] select-none text-[10.5px]"
+                      title={new Date(e.createdAt).toLocaleString()}
+                    >
                       {clockTime(e.createdAt)}
                     </span>
-                    <span className={cn('shrink-0 flex items-center gap-1.5 w-[92px]', c.color)}>
-                      <Icon className="w-3.5 h-3.5" />
-                      <span className="text-[10px] font-bold tracking-wider">{c.label}</span>
+
+                    {/* Compact Category Tag */}
+                    <span
+                      className={cn(
+                        'shrink-0 inline-flex items-center gap-1 px-1.5 py-0.5 rounded border border-white/[0.06] bg-white/[0.02] text-[9.5px] font-bold tracking-wider uppercase select-none',
+                        c.color
+                      )}
+                    >
+                      <Icon className="w-2.5 h-2.5 shrink-0" />
+                      <span>{c.label}</span>
                     </span>
-                    <span className={cn('shrink-0 font-semibold', c.color)}>{e.action}</span>
-                    {e.actor && <span className="text-white/45 shrink-0">· {e.actor}</span>}
-                    {e.target && (
-                      <span className="text-white/70 truncate">
-                        <span className="text-white/25">→ </span>{e.target}
+
+                    {/* Action Name */}
+                    <span className={cn('shrink-0 font-medium', c.color)}>
+                      {e.action}
+                    </span>
+
+                    {/* Actor */}
+                    {e.actor && (
+                      <span className="text-white/35 shrink-0 select-none">
+                        · {e.actor}
                       </span>
                     )}
-                    <span className="ml-auto shrink-0 text-white/25 text-[11px] opacity-0 group-hover:opacity-100 transition-opacity">
+
+                    {/* Target / Details */}
+                    {e.target && (
+                      <span className="text-white/60 truncate min-w-0">
+                        <span className="text-white/20 select-none">→ </span>
+                        {e.target}
+                      </span>
+                    )}
+
+                    {/* Relative Time on right */}
+                    <span className="ml-auto shrink-0 text-white/25 text-[10px] tabular-nums pl-2 select-none group-hover:text-white/40 transition-colors">
                       {relativeTime(e.createdAt)}
                     </span>
                   </div>
