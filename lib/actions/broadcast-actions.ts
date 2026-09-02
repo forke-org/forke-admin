@@ -425,6 +425,10 @@ export async function getBroadcastEmailPreviewHtmlAction(params: {
         subject: `New on Forke: ${params.title}`,
       }
     } else {
+      const changelogUrl = params.slug
+        ? `https://www.forke.space/changelog#${params.slug}`
+        : 'https://www.forke.space/changelog'
+
       const html = buildChangelogEmail({
         title: params.title,
         slug: params.slug || '',
@@ -434,6 +438,7 @@ export async function getBroadcastEmailPreviewHtmlAction(params: {
         fixes: params.fixes || [],
         mediaUrl: params.mediaUrl || undefined,
         mediaType: params.mediaType || 'none',
+        url: changelogUrl,
         unsubscribe: true,
       })
       return {

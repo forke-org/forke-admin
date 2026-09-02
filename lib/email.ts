@@ -314,6 +314,23 @@ function resolveBaseUrl(): string {
 }
 
 /**
+ * Resolves the public marketing site URL (https://www.forke.space) for all public-facing links
+ * (e.g. changelog, blogs, homepage, unsubscribe).
+ * Guarantees that subscriber emails NEVER link to admin.forke.space or localhost.
+ */
+function resolveMarketingUrl(): string {
+  let url = process.env.NEXT_PUBLIC_MARKETING_URL || 'https://www.forke.space'
+  if (url.startsWith('"') && url.endsWith('"')) url = url.slice(1, -1)
+  if (url.startsWith("'") && url.endsWith("'")) url = url.slice(1, -1)
+  url = url.trim().replace(/\/$/, '')
+
+  if (url.includes('admin.') || url.includes('localhost') || !url.startsWith('http')) {
+    return 'https://www.forke.space'
+  }
+  return url
+}
+
+/**
  * Posts an email through Resend. Fail-soft: logs and returns false, never throws,
  * so a Resend outage can never block the underlying action.
  */
@@ -655,6 +672,12 @@ function blogSocials(): string {
  * rows (stacking photo-on-top on phones), then a social row.
  */
 export function buildBlogEmail(data: BlogEmailData): string {
+  const publicBase = resolveMarketingUrl()
+  let targetUrl = data.url || `${publicBase}/blogs`
+  if (targetUrl.includes('admin.forke.space') || targetUrl.includes('localhost')) {
+    targetUrl = targetUrl.replace(/https?:\/\/(admin\.forke\.space|localhost:\d+)/, publicBase)
+  }
+
   const dateStr = formatBlogDate(data.publishedAt)
   const minutes = data.readingMinutes && data.readingMinutes > 0 ? data.readingMinutes : 1
 
@@ -697,13 +720,13 @@ export function buildBlogEmail(data: BlogEmailData): string {
       <!-- Featured (Apple-Newsroom) -->
       <table width="100%" cellpadding="0" cellspacing="0" border="0"><tr><td style="padding:34px 44px 24px;text-align:center;">
         <p class="fx fx-1" style="font-family:${BRAND.mono};font-size:10.5px;letter-spacing:0.2em;text-transform:uppercase;color:${BRAND.accent};margin:0 0 16px;">From the Forke blog</p>
-        <h1 class="fx fx-1" style="font-family:${BRAND.sans};font-size:29px;font-weight:600;letter-spacing:-0.035em;line-height:1.2;color:${BRAND.textHigh};margin:0;"><a href="${data.url}" target="_blank" style="color:${BRAND.textHigh};text-decoration:none;">${data.title}</a></h1>
+        <h1 class="fx fx-1" style="font-family:${BRAND.sans};font-size:29px;font-weight:600;letter-spacing:-0.035em;line-height:1.2;color:${BRAND.textHigh};margin:0;"><a href="${targetUrl}" target="_blank" style="color:${BRAND.textHigh};text-decoration:none;">${data.title}</a></h1>
       </td></tr>
-      <tr><td style="padding:0 24px;line-height:0;font-size:0;"><div class="fx fx-2">${blogImg(data.coverImage, data.title, data.url, 14)}</div></td></tr>
+      <tr><td style="padding:0 24px;line-height:0;font-size:0;"><div class="fx fx-2">${blogImg(data.coverImage, data.title, targetUrl, 14)}</div></td></tr>
       <tr><td style="padding:24px 44px 34px;text-align:center;">
         ${excerptLine}
         <p class="fx fx-3" style="font-family:${BRAND.mono};font-size:11px;color:${BRAND.textFaint};margin:0 0 22px;">${metaLine}</p>
-        <div class="fx-cta">${buttonPrimary(data.url, 'Read more')}</div>
+        <div class="fx-cta">${buttonPrimary(targetUrl, 'Read more')}</div>
       </td></tr>
       </table>
     `,
@@ -730,7 +753,11 @@ export interface ChangelogEmailData {
  * Finalized official Forke Changelog email template matching brand standards.
  */
 export function buildChangelogEmail(data: ChangelogEmailData): string {
-  const changelogUrl = data.url || `${BRAND.baseUrl}/changelog#${data.slug}`
+  const publicBase = resolveMarketingUrl()
+  let changelogUrl = data.url || `${publicBase}/changelog`
+  if (changelogUrl.includes('admin.forke.space') || changelogUrl.includes('localhost')) {
+    changelogUrl = changelogUrl.replace(/https?:\/\/(admin\.forke\.space|localhost:\d+)/, publicBase)
+  }
   const tagLabel = (data.tag || 'FEATURE').toUpperCase()
   const dateStr = data.publishedAt
     ? new Date(data.publishedAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })
@@ -982,7 +1009,7 @@ export async function sendBlogPublishedBroadcast(blog: {
   if (!audienceId) return { success: false, sentCount: 0 }
   const synced = await syncContactsToAudience(audienceId, emails, apiKey)
 
-  const baseUrl = resolveBaseUrl()
+  const baseUrl = resolveMarketingUrl()
   const url = `${baseUrl}/blogs/${blog.slug}`
 
   // Latest 3 OTHER published posts, newest first, for the "Latest from the blog"
@@ -1145,7 +1172,7 @@ export async function sendChangelogPublishedBroadcast(changelog: {
   if (!audienceId) return { success: false, sentCount: 0, error: 'Failed to ensure Resend audience.' }
   const synced = await syncContactsToAudience(audienceId, emails, apiKey)
 
-  const baseUrl = resolveBaseUrl()
+  const baseUrl = resolveMarketingUrl()
   const changelogUrl = `${baseUrl}/changelog`
 
   const html = buildChangelogEmail({
@@ -1238,7 +1265,7 @@ export async function getRecentPostsForEmail(): Promise<BlogEmailRecent[]> {
       .where(eq(blogs.status, 'published'))
       .orderBy(desc(blogs.publishedAt))
       .limit(3)
-    const baseUrl = resolveBaseUrl()
+    const baseUrl = resolveMarketingUrl()
     return rows.map((r) => ({
       title: r.title,
       excerpt: r.excerpt,
