@@ -898,23 +898,35 @@ async function ensureAudience(apiKey: string): Promise<string | null> {
 /**
  * Sync DB subscriber emails into a Resend audience as contacts. Idempotent:
  * Resend treats re-adding an existing contact as a no-op (we ignore 409/already
- * exists). Paced lightly to be polite to the API.
+ * exists). Uses concurrent chunks for high performance while staying within rate limits.
  */
 async function syncContactsToAudience(audienceId: string, emails: string[], apiKey: string): Promise<number> {
   let synced = 0
-  for (const email of emails) {
-    try {
-      const res = await resendFetch(`/audiences/${audienceId}/contacts`, {
-        method: 'POST',
-        body: JSON.stringify({ email, unsubscribed: false }),
-      }, apiKey)
-      // 200/201 = created; 409/422 = already a contact — both are fine.
-      if (res.ok || res.status === 409 || res.status === 422) synced++
-      else console.warn(`Contact sync for ${email} returned ${res.status}:`, await res.text())
-    } catch (err) {
-      console.warn(`Contact sync threw for ${email}:`, err)
+  const chunkSize = 8
+  for (let i = 0; i < emails.length; i += chunkSize) {
+    const chunk = emails.slice(i, i + chunkSize)
+    await Promise.all(
+      chunk.map(async (email) => {
+        try {
+          const res = await resendFetch(
+            `/audiences/${audienceId}/contacts`,
+            {
+              method: 'POST',
+              body: JSON.stringify({ email, unsubscribed: false }),
+            },
+            apiKey
+          )
+          // 200/201 = created; 409/422 = already a contact — both are fine.
+          if (res.ok || res.status === 409 || res.status === 422) synced++
+          else console.warn(`Contact sync for ${email} returned ${res.status}:`, await res.text())
+        } catch (err) {
+          console.warn(`Contact sync threw for ${email}:`, err)
+        }
+      })
+    )
+    if (i + chunkSize < emails.length) {
+      await sleep(80)
     }
-    await sleep(120)
   }
   return synced
 }
@@ -1030,12 +1042,13 @@ export async function sendBlogPublishedBroadcast(blog: {
         reply_to: 'support@forke.space',
         subject,
         html,
-        name: `Blog: ${blog.title}`,
+        name: `Blog: ${blog.title}`.slice(0, 68),
       }),
     }, apiKey)
     if (!createRes.ok) {
-      console.error('Failed to create Resend broadcast:', await createRes.text())
-      return { success: false, sentCount: 0 }
+      const errText = await createRes.text()
+      console.error('Failed to create Resend broadcast:', errText)
+      return { success: false, sentCount: 0, error: errText }
     }
     const broadcast = (await createRes.json()) as { id: string }
     const broadcastId = broadcast.id
@@ -1043,38 +1056,44 @@ export async function sendBlogPublishedBroadcast(blog: {
     // 4) Send it now — with retries.
     //
     // Resend can return a transient error if /send is called in the same instant
-    // the broadcast is created (it hasn't finished provisioning yet). On Vercel's
-    // serverless timing this race is easy to hit, and a failed send silently
-    // leaves the broadcast stuck in "draft". So we retry a few times with a short
-    // backoff before giving up, and we KEEP the real error text so the caller can
-    // surface it instead of a generic failure.
+    // the broadcast is created (e.g. status 400 "broadcast is still processing").
+    // We retry with exponential backoff before giving up.
     let lastError = ''
     for (let attempt = 1; attempt <= 4; attempt++) {
-      const sendRes = await resendFetch(`/broadcasts/${broadcastId}/send`, {
-        method: 'POST',
-        body: JSON.stringify({}),
-      }, apiKey)
-
+      const sendRes = await resendFetch(
+        `/broadcasts/${broadcastId}/send`,
+        {
+          method: 'POST',
+          body: JSON.stringify({}),
+        },
+        apiKey
+      )
       if (sendRes.ok) {
-        console.log(`Blog broadcast sent to audience ${audienceId} (${synced} contacts).`)
-        return { success: true, sentCount: synced, broadcastId }
+        return {
+          success: true,
+          sentCount: synced,
+          broadcastId,
+        }
       }
-
       lastError = await sendRes.text()
-      console.error(`Broadcast send attempt ${attempt}/4 failed (${sendRes.status}):`, lastError)
-
-      // 4xx that isn't a 429 is a real, non-transient problem (bad audience,
-      // unverified domain, already sent) — retrying won't help, so stop early.
-      const transient = sendRes.status === 429 || sendRes.status >= 500
-      if (!transient) break
-      await sleep(attempt * 800) // 0.8s, 1.6s, 2.4s backoff
+      console.warn(`Resend broadcast send attempt ${attempt} failed:`, lastError)
+      if (attempt < 4) {
+        await new Promise((r) => setTimeout(r, 600 * Math.pow(2, attempt - 1)))
+      }
     }
-
-    console.error('Failed to send Resend broadcast after retries:', lastError)
-    return { success: false, sentCount: 0, broadcastId, error: lastError }
+    return {
+      success: false,
+      sentCount: 0,
+      broadcastId,
+      error: lastError,
+    }
   } catch (err) {
-    console.error('Error dispatching blog broadcast:', err)
-    return { success: false, sentCount: 0, error: err instanceof Error ? err.message : String(err) }
+    console.error('Failed to dispatch blog broadcast:', err)
+    return {
+      success: false,
+      sentCount: 0,
+      error: err instanceof Error ? err.message : 'Unknown error',
+    }
   }
 }
 
@@ -1097,7 +1116,7 @@ export async function sendChangelogPublishedBroadcast(changelog: {
   const apiKey = resolveResendApiKey()
   if (!apiKey) {
     console.warn('⚠️ RESEND_API_KEY is not configured. Skipping changelog broadcast.')
-    return { success: false, sentCount: 0 }
+    return { success: false, sentCount: 0, error: 'RESEND_API_KEY is not configured.' }
   }
 
   // Resolve recipients from our DB (de-duplicated, case-insensitive).
@@ -1117,13 +1136,13 @@ export async function sendChangelogPublishedBroadcast(changelog: {
     }
   } catch (err) {
     console.error('Failed to load subscribers for changelog broadcast:', err)
-    return { success: false, sentCount: 0 }
+    return { success: false, sentCount: 0, error: 'Failed to load subscribers from database.' }
   }
   if (emails.length === 0) return { success: true, sentCount: 0 }
 
   // 1) Ensure an audience and 2) sync our subscribers into it as contacts.
   const audienceId = await ensureAudience(apiKey)
-  if (!audienceId) return { success: false, sentCount: 0 }
+  if (!audienceId) return { success: false, sentCount: 0, error: 'Failed to ensure Resend audience.' }
   const synced = await syncContactsToAudience(audienceId, emails, apiKey)
 
   const baseUrl = resolveBaseUrl()
@@ -1156,7 +1175,7 @@ export async function sendChangelogPublishedBroadcast(changelog: {
           reply_to: 'support@forke.space',
           subject,
           html,
-          name: `Changelog: ${changelog.title}`,
+          name: `Changelog: ${changelog.title}`.slice(0, 68),
         }),
       },
       apiKey

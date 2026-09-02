@@ -459,19 +459,21 @@ export default function AdminDashboard() {
   }
 
   const handleApproveBroadcast = async (item: BroadcastApprovalItem) => {
-    setApprovingBroadcastId(item.id)
+    // Optimistically remove from UI and close preview if open
+    setBroadcastApprovals((prev) => prev.filter((a) => a.id !== item.id))
+    setPreviewModalOpen(false)
+    toast('Broadcast approved! Dispatching to subscribers in the background…', 'success')
+
     try {
       const res = await approveBroadcastAction(item.id)
-      if (res.success) {
-        toast(`Broadcast dispatched to ${res.sentCount || broadcastSubCount} subscribers!`, 'success')
-        setBroadcastApprovals((prev) => prev.filter((a) => a.id !== item.id))
-      } else {
-        toast(res.error || 'Failed to send broadcast.', 'error')
+      if (!res.success) {
+        toast(res.error || 'Failed to trigger broadcast.', 'error')
+        // Restore card if server rejected
+        setBroadcastApprovals((prev) => [item, ...prev])
       }
     } catch {
       toast('Network error while approving broadcast.', 'error')
-    } finally {
-      setApprovingBroadcastId(null)
+      setBroadcastApprovals((prev) => [item, ...prev])
     }
   }
 
