@@ -976,36 +976,57 @@ function ChangelogEditorView({ id, onBack, onSaved }: EditorProps) {
                 </div>
               )}
 
-              {/* What's New & Improved (Callout Card) */}
-              {improvements.some((s) => s.trim()) && (
-                <div className="mb-4 rounded-xl border border-accent/20 bg-accent/[0.04] p-4 text-left">
-                  <p className="font-mono text-[10px] font-bold uppercase tracking-[0.14em] text-accent mb-2.5 flex items-center gap-1.5 select-none">
-                    <Sparkles className="h-3 w-3 text-accent" /> What&apos;s New &amp; Improved
-                  </p>
-                  <div className="space-y-2">
-                    {improvements.filter((s) => s.trim()).map((imp, i) => (
-                      <div key={i} className="flex items-start gap-2 text-[13px] text-white/90">
-                        <CheckCircle2 className="h-4 w-4 text-accent shrink-0 mt-0.5" />
-                        <span className="leading-relaxed">{imp}</span>
+              {/* Architectural Sub-Panel for Improvements & Fixes */}
+              {(improvements.some((s) => s.trim()) || fixes.some((s) => s.trim())) && (
+                <div className="mb-4 rounded-xl border border-white/[0.07] bg-white/[0.015] p-4 text-left">
+                  <div
+                    className={`grid grid-cols-1 ${
+                      improvements.some((s) => s.trim()) && fixes.some((s) => s.trim())
+                        ? 'sm:grid-cols-2 gap-5'
+                        : 'gap-4'
+                    }`}
+                  >
+                    {improvements.some((s) => s.trim()) && (
+                      <div className="space-y-2.5">
+                        <h5 className="font-mono text-[10.5px] font-semibold uppercase tracking-[0.14em] text-white/50 select-none">
+                          Improvements
+                        </h5>
+                        <ul className="space-y-2">
+                          {improvements.filter((s) => s.trim()).map((imp, i) => (
+                            <li
+                              key={i}
+                              className="text-[13px] text-white/75 leading-relaxed font-light flex items-start"
+                            >
+                              <span className="text-white/30 mr-2 font-mono text-xs select-none mt-0.5 leading-none shrink-0">
+                                –
+                              </span>
+                              <span>{imp}</span>
+                            </li>
+                          ))}
+                        </ul>
                       </div>
-                    ))}
-                  </div>
-                </div>
-              )}
+                    )}
 
-              {/* Fixes & Polish (Hairline Card) */}
-              {fixes.some((s) => s.trim()) && (
-                <div className="mb-4 rounded-xl border border-white/10 bg-white/[0.02] p-4 text-left">
-                  <p className="font-mono text-[10px] font-bold uppercase tracking-[0.14em] text-emerald-400 mb-2.5 flex items-center gap-1.5 select-none">
-                    <Check className="h-3 w-3 text-emerald-400" /> Fixes &amp; Polish
-                  </p>
-                  <div className="space-y-2">
-                    {fixes.filter((s) => s.trim()).map((fix, i) => (
-                      <div key={i} className="flex items-start gap-2 text-[13px] text-white/70">
-                        <span className="h-1.5 w-1.5 rounded-full bg-emerald-400 shrink-0 mt-2" />
-                        <span className="leading-relaxed">{fix}</span>
+                    {fixes.some((s) => s.trim()) && (
+                      <div className="space-y-2.5">
+                        <h5 className="font-mono text-[10.5px] font-semibold uppercase tracking-[0.14em] text-white/50 select-none">
+                          Fixes
+                        </h5>
+                        <ul className="space-y-2">
+                          {fixes.filter((s) => s.trim()).map((fix, i) => (
+                            <li
+                              key={i}
+                              className="text-[13px] text-white/75 leading-relaxed font-light flex items-start"
+                            >
+                              <span className="text-white/30 mr-2 font-mono text-xs select-none mt-0.5 leading-none shrink-0">
+                                –
+                              </span>
+                              <span>{fix}</span>
+                            </li>
+                          ))}
+                        </ul>
                       </div>
-                    ))}
+                    )}
                   </div>
                 </div>
               )}

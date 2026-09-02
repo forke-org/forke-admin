@@ -624,25 +624,27 @@ export async function getDatabaseOverview() {
 
     // 10 & 11 are each independent, soft-failing (default on error) stats
     // reads — run all three underlying queries concurrently.
-    const [uptime, { cacheHitRatio, commits }] = await Promise.all([
+    const [uptimeResult, { cacheHitRatio, commits }] = await Promise.all([
       // 10. Query server uptime
       (async () => {
         try {
           const uptimeRes = await client.unsafe(`SELECT pg_postmaster_start_time() as start_time`)
           const startTimeVal = uptimeRes[0]?.start_time
-          if (!startTimeVal) return 'N/A'
+          if (!startTimeVal) return { formatted: 'N/A', seconds: 0 }
           const diffMs = Date.now() - new Date(startTimeVal).getTime()
           const diffSecs = Math.floor(diffMs / 1000)
           const diffMins = Math.floor(diffSecs / 60)
           const diffHours = Math.floor(diffMins / 60)
           const diffDays = Math.floor(diffHours / 24)
 
-          if (diffDays > 0) return `${diffDays}d ${diffHours % 24}h`
-          if (diffHours > 0) return `${diffHours}h ${diffMins % 60}m`
-          return `${diffMins}m`
+          let formatted = `${diffMins}m`
+          if (diffDays > 0) formatted = `${diffDays}d ${diffHours % 24}h`
+          else if (diffHours > 0) formatted = `${diffHours}h ${diffMins % 60}m`
+
+          return { formatted, seconds: diffSecs }
         } catch (e) {
           console.error('Failed to query server uptime:', e)
-          return 'N/A'
+          return { formatted: 'N/A', seconds: 0 }
         }
       })(),
       // 11. Query Cache Hit Ratio & Transactions Commits count
@@ -681,24 +683,50 @@ export async function getDatabaseOverview() {
       })(),
     ])
 
+    // Try fetching genuine host telemetry from the Go backend running on the OCI VM
+    const backendUrl =
+      process.env.NEXT_PUBLIC_BACKEND_URL ||
+      (process.env.NODE_ENV === 'production' ? 'https://api.forke.space' : 'http://localhost:8080')
+    let ociTelemetry: any = null
+    try {
+      const resp = await fetch(`${backendUrl}/api/v1/system/telemetry`, {
+        signal: AbortSignal.timeout(2000),
+        cache: 'no-store',
+      })
+      if (resp.ok) {
+        ociTelemetry = await resp.json()
+      }
+    } catch {
+      // Backend not reached or offline, fallback safely
+    }
+
     const mem = getAccurateHostMemory()
-    const loadAvg = os.loadavg() || [0.1, 0.1, 0.1]
+    const loadAvg = ociTelemetry?.loadAvg || os.loadavg() || [0.05, 0.05, 0.05]
     const cacheHitNum = parseFloat(cacheHitRatio.replace('%', '')) || 100.0
 
+    // Accurate VM uptime calculation:
+    // 1. If Go backend on OCI gave real Linux /proc/uptime, use it.
+    // 2. Otherwise, use PostgreSQL uptime on the OCI VM (since PG runs on the same VM).
+    // 3. Prevent Vercel serverless sandbox os.uptime() (0m) from showing as VM uptime.
+    const effectiveUptime =
+      ociTelemetry?.systemUptimeSeconds && ociTelemetry.systemUptimeSeconds > 0
+        ? ociTelemetry.systemUptimeSeconds
+        : Math.max(uptimeResult.seconds || 0, os.uptime())
+
     const hostInfo = {
-      hostname: os.hostname(),
-      platform: os.platform(),
-      type: os.type(),
+      hostname: ociTelemetry?.hostname || os.hostname(),
+      platform: ociTelemetry?.platform || os.platform(),
+      type: ociTelemetry?.os || os.type(),
       release: os.release(),
-      arch: os.arch(),
-      cpuCount: os.cpus()?.length || 1,
-      cpuModel: os.cpus()?.[0]?.model || 'Host CPU',
+      arch: ociTelemetry?.arch || os.arch(),
+      cpuCount: ociTelemetry?.cpuCount || os.cpus()?.length || 4,
+      cpuModel: ociTelemetry?.cpuModel || os.cpus()?.[0]?.model || 'Ampere Altra (ARM64)',
       loadAvg: loadAvg,
-      totalMemBytes: mem.totalMemBytes,
-      freeMemBytes: mem.freeMemBytes,
-      usedMemBytes: mem.usedMemBytes,
-      memUsagePct: mem.memUsagePct,
-      systemUptimeSeconds: os.uptime(),
+      totalMemBytes: ociTelemetry?.totalMemBytes || mem.totalMemBytes,
+      freeMemBytes: ociTelemetry?.freeMemBytes || mem.freeMemBytes,
+      usedMemBytes: ociTelemetry?.usedMemBytes || mem.usedMemBytes,
+      memUsagePct: ociTelemetry?.memUsagePct ?? mem.memUsagePct,
+      systemUptimeSeconds: effectiveUptime,
       processRssBytes: process.memoryUsage().rss,
       nodeVersion: process.version,
     }
@@ -764,7 +792,7 @@ export async function getDatabaseOverview() {
       user,
       sslMode,
       maskedUri,
-      uptime,
+      uptime: uptimeResult.formatted,
       cacheHitRatio,
       commits
     }
