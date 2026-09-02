@@ -36,10 +36,12 @@ export default function GlobeView({
   data,
   focusIso,
   onHover,
+  metric = 'clicks',
 }: {
   data: CountryDatum[]
   focusIso?: string | null
-  onHover?: (d: { name: string; clicks: number } | null) => void
+  onHover?: (d: { name: string; value: number; metric: string } | null) => void
+  metric?: 'clicks' | 'subscribers'
 }) {
   const globeEl = useRef<any>(null)
   const wrapRef = useRef<HTMLDivElement>(null)
@@ -54,18 +56,27 @@ export default function GlobeView({
 
   const byIso = useMemo(() => {
     const m = new Map<string, number>()
-    for (const d of data) m.set(d.country.toUpperCase(), d.clicks)
+    for (const d of data) {
+      const val = metric === 'subscribers' ? d.conversions ?? 0 : d.clicks
+      m.set(d.country.toUpperCase(), val)
+    }
     return m
-  }, [data])
-  const max = Math.max(...data.map((d) => d.clicks), 1)
+  }, [data, metric])
 
-  // The country with the most clicks — the globe starts pointed here.
+  const max = useMemo(() => Math.max(...Array.from(byIso.values()), 1), [byIso])
+
+  // The country with the most volume in the active metric — the globe starts pointed here.
   const topIso = useMemo(() => {
     let top: string | null = null
     let best = -1
-    for (const d of data) if (d.clicks > best) { best = d.clicks; top = d.country.toUpperCase() }
+    for (const [iso, val] of byIso.entries()) {
+      if (val > best) {
+        best = val
+        top = iso
+      }
+    }
     return top
-  }, [data])
+  }, [byIso])
 
   // Resolve an ISO-2 to a lat/lng (centroid table first, then polygon bbox center).
   const centroidFor = (iso: string): { lat: number; lng: number } | null => {
@@ -95,13 +106,17 @@ export default function GlobeView({
     return () => { alive = false }
   }, [])
 
-  // Responsive sizing.
+  // Responsive sizing — observes both width and height of container.
   useEffect(() => {
     if (!wrapRef.current) return
     const ro = new ResizeObserver((entries) => {
-      const w = entries[0].contentRect.width
-      const h = Math.min(Math.max(w, 360), 520)
-      setSize({ w, h })
+      const entry = entries[0]
+      if (!entry) return
+      const w = entry.contentRect.width
+      const containerH = entry.contentRect.height
+      const h = containerH > 100 ? containerH : Math.min(Math.max(w, 280), 500)
+      const finalDim = Math.min(w, h)
+      setSize({ w: finalDim, h: finalDim })
     })
     ro.observe(wrapRef.current)
     return () => ro.disconnect()
@@ -135,16 +150,16 @@ export default function GlobeView({
 
   const colorFor = (feat: Feature) => {
     const iso = feat.properties.ISO_A2 as string
-    const clicks = byIso.get(iso)
-    if (!clicks) return 'rgba(255,255,255,0.08)'
-    const t = clicks / max
+    const val = byIso.get(iso)
+    if (!val) return 'rgba(255,255,255,0.08)'
+    const t = val / max
     // Selected country gets a brighter highlight.
     if (focusIso && iso === focusIso) return 'rgba(255,150,40,0.98)'
     return `rgba(255,122,0,${0.25 + t * 0.7})`
   }
 
   return (
-    <div ref={wrapRef} className="w-full flex items-center justify-center">
+    <div ref={wrapRef} className="w-full h-full flex items-center justify-center">
       <Globe
         ref={globeEl}
         width={size.w}
@@ -161,17 +176,27 @@ export default function GlobeView({
         polygonStrokeColor={() => 'rgba(255,255,255,0.18)'}
         polygonAltitude={((feat: Feature) => {
           const iso = feat.properties.ISO_A2
-          const clicks = byIso.get(iso)
+          const val = byIso.get(iso)
           if (focusIso && iso === focusIso) return 0.18
-          return clicks ? 0.02 + (clicks / max) * 0.12 : 0.006
+          return val ? 0.02 + (val / max) * 0.12 : 0.006
         }) as any}
         onPolygonHover={((feat: Feature | null) => {
           if (!onHover) return
-          if (!feat) { onHover(null); return }
+          if (!feat) {
+            onHover(null)
+            return
+          }
           const iso = feat.properties.ISO_A2
-          const clicks = byIso.get(iso)
-          if (clicks) onHover({ name: feat.properties.NAME || feat.properties.ADMIN || iso, clicks })
-          else onHover(null)
+          const val = byIso.get(iso)
+          if (val !== undefined && val > 0) {
+            onHover({
+              name: feat.properties.NAME || feat.properties.ADMIN || iso,
+              value: val,
+              metric: metric === 'subscribers' ? 'subscribers' : 'clicks',
+            })
+          } else {
+            onHover(null)
+          }
         }) as any}
         polygonsTransitionDuration={300}
       />

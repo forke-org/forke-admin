@@ -13,7 +13,7 @@
 import React, { useEffect, useRef, useState, useCallback } from 'react'
 import {
   Shield, User, Briefcase, Database, MessageSquare, Zap, Settings, AlertTriangle,
-  RefreshCw, Pause, Play, Terminal, Trash2
+  RefreshCw, Pause, Play, Terminal, Trash2, FileText
 } from 'lucide-react'
 import { getActivityFeed, purgeAuditLogsAction, getActivityLogLiveStatusAction, setActivityLogLiveStatusAction, type ActivityEvent, type ActivityCategory } from '@/lib/actions/audit-actions'
 import { Skeleton } from '@/components/ui/Skeleton'
@@ -31,6 +31,7 @@ const CATEGORY: Record<ActivityCategory, { label: string; icon: IconType; color:
   task: { label: 'TASK', icon: Zap, color: 'text-cyan-400', dot: 'bg-cyan-400' },
   system: { label: 'SYSTEM', icon: Settings, color: 'text-white/60', dot: 'bg-white/50' },
   error: { label: 'ERROR', icon: AlertTriangle, color: 'text-red-400', dot: 'bg-red-400' },
+  content: { label: 'CONTENT', icon: FileText, color: 'text-orange-400', dot: 'bg-orange-400' },
 }
 
 const FILTERS: { value: ActivityCategory | 'all'; label: string }[] = [
@@ -41,6 +42,7 @@ const FILTERS: { value: ActivityCategory | 'all'; label: string }[] = [
   { value: 'db', label: 'Database' },
   { value: 'support', label: 'Support' },
   { value: 'task', label: 'Tasks' },
+  { value: 'content', label: 'Content' },
 ]
 
 function relativeTime(iso: string): string {

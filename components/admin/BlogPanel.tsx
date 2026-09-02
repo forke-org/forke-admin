@@ -73,12 +73,75 @@ type BlogRow = Awaited<ReturnType<typeof getBlogs>>['data'][number]
 type View = { mode: 'list' } | { mode: 'edit'; id: string | null }
 
 export default function BlogPanel() {
-  const [view, setView] = useState<View>({ mode: 'list' })
+  const [listPage, setListPage] = useState<number>(() => {
+    if (typeof window !== 'undefined') {
+      const p = new URLSearchParams(window.location.search).get('p')
+      return p ? Math.max(1, parseInt(p, 10) || 1) : 1
+    }
+    return 1
+  })
+  const [view, setView] = useState<View>(() => {
+    if (typeof window !== 'undefined') {
+      const editId = new URLSearchParams(window.location.search).get('edit')
+      if (editId) return { mode: 'edit', id: editId === 'new' ? null : editId }
+    }
+    return { mode: 'list' }
+  })
+  const [refreshTrigger, setRefreshTrigger] = useState(0)
 
-  if (view.mode === 'list') {
-    return <BlogList onOpen={(id) => setView({ mode: 'edit', id })} />
+  const openEditor = (id: string | null) => {
+    setView({ mode: 'edit', id })
+    if (typeof window !== 'undefined') {
+      const url = new URL(window.location.href)
+      url.searchParams.set('edit', id || 'new')
+      if (listPage > 1) url.searchParams.set('p', String(listPage))
+      window.history.pushState({}, '', url.pathname + url.search)
+    }
   }
-  return <BlogEditorView id={view.id} onBack={() => setView({ mode: 'list' })} />
+
+  const closeEditor = () => {
+    setView({ mode: 'list' })
+    if (typeof window !== 'undefined') {
+      const url = new URL(window.location.href)
+      url.searchParams.delete('edit')
+      if (listPage > 1) url.searchParams.set('p', String(listPage))
+      else url.searchParams.delete('p')
+      window.history.pushState({}, '', url.pathname + url.search)
+    }
+  }
+
+  const handleSaved = () => {
+    setRefreshTrigger((prev) => prev + 1)
+  }
+
+  return (
+    <>
+      <div className={cn("h-full w-full flex flex-col min-h-0", view.mode !== 'list' && 'hidden')}>
+        <BlogList
+          initialPage={listPage}
+          onPageChange={(p) => {
+            setListPage(p)
+            if (typeof window !== 'undefined') {
+              const url = new URL(window.location.href)
+              if (p > 1) url.searchParams.set('p', String(p))
+              else url.searchParams.delete('p')
+              window.history.replaceState({}, '', url.pathname + url.search)
+            }
+          }}
+          onOpen={openEditor}
+          refreshTrigger={refreshTrigger}
+        />
+      </div>
+
+      {view.mode === 'edit' && (
+        <BlogEditorView
+          id={view.id}
+          onBack={closeEditor}
+          onSaved={handleSaved}
+        />
+      )}
+    </>
+  )
 }
 
 // ── list view (tabular: search · filter · multi-select · bulk actions) ──────
@@ -86,12 +149,22 @@ export default function BlogPanel() {
 const PER_PAGE = 10
 type StatusFilter = 'all' | 'published' | 'draft'
 
-function BlogList({ onOpen }: { onOpen: (id: string | null) => void }) {
+function BlogList({
+  initialPage = 1,
+  onPageChange,
+  onOpen,
+  refreshTrigger = 0,
+}: {
+  initialPage?: number
+  onPageChange?: (page: number) => void
+  onOpen: (id: string | null) => void
+  refreshTrigger?: number
+}) {
   const [rows, setRows] = useState<BlogRow[]>([])
   const [viewCounts, setViewCounts] = useState<Record<string, number>>({})
   const [loading, setLoading] = useState(true)
   const [confirm, setConfirm] = useState<ConfirmOptions | null>(null)
-  const [page, setPage] = useState(1)
+  const [page, setPage] = useState(initialPage)
   const [query, setQuery] = useState('')
   const [statusFilter, setStatusFilter] = useState<StatusFilter>('all')
   const [selected, setSelected] = useState<Set<string>>(new Set())
@@ -110,7 +183,13 @@ function BlogList({ onOpen }: { onOpen: (id: string | null) => void }) {
 
   useEffect(() => {
     load()
-  }, [load])
+  }, [load, refreshTrigger])
+
+  useEffect(() => {
+    if (initialPage > 0) {
+      setPage(initialPage)
+    }
+  }, [initialPage])
 
   // Filter by search + status (rows already arrive newest-first from the server).
   const filtered = rows.filter((r) => {
@@ -125,12 +204,21 @@ function BlogList({ onOpen }: { onOpen: (id: string | null) => void }) {
   })
 
   const totalPages = Math.max(1, Math.ceil(filtered.length / PER_PAGE))
+  const isFirstRender = useRef(true)
   useEffect(() => {
+    if (isFirstRender.current) {
+      isFirstRender.current = false
+      return
+    }
     setPage(1)
+    onPageChange?.(1)
   }, [query, statusFilter])
+
   useEffect(() => {
-    setPage((p) => Math.min(p, totalPages))
-  }, [totalPages])
+    if (!loading && rows.length > 0) {
+      setPage((p) => Math.min(Math.max(1, p), totalPages))
+    }
+  }, [loading, rows.length, totalPages])
   const visibleRows = filtered.slice((page - 1) * PER_PAGE, page * PER_PAGE)
 
   // Selection helpers operate over the current filtered set.
@@ -442,9 +530,13 @@ function BlogList({ onOpen }: { onOpen: (id: string | null) => void }) {
           </p>
           <div className="flex items-center gap-1">
             <button
-              onClick={() => setPage((p) => Math.max(1, p - 1))}
+              onClick={() => {
+                const next = Math.max(1, page - 1)
+                setPage(next)
+                onPageChange?.(next)
+              }}
               disabled={page === 1}
-              className="flex h-7 w-7 items-center justify-center rounded-md border border-[var(--color-border)] text-[var(--color-text-muted)] transition-colors hover:text-white disabled:opacity-30 disabled:pointer-events-none"
+              className="flex h-7 w-7 items-center justify-center rounded-md border border-[var(--color-border)] text-[var(--color-text-muted)] transition-colors hover:text-white disabled:opacity-30 disabled:pointer-events-none cursor-pointer"
               title="Previous page"
             >
               <ChevronLeft className="h-3.5 w-3.5" />
@@ -453,9 +545,13 @@ function BlogList({ onOpen }: { onOpen: (id: string | null) => void }) {
               {page} / {totalPages}
             </span>
             <button
-              onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
+              onClick={() => {
+                const next = Math.min(totalPages, page + 1)
+                setPage(next)
+                onPageChange?.(next)
+              }}
               disabled={page === totalPages}
-              className="flex h-7 w-7 items-center justify-center rounded-md border border-[var(--color-border)] text-[var(--color-text-muted)] transition-colors hover:text-white disabled:opacity-30 disabled:pointer-events-none"
+              className="flex h-7 w-7 items-center justify-center rounded-md border border-[var(--color-border)] text-[var(--color-text-muted)] transition-colors hover:text-white disabled:opacity-30 disabled:pointer-events-none cursor-pointer"
               title="Next page"
             >
               <ChevronRight className="h-3.5 w-3.5" />
@@ -508,7 +604,7 @@ function StatusBadge({ status }: { status: 'draft' | 'published' }) {
 
 // ── editor view ──────────────────────────────────────────────────────────────
 
-function BlogEditorView({ id, onBack }: { id: string | null; onBack: () => void }) {
+function BlogEditorView({ id, onBack, onSaved }: { id: string | null; onBack: () => void; onSaved?: () => void }) {
   const [loading, setLoading] = useState(id !== null)
   const [status, setStatus] = useState<'draft' | 'published'>('draft')
   const [initial, setInitial] = useState<{
@@ -624,6 +720,7 @@ function BlogEditorView({ id, onBack }: { id: string | null; onBack: () => void 
 
       setSavedAt(new Date())
       setHasChanges(false)
+      onSaved?.()
       return savedId
     } finally {
       savingRef.current = false

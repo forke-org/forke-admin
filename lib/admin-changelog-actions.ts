@@ -13,7 +13,7 @@
 import { revalidatePath } from 'next/cache'
 import { db } from '@/lib/db'
 import { changelogs } from '@/lib/db/schema'
-import { eq, desc } from 'drizzle-orm'
+import { eq, desc, inArray } from 'drizzle-orm'
 import { getCurrentAdmin } from '@/lib/admin-actions'
 import { logAudit } from '@/lib/actions/audit-actions'
 
@@ -99,6 +99,22 @@ export async function createChangelogAction(input: ChangelogInput) {
       target: `${inserted.title} (${inserted.slug})`,
     })
 
+    if (inserted.isPublished) {
+      const { createBroadcastApprovalAction } = await import('./actions/broadcast-actions')
+      await createBroadcastApprovalAction({
+        type: 'changelog',
+        contentId: inserted.id,
+        title: inserted.title,
+        slug: inserted.slug,
+        tag: inserted.tag,
+        description: inserted.description,
+        improvements: inserted.improvements || [],
+        fixes: inserted.fixes || [],
+        mediaUrl: inserted.mediaUrl,
+        mediaType: inserted.mediaType as any,
+      })
+    }
+
     revalidatePath('/changelog')
     return { success: true, id: inserted.id }
   } catch (error: any) {
@@ -157,8 +173,23 @@ export async function updateChangelogAction(id: string, input: Partial<Changelog
       target: `${updated.title} (${updated.slug})`,
     })
 
+    if (input.isPublished && !existing?.isPublished) {
+      const { createBroadcastApprovalAction } = await import('./actions/broadcast-actions')
+      await createBroadcastApprovalAction({
+        type: 'changelog',
+        contentId: updated.id,
+        title: updated.title,
+        slug: updated.slug,
+        tag: updated.tag,
+        description: updated.description,
+        improvements: updated.improvements || [],
+        fixes: updated.fixes || [],
+        mediaUrl: updated.mediaUrl,
+        mediaType: updated.mediaType as any,
+      })
+    }
+
     revalidatePath('/changelog')
-    revalidatePath(`/changelog/${updated.slug}`)
     return { success: true }
   } catch (error: any) {
     console.error('Failed to update changelog:', error)
@@ -224,6 +255,22 @@ export async function toggleChangelogPublishAction(id: string, isPublished: bool
       target: `${updated.title} (${updated.slug})`,
     })
 
+    if (isPublished) {
+      const { createBroadcastApprovalAction } = await import('./actions/broadcast-actions')
+      await createBroadcastApprovalAction({
+        type: 'changelog',
+        contentId: updated.id,
+        title: updated.title,
+        slug: updated.slug,
+        tag: updated.tag,
+        description: updated.description,
+        improvements: updated.improvements || [],
+        fixes: updated.fixes || [],
+        mediaUrl: updated.mediaUrl,
+        mediaType: updated.mediaType as any,
+      })
+    }
+
     revalidatePath('/changelog')
     return { success: true }
   } catch (error) {
@@ -231,3 +278,86 @@ export async function toggleChangelogPublishAction(id: string, isPublished: bool
     return { success: false, error: 'Database update failed.' }
   }
 }
+
+export async function bulkDeleteChangelogsAction(ids: string[]) {
+  await ensureAdmin()
+  if (ids.length === 0) return { success: true as const, count: 0 }
+
+  try {
+    const list = await db
+      .select({ id: changelogs.id, mediaUrl: changelogs.mediaUrl })
+      .from(changelogs)
+      .where(inArray(changelogs.id, ids))
+
+    const { deleteFileByUrl } = await import('@/lib/r2')
+    await Promise.all(
+      list
+        .filter((item) => !!item.mediaUrl)
+        .map((item) => deleteFileByUrl(item.mediaUrl!).catch(() => {}))
+    )
+
+    await db.delete(changelogs).where(inArray(changelogs.id, ids))
+
+    await logAudit({
+      category: 'content',
+      action: 'changelog.bulk_deleted',
+      target: `${ids.length} changelogs`,
+    })
+
+    revalidatePath('/changelog')
+    return { success: true as const, count: ids.length }
+  } catch (error: any) {
+    console.error('Failed to bulk delete changelogs:', error)
+    return { success: false, error: error?.message || 'Bulk delete failed' }
+  }
+}
+
+export async function bulkSetChangelogPublishAction(ids: string[], isPublished: boolean) {
+  await ensureAdmin()
+  if (ids.length === 0) return { success: true as const, count: 0 }
+
+  try {
+    const existing = await db
+      .select()
+      .from(changelogs)
+      .where(inArray(changelogs.id, ids))
+
+    await db
+      .update(changelogs)
+      .set({ isPublished, updatedAt: new Date() })
+      .where(inArray(changelogs.id, ids))
+
+    await logAudit({
+      category: 'content',
+      action: isPublished ? 'changelog.bulk_published' : 'changelog.bulk_drafted',
+      target: `${ids.length} changelogs`,
+    })
+
+    if (isPublished) {
+      const { createBroadcastApprovalAction } = await import('./actions/broadcast-actions')
+      for (const item of existing) {
+        if (!item.isPublished) {
+          await createBroadcastApprovalAction({
+            type: 'changelog',
+            contentId: item.id,
+            title: item.title,
+            slug: item.slug,
+            tag: item.tag,
+            description: item.description,
+            improvements: (Array.isArray(item.improvements) ? item.improvements : []) as string[],
+            fixes: (Array.isArray(item.fixes) ? item.fixes : []) as string[],
+            mediaUrl: item.mediaUrl,
+            mediaType: item.mediaType as any,
+          }).catch((err) => console.error('Failed to create broadcast approval:', err))
+        }
+      }
+    }
+
+    revalidatePath('/changelog')
+    return { success: true as const, count: ids.length }
+  } catch (error: any) {
+    console.error('Failed to bulk update changelog status:', error)
+    return { success: false, error: error?.message || 'Bulk status update failed' }
+  }
+}
+

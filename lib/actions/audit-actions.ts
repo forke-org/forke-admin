@@ -17,7 +17,7 @@ import { getCurrentAdmin } from '@/lib/admin-actions'
 import { isActivityLogLive, setActivityLogLive } from '@/lib/db/settings'
 
 export type ActivityCategory =
-  | 'admin' | 'user' | 'owner' | 'db' | 'support' | 'task' | 'system' | 'error'
+  | 'admin' | 'user' | 'owner' | 'db' | 'support' | 'task' | 'system' | 'error' | 'content'
 
 export interface ActivityEvent {
   id: string

@@ -149,9 +149,9 @@ export const tasks = pgTable('tasks', {
   status: taskStatusEnum('status').default('open').notNull(),
   skillTags: text('skill_tags').array(),
   clientId: uuid('client_id')
-    .references(() => users.id)
+    .references(() => users.id, { onDelete: 'cascade' })
     .notNull(),
-  claimantId: uuid('claimant_id').references(() => users.id),
+  claimantId: uuid('claimant_id').references(() => users.id, { onDelete: 'set null' }),
   claimedAt: timestamp('claimed_at'),
   deadline: timestamp('deadline'),
   sandboxRepoId: uuid('sandbox_repo_id').references(() => sandboxRepos.id, { onDelete: 'set null' }),
@@ -165,10 +165,10 @@ export const tasks = pgTable('tasks', {
 export const submissions = pgTable('submissions', {
   id: uuid('id').primaryKey().defaultRandom(),
   taskId: uuid('task_id')
-    .references(() => tasks.id)
+    .references(() => tasks.id, { onDelete: 'cascade' })
     .notNull(),
   developerId: uuid('developer_id')
-    .references(() => users.id)
+    .references(() => users.id, { onDelete: 'cascade' })
     .notNull(),
   githubLink: text('github_link').notNull(),
   note: text('note'),
@@ -477,4 +477,32 @@ export const changelogs = pgTable('changelogs', {
   createdAt: timestamp('created_at').defaultNow().notNull(),
   updatedAt: timestamp('updated_at').defaultNow().notNull(),
 })
+
+// ===== BROADCAST EMAIL APPROVALS (Admin Overview Notifications) =====
+export const broadcastApprovals = pgTable('broadcast_approvals', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  type: text('type').notNull(), // 'blog' | 'changelog'
+  contentId: uuid('content_id').notNull(),
+  title: text('title').notNull(),
+  slug: text('slug').notNull(),
+  tag: text('tag'),
+  excerpt: text('excerpt'),
+  description: text('description'),
+  coverImage: text('cover_image'),
+  mediaUrl: text('media_url'),
+  mediaType: text('media_type').default('none'),
+  authorName: text('author_name'),
+  readingMinutes: integer('reading_minutes'),
+  improvements: jsonb('improvements').default([]).$type<string[]>(),
+  fixes: jsonb('fixes').default([]).$type<string[]>(),
+  status: text('status').notNull().default('pending'), // 'pending' | 'approved' | 'dismissed' | 'failed'
+  broadcastId: text('broadcast_id'),
+  sentCount: integer('sent_count').default(0),
+  error: text('error'),
+  approvedAt: timestamp('approved_at'),
+  approvedBy: text('approved_by'),
+  createdAt: timestamp('created_at').defaultNow().notNull(),
+  updatedAt: timestamp('updated_at').defaultNow().notNull(),
+})
+
 

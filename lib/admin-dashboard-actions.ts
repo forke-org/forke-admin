@@ -787,15 +787,15 @@ export async function getTrackerData(days = 30): Promise<{ success: boolean; dat
       `),
       db.execute(sql`
         WITH clicks_by_country AS (
-          SELECT COALESCE(NULLIF(country, ''), 'unknown') AS country, count(*)::int AS clicks
+          SELECT COALESCE(NULLIF(UPPER(country), ''), 'unknown') AS country, count(*)::int AS clicks
           FROM public.page_visits
           WHERE is_bot = false AND ${windowSql}
           GROUP BY 1
         ),
         conversions_by_country AS (
-          SELECT COALESCE(NULLIF(attribution->>'country', ''), 'unknown') AS country, count(*)::int AS conversions
+          SELECT COALESCE(NULLIF(UPPER(attribution->>'country'), ''), 'unknown') AS country, count(*)::int AS conversions
           FROM public.subscribers
-          WHERE attribution->>'country' IS NOT NULL
+          WHERE ${isAllTime ? sql`1=1` : sql`created_at >= now() - (${days} || ' days')::interval`}
           GROUP BY 1
         ),
         conv_totals AS (

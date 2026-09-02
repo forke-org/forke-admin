@@ -685,6 +685,116 @@ export function buildBlogEmail(data: BlogEmailData): string {
   })
 }
 
+export interface ChangelogEmailData {
+  title: string
+  slug: string
+  tag?: string
+  description: string
+  improvements?: string[]
+  fixes?: string[]
+  mediaUrl?: string
+  mediaType?: 'none' | 'image' | 'video'
+  publishedAt?: string | Date
+  url?: string
+  unsubscribe?: boolean
+  maxWidth?: number
+  recentPosts?: BlogEmailRecent[]
+}
+
+/**
+ * Finalized official Forke Changelog email template matching brand standards.
+ */
+export function buildChangelogEmail(data: ChangelogEmailData): string {
+  const changelogUrl = data.url || `${BRAND.baseUrl}/changelog#${data.slug}`
+  const tagLabel = (data.tag || 'FEATURE').toUpperCase()
+  const dateStr = data.publishedAt
+    ? new Date(data.publishedAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })
+    : new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })
+
+  const improvementsList = (data.improvements || []).filter((s) => s.trim())
+  const fixesList = (data.fixes || []).filter((s) => s.trim())
+
+  let highlightsHtml = ''
+  if (improvementsList.length > 0 || fixesList.length > 0) {
+    const impSection =
+      improvementsList.length > 0
+        ? `<td style="vertical-align:top;padding:12px;width:50%;">
+            <p style="font-family:${BRAND.mono};font-size:10px;font-weight:600;letter-spacing:0.14em;text-transform:uppercase;color:${BRAND.accent};margin:0 0 10px;">IMPROVEMENTS</p>
+            <ul style="margin:0;padding-left:14px;color:${BRAND.textBody};font-family:${BRAND.sans};font-size:13px;line-height:1.6;">
+              ${improvementsList.map((item) => `<li style="margin-bottom:6px;">${item}</li>`).join('')}
+            </ul>
+          </td>`
+        : ''
+
+    const fixSection =
+      fixesList.length > 0
+        ? `<td style="vertical-align:top;padding:12px;width:50%;">
+            <p style="font-family:${BRAND.mono};font-size:10px;font-weight:600;letter-spacing:0.14em;text-transform:uppercase;color:#34D399;margin:0 0 10px;">FIXES</p>
+            <ul style="margin:0;padding-left:14px;color:${BRAND.textBody};font-family:${BRAND.sans};font-size:13px;line-height:1.6;">
+              ${fixesList.map((item) => `<li style="margin-bottom:6px;">${item}</li>`).join('')}
+            </ul>
+          </td>`
+        : ''
+
+    highlightsHtml = `
+      <table width="100%" cellpadding="0" cellspacing="0" border="0" style="margin:20px 0 16px;background:${BRAND.card};border:1px solid ${BRAND.hairlineSoft};border-radius:12px;">
+        <tr>${impSection}${fixSection}</tr>
+      </table>
+    `
+  }
+
+  const mediaRow = data.mediaUrl
+    ? `<tr><td style="padding:0 24px;line-height:0;font-size:0;"><div style="border-radius:12px;overflow:hidden;border:1px solid ${BRAND.hairlineSoft};">${blogImg(data.mediaUrl, data.title, changelogUrl, 12)}</div></td></tr>`
+    : ''
+
+  const footerExtra = data.unsubscribe
+    ? `<p style="font-family:${BRAND.sans};font-size:11px;line-height:1.6;color:${BRAND.textFaint};margin:14px 0 0 0;">
+         You're receiving this because you subscribed to Forke release updates.
+         <a href="{{{RESEND_UNSUBSCRIBE_URL}}}" style="color:${BRAND.textMuted};text-decoration:underline;">Unsubscribe</a>.
+       </p>`
+    : ''
+
+  return emailShell({
+    maxWidth: data.maxWidth,
+    title: data.title,
+    banner: 'main-banner.png',
+    preheader: data.description?.slice(0, 140) || `New in Forke Changelog: ${data.title}`,
+    footerLabel: 'Forke Release Notes',
+    footerExtra,
+    fullBleedBody: true,
+    recentPosts: data.recentPosts,
+    bodyHtml: `
+      <table width="100%" cellpadding="0" cellspacing="0" border="0">
+        <tr>
+          <td style="padding:32px 36px 20px;text-align:center;">
+            <p style="font-family:${BRAND.mono};font-size:10.5px;letter-spacing:0.2em;text-transform:uppercase;color:${BRAND.accent};margin:0 0 14px;">
+              From the Forke changelog &middot; ${tagLabel}
+            </p>
+            <h1 style="font-family:${BRAND.sans};font-size:27px;font-weight:600;letter-spacing:-0.035em;line-height:1.22;color:${BRAND.textHigh};margin:0 0 14px;">
+              <a href="${changelogUrl}" target="_blank" style="color:${BRAND.textHigh};text-decoration:none;">${data.title}</a>
+            </h1>
+            <p style="font-family:${BRAND.sans};font-size:15px;line-height:1.7;color:${BRAND.textBody};margin:0 0 12px;text-align:left;">
+              ${data.description}
+            </p>
+            <p style="font-family:${BRAND.mono};font-size:11px;color:${BRAND.textFaint};margin:0 0 20px;text-align:center;">
+              ${dateStr} &middot; Release Note
+            </p>
+          </td>
+        </tr>
+        ${mediaRow}
+        <tr>
+          <td style="padding:16px 36px 32px;">
+            ${highlightsHtml}
+            <div style="text-align:center;margin-top:24px;">
+              ${buttonPrimary(changelogUrl, 'View Full Changelog')}
+            </div>
+          </td>
+        </tr>
+      </table>
+    `,
+  })
+}
+
 // ----------------------------------------------------------------------------
 // Public senders — signatures, subjects, and from-addresses unchanged.
 // ----------------------------------------------------------------------------
@@ -939,6 +1049,130 @@ export async function sendBlogPublishedBroadcast(blog: {
     return { success: false, sentCount: 0, broadcastId, error: lastError }
   } catch (err) {
     console.error('Error dispatching blog broadcast:', err)
+    return { success: false, sentCount: 0, error: err instanceof Error ? err.message : String(err) }
+  }
+}
+
+/**
+ * Announce a newly-published changelog release to every subscriber via Resend's Broadcasts API.
+ * Uses the exact same audience synchronization as sendBlogPublishedBroadcast.
+ */
+export async function sendChangelogPublishedBroadcast(changelog: {
+  id?: string
+  title: string
+  slug?: string
+  tag?: string
+  description: string
+  improvements?: string[]
+  fixes?: string[]
+  mediaUrl?: string | null
+  mediaType?: 'none' | 'image' | 'video'
+  publishedAt?: Date | string | null
+}): Promise<{ success: boolean; sentCount: number; broadcastId?: string; error?: string }> {
+  const apiKey = resolveResendApiKey()
+  if (!apiKey) {
+    console.warn('⚠️ RESEND_API_KEY is not configured. Skipping changelog broadcast.')
+    return { success: false, sentCount: 0 }
+  }
+
+  // Resolve recipients from our DB (de-duplicated, case-insensitive).
+  const emails: string[] = []
+  try {
+    const { db } = await import('./db')
+    const { subscribers } = await import('./db/schema')
+    const rows = await db.select({ email: subscribers.email }).from(subscribers)
+    const seen = new Set<string>()
+    for (const r of rows) {
+      const e = r.email?.trim()
+      if (!e) continue
+      const key = e.toLowerCase()
+      if (seen.has(key)) continue
+      seen.add(key)
+      emails.push(e)
+    }
+  } catch (err) {
+    console.error('Failed to load subscribers for changelog broadcast:', err)
+    return { success: false, sentCount: 0 }
+  }
+  if (emails.length === 0) return { success: true, sentCount: 0 }
+
+  // 1) Ensure an audience and 2) sync our subscribers into it as contacts.
+  const audienceId = await ensureAudience(apiKey)
+  if (!audienceId) return { success: false, sentCount: 0 }
+  const synced = await syncContactsToAudience(audienceId, emails, apiKey)
+
+  const baseUrl = resolveBaseUrl()
+  const changelogUrl = `${baseUrl}/changelog`
+
+  const html = buildChangelogEmail({
+    title: changelog.title,
+    slug: changelog.slug || '',
+    tag: changelog.tag || 'FEATURE',
+    description: changelog.description,
+    improvements: changelog.improvements,
+    fixes: changelog.fixes,
+    mediaUrl: changelog.mediaUrl || undefined,
+    mediaType: changelog.mediaType || 'none',
+    publishedAt: changelog.publishedAt || undefined,
+    url: changelogUrl,
+    unsubscribe: true, // Broadcasts API requires an unsubscribe link.
+  })
+  const subject = `New in Forke: ${changelog.title}`
+
+  try {
+    // 3) Create the broadcast against the audience.
+    const createRes = await resendFetch(
+      '/broadcasts',
+      {
+        method: 'POST',
+        body: JSON.stringify({
+          audience_id: audienceId,
+          from: 'Forke Changelog <changelog@forke.space>',
+          reply_to: 'support@forke.space',
+          subject,
+          html,
+          name: `Changelog: ${changelog.title}`,
+        }),
+      },
+      apiKey
+    )
+    if (!createRes.ok) {
+      const errText = await createRes.text()
+      console.error('Failed to create Resend changelog broadcast:', errText)
+      return { success: false, sentCount: 0, error: errText }
+    }
+    const broadcast = (await createRes.json()) as { id: string }
+    const broadcastId = broadcast.id
+
+    // 4) Send it now — with retries.
+    let lastError = ''
+    for (let attempt = 1; attempt <= 4; attempt++) {
+      const sendRes = await resendFetch(
+        `/broadcasts/${broadcastId}/send`,
+        {
+          method: 'POST',
+          body: JSON.stringify({}),
+        },
+        apiKey
+      )
+
+      if (sendRes.ok) {
+        console.log(`Changelog broadcast sent to audience ${audienceId} (${synced} contacts).`)
+        return { success: true, sentCount: synced, broadcastId }
+      }
+
+      lastError = await sendRes.text()
+      console.error(`Changelog broadcast send attempt ${attempt}/4 failed (${sendRes.status}):`, lastError)
+
+      const transient = sendRes.status === 429 || sendRes.status >= 500
+      if (!transient) break
+      await sleep(attempt * 800)
+    }
+
+    console.error('Failed to send Resend changelog broadcast after retries:', lastError)
+    return { success: false, sentCount: 0, broadcastId, error: lastError }
+  } catch (err) {
+    console.error('Error dispatching changelog broadcast:', err)
     return { success: false, sentCount: 0, error: err instanceof Error ? err.message : String(err) }
   }
 }

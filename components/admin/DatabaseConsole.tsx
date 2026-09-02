@@ -57,7 +57,8 @@ import {
   Link2,
   Terminal,
   Play,
-  AlertCircle
+  AlertCircle,
+  Minus
 } from 'lucide-react'
 import { Button } from '@/components/ui/Button'
 import { Select } from '@/components/ui/Select'
@@ -669,12 +670,12 @@ export default function DatabaseConsole({ currentAdmin, initialTab }: DatabaseCo
   // Row selection helpers
   const primaryKeyCol = primaryKeys[0] || 'id' // Default to id if no PK found
 
-  function handleSelectAllRows(e: React.ChangeEvent<HTMLInputElement>) {
-    if (e.target.checked) {
+  function handleSelectAllRows() {
+    if (rows.length > 0 && selectedRowKeys.length === rows.length) {
+      setSelectedRowKeys([])
+    } else {
       const keys = rows.map(r => r[primaryKeyCol])
       setSelectedRowKeys(keys)
-    } else {
-      setSelectedRowKeys([])
     }
   }
 
@@ -2369,12 +2370,27 @@ export default function DatabaseConsole({ currentAdmin, initialTab }: DatabaseCo
                       {/* Checkbox select-all */}
                       {isSuperAdmin && (
                         <th className="px-4 py-3 w-10 text-center">
-                          <input
-                            type="checkbox"
-                            checked={rows.length > 0 && selectedRowKeys.length === rows.length}
-                            onChange={handleSelectAllRows}
-                            className="rounded !border-white/20 !bg-black checked:!bg-accent text-accent focus:ring-0 focus:ring-offset-0 cursor-pointer w-3.5 h-3.5 transition-colors"
-                          />
+                          <button
+                            type="button"
+                            role="checkbox"
+                            aria-checked={rows.length > 0 && selectedRowKeys.length === rows.length}
+                            onClick={handleSelectAllRows}
+                            className={cn(
+                              "w-4 h-4 rounded flex items-center justify-center transition-colors cursor-pointer border mx-auto",
+                              rows.length > 0 && selectedRowKeys.length === rows.length
+                                ? "bg-accent border-accent text-black font-bold"
+                                : selectedRowKeys.length > 0
+                                ? "bg-accent/20 border-accent/60 text-accent font-bold"
+                                : "border-white/20 bg-black/60 hover:border-white/40"
+                            )}
+                          >
+                            {rows.length > 0 && selectedRowKeys.length === rows.length && (
+                              <Check className="w-3 h-3 text-black stroke-[3]" />
+                            )}
+                            {selectedRowKeys.length > 0 && selectedRowKeys.length < rows.length && (
+                              <Minus className="w-2.5 h-2.5 text-accent stroke-[3]" />
+                            )}
+                          </button>
                         </th>
                       )}
 
@@ -2443,12 +2459,23 @@ export default function DatabaseConsole({ currentAdmin, initialTab }: DatabaseCo
                             {/* Checkbox row select */}
                             {isSuperAdmin && (
                               <td className="px-4 py-3 text-center">
-                                <input
-                                  type="checkbox"
-                                  checked={isRowSelected}
-                                  onChange={(e) => handleSelectRow(pkVal, e.target.checked)}
-                                  className="rounded !border-white/20 !bg-black checked:!bg-accent text-accent focus:ring-0 focus:ring-offset-0 cursor-pointer w-3.5 h-3.5 transition-colors"
-                                />
+                                <button
+                                  type="button"
+                                  role="checkbox"
+                                  aria-checked={isRowSelected}
+                                  onClick={(e) => {
+                                    e.stopPropagation()
+                                    handleSelectRow(pkVal, !isRowSelected)
+                                  }}
+                                  className={cn(
+                                    "w-4 h-4 rounded flex items-center justify-center transition-colors cursor-pointer border mx-auto",
+                                    isRowSelected
+                                      ? "bg-accent border-accent text-black font-bold"
+                                      : "border-white/20 bg-black/60 hover:border-white/40"
+                                  )}
+                                >
+                                  {isRowSelected && <Check className="w-3 h-3 text-black stroke-[3]" />}
+                                </button>
                               </td>
                             )}
 

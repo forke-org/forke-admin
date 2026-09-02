@@ -92,3 +92,41 @@ export async function getBackupStats(): Promise<{
     return { success: false, error: error.message || 'Failed to load backup stats.' }
   }
 }
+
+export async function triggerManualBackupAction(): Promise<{
+  success: boolean
+  url?: string
+  error?: string
+}> {
+  const authenticated = await isAdminAuthenticated()
+  if (!authenticated) {
+    return { success: false, error: 'Unauthorized' }
+  }
+
+  const { generateDatabaseBackupAction } = await import('@/lib/db-client-actions')
+  return await generateDatabaseBackupAction()
+}
+
+export async function getBackupDownloadUrl(r2Key: string): Promise<{
+  success: boolean
+  url?: string
+  error?: string
+}> {
+  const authenticated = await isAdminAuthenticated()
+  if (!authenticated) {
+    return { success: false, error: 'Unauthorized' }
+  }
+
+  if (!r2Key) {
+    return { success: false, error: 'Missing backup key' }
+  }
+
+  try {
+    const { getPresignedDownloadUrl } = await import('@/lib/r2')
+    const url = await getPresignedDownloadUrl(r2Key, 3600) // 1 hour link
+    return { success: true, url }
+  } catch (err: any) {
+    return { success: false, error: err.message || 'Failed to generate download URL' }
+  }
+}
+

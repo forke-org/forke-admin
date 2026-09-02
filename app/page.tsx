@@ -57,6 +57,7 @@ import {
   ChevronRight,
   ShieldCheck, 
   UserX, 
+  Check,
   CheckCircle2, 
   XCircle, 
   Search, 
@@ -87,8 +88,16 @@ import {
   Trash2,
   Server,
   RefreshCw,
-  History
+  History,
+  Send,
+  Loader2
 } from 'lucide-react'
+import {
+  getPendingBroadcastApprovalsAction,
+  approveBroadcastAction,
+  dismissBroadcastAction,
+  type BroadcastApprovalItem
+} from '@/lib/actions/broadcast-actions'
 import DatabaseConsole from '@/components/admin/DatabaseConsole'
 import BlogPanel from '@/components/admin/BlogPanel'
 import VmOverviewPanel from '@/components/admin/VmOverviewPanel'
@@ -183,11 +192,16 @@ export default function AdminDashboard() {
     return () => { active = false; clearInterval(id) }
   }, [])
 
-  // Synchronize activeTab with URL query parameter on mount
+  // Synchronize activeTab and page with URL query parameter on mount
   useEffect(() => {
     if (typeof window !== 'undefined') {
       const params = new URLSearchParams(window.location.search)
       const tab = params.get('tab')
+      const pageParam = params.get('page') || params.get('p')
+      if (pageParam) {
+        const p = parseInt(pageParam, 10)
+        if (p > 0) setCurrentPage(p)
+      }
       const validTabs = [
         'dashboard', 'owner-approval', 'developer-ban', 'enquiries',
         'admins', 'subscribers', 'tracker', 'blogs', 'changelog', 'activity', 'database', 'vm-overview', 'sql-editor', 'buckets', 'backups'
@@ -208,10 +222,28 @@ export default function AdminDashboard() {
   // Switch tab and close the mobile drawer
   function selectTab(tab: Exclude<typeof activeTab, null>) {
     setActiveTab(tab)
+    setCurrentPage(1)
     setMobileNavOpen(false)
     if (typeof window !== 'undefined') {
       const url = new URL(window.location.href)
       url.searchParams.set('tab', tab)
+      url.searchParams.delete('page')
+      url.searchParams.delete('p')
+      url.searchParams.delete('edit')
+      window.history.pushState({}, '', url.pathname + url.search)
+    }
+  }
+
+  function changePage(newPage: number) {
+    setCurrentPage(newPage)
+    if (typeof window !== 'undefined') {
+      const url = new URL(window.location.href)
+      if (newPage > 1) {
+        url.searchParams.set('p', String(newPage))
+      } else {
+        url.searchParams.delete('p')
+        url.searchParams.delete('page')
+      }
       window.history.pushState({}, '', url.pathname + url.search)
     }
   }
@@ -245,6 +277,12 @@ export default function AdminDashboard() {
   const [waitlistEnabled, setWaitlistEnabled] = useState(true)
   const [isTogglingWaitlist, setIsTogglingWaitlist] = useState(false)
   const [searchQuery, setSearchQuery] = useState('')
+
+  // Broadcast email approvals notification state
+  const [broadcastApprovals, setBroadcastApprovals] = useState<BroadcastApprovalItem[]>([])
+  const [broadcastSubCount, setBroadcastSubCount] = useState<number>(0)
+  const [approvingBroadcastId, setApprovingBroadcastId] = useState<string | null>(null)
+  const [dismissingBroadcastId, setDismissingBroadcastId] = useState<string | null>(null)
 
   // Current admin session info
   const [currentAdmin, setCurrentAdmin] = useState<any>(null)
@@ -294,7 +332,13 @@ export default function AdminDashboard() {
   const [waitlistModalPassword, setWaitlistModalPassword] = useState('')
 
   // Pagination states
-  const [currentPage, setCurrentPage] = useState(1)
+  const [currentPage, setCurrentPage] = useState<number>(() => {
+    if (typeof window !== 'undefined') {
+      const p = new URLSearchParams(window.location.search).get('page') || new URLSearchParams(window.location.search).get('p')
+      return p ? Math.max(1, parseInt(p, 10) || 1) : 1
+    }
+    return 1
+  })
   const [pageSize, setPageSize] = useState(10)
 
   useEffect(() => {
@@ -369,6 +413,18 @@ export default function AdminDashboard() {
           .catch((err) => console.error('Failed to fetch admins:', err))
       )
     }
+    if (activeTab === 'dashboard') {
+      tasks.push(
+        getPendingBroadcastApprovalsAction()
+          .then((res) => {
+            if (res.success) {
+              setBroadcastApprovals(res.approvals)
+              setBroadcastSubCount(res.subscriberCount)
+            }
+          })
+          .catch((err) => console.error('Failed to fetch broadcast approvals:', err))
+      )
+    }
 
     await Promise.all(tasks)
 
@@ -384,6 +440,49 @@ export default function AdminDashboard() {
         if (res.success && res.counts) setSidebarCounts(res.counts)
       })
       .catch(() => {})
+
+    getPendingBroadcastApprovalsAction()
+      .then(res => {
+        if (res.success) {
+          setBroadcastApprovals(res.approvals)
+          setBroadcastSubCount(res.subscriberCount)
+        }
+      })
+      .catch(() => {})
+  }
+
+  const handleApproveBroadcast = async (item: BroadcastApprovalItem) => {
+    setApprovingBroadcastId(item.id)
+    try {
+      const res = await approveBroadcastAction(item.id)
+      if (res.success) {
+        toast(`Broadcast dispatched to ${res.sentCount || broadcastSubCount} subscribers!`, 'success')
+        setBroadcastApprovals((prev) => prev.filter((a) => a.id !== item.id))
+      } else {
+        toast(res.error || 'Failed to send broadcast.', 'error')
+      }
+    } catch {
+      toast('Network error while approving broadcast.', 'error')
+    } finally {
+      setApprovingBroadcastId(null)
+    }
+  }
+
+  const handleDismissBroadcast = async (item: BroadcastApprovalItem) => {
+    setDismissingBroadcastId(item.id)
+    try {
+      const res = await dismissBroadcastAction(item.id)
+      if (res.success) {
+        toast('Broadcast notification dismissed.', 'info')
+        setBroadcastApprovals((prev) => prev.filter((a) => a.id !== item.id))
+      } else {
+        toast(res.error || 'Failed to dismiss broadcast.', 'error')
+      }
+    } catch {
+      toast('Network error while dismissing broadcast.', 'error')
+    } finally {
+      setDismissingBroadcastId(null)
+    }
   }
 
   async function fetchCurrentAdmin() {
@@ -925,7 +1024,7 @@ export default function AdminDashboard() {
           {/* Navigation buttons */}
           <div className="flex items-center gap-1">
             <button
-              onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
+              onClick={() => changePage(Math.max(currentPage - 1, 1))}
               disabled={currentPage === 1}
               className="w-7 h-7 flex items-center justify-center rounded-md bg-white/[0.02] border border-[var(--color-border)] text-[var(--color-text-muted)] hover:text-white hover:border-white/15 disabled:opacity-30 disabled:pointer-events-none transition-colors cursor-pointer"
               title="Previous Page"
@@ -936,7 +1035,7 @@ export default function AdminDashboard() {
               {currentPage} / {totalPages}
             </span>
             <button
-              onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
+              onClick={() => changePage(Math.min(currentPage + 1, totalPages))}
               disabled={currentPage === totalPages}
               className="w-7 h-7 flex items-center justify-center rounded-md bg-white/[0.02] border border-[var(--color-border)] text-[var(--color-text-muted)] hover:text-white hover:border-white/15 disabled:opacity-30 disabled:pointer-events-none transition-colors cursor-pointer"
               title="Next Page"
@@ -1035,23 +1134,37 @@ export default function AdminDashboard() {
           {/* Navigation Links */}
           <nav className="flex-grow px-3 space-y-0.5">
             
-            {/* Dashboard */}
+            {/* Dashboard / Overview */}
             <button
               onClick={() => selectTab('dashboard')}
               className={cn(
-                "w-full flex items-center gap-2.5 px-2.5 py-2 rounded-lg transition-colors text-[13px] font-medium text-left",
+                "relative w-full flex items-center gap-2.5 px-2.5 py-2 rounded-lg transition-colors text-[13px] font-medium text-left",
                 sidebarCollapsed && "lg:justify-center lg:px-0",
                 activeTab === 'dashboard'
                   ? 'bg-white/[0.05] text-white'
                   : 'text-[var(--color-text-muted)] hover:bg-white/[0.03] hover:text-white'
               )}
-              title={sidebarCollapsed ? "Overview" : undefined}
+              title={sidebarCollapsed ? (broadcastApprovals.length > 0 ? `Overview (${broadcastApprovals.length} pending)` : "Overview") : undefined}
             >
-              <LayoutDashboard className={cn(
-                `w-[18px] h-[18px] shrink-0 transition-colors`,
-                activeTab === 'dashboard' ? 'text-accent' : 'text-[var(--color-text-muted)]'
-              )} />
-              {!sidebarCollapsed && <span className="animate-in fade-in duration-200">Overview</span>}
+              <div className="relative shrink-0">
+                <LayoutDashboard className={cn(
+                  `w-[18px] h-[18px] transition-colors`,
+                  activeTab === 'dashboard' ? 'text-accent' : 'text-[var(--color-text-muted)]'
+                )} />
+                {sidebarCollapsed && broadcastApprovals.length > 0 && (
+                  <span className="absolute -top-1 -right-1 w-2 h-2 rounded-full bg-accent animate-pulse" />
+                )}
+              </div>
+              {!sidebarCollapsed && (
+                <div className="flex items-center justify-between flex-1 min-w-0 animate-in fade-in duration-200">
+                  <span>Overview</span>
+                  {broadcastApprovals.length > 0 && (
+                    <span className="px-1.5 py-0.2 rounded-full bg-accent/20 border border-accent/40 text-[10px] font-mono font-bold text-accent">
+                      {broadcastApprovals.length}
+                    </span>
+                  )}
+                </div>
+              )}
             </button>
 
             {/* Users */}
@@ -1715,6 +1828,123 @@ export default function AdminDashboard() {
 
               </div>
 
+              {/* ==================== NOTIFICATIONS: BROADCAST EMAIL APPROVALS (MINIMAL) ==================== */}
+              <div className="p-5 sm:p-6 rounded-xl bg-white/[0.015] border border-[var(--color-border)] space-y-3.5">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 border-b border-[var(--color-border)] pb-3.5">
+                  <div className="flex items-center gap-2.5">
+                    <Mail className="h-4 w-4 text-white/50" />
+                    <div className="flex items-center gap-2">
+                      <h3 className="text-sm font-medium text-white">Broadcast Email Approvals</h3>
+                      {broadcastApprovals.length > 0 ? (
+                        <span className="rounded px-2 py-0.5 font-mono text-[10px] bg-white/[0.04] border border-white/10 text-white/80">
+                          {broadcastApprovals.length} pending
+                        </span>
+                      ) : (
+                        <span className="rounded px-2 py-0.5 font-mono text-[10px] text-white/30">
+                          all cleared
+                        </span>
+                      )}
+                    </div>
+                  </div>
+
+                  {broadcastApprovals.length > 0 && (
+                    <div className="text-[11px] font-mono text-white/40">
+                      Audience: <span className="text-white/80">~{broadcastSubCount.toLocaleString()} subscribers</span>
+                    </div>
+                  )}
+                </div>
+
+                {broadcastApprovals.length === 0 ? (
+                  <div className="py-3.5 px-4 rounded-lg bg-white/[0.01] border border-white/[0.04] flex items-center justify-between text-xs text-white/40 font-mono">
+                    <span className="flex items-center gap-2">
+                      <Check className="h-3.5 w-3.5 text-white/30" />
+                      No pending approvals. Broadcast announcements will appear here upon publishing.
+                    </span>
+                    <span className="text-[10px] text-white/20 hidden sm:inline">Zero auto-send policy</span>
+                  </div>
+                ) : (
+                  <div className="space-y-2.5">
+                    {broadcastApprovals.map((approval) => {
+                      const isApproving = approvingBroadcastId === approval.id
+                      const isDismissing = dismissingBroadcastId === approval.id
+                      return (
+                        <div
+                          key={approval.id}
+                          className="rounded-lg border border-white/[0.06] bg-white/[0.01] p-3.5 sm:p-4 hover:border-white/10 transition-colors flex flex-col lg:flex-row lg:items-center justify-between gap-3.5"
+                        >
+                          <div className="space-y-1 min-w-0 flex-1">
+                            <div className="flex flex-wrap items-center gap-2">
+                              <span className="rounded border border-white/10 bg-white/[0.03] px-2 py-0.5 font-mono text-[10px] text-white/70 uppercase tracking-wider">
+                                {approval.type}
+                              </span>
+                              {approval.tag && (
+                                <span className="rounded border border-white/10 px-1.5 py-0.5 font-mono text-[10px] text-white/50">
+                                  {approval.tag}
+                                </span>
+                              )}
+                              <span className="text-[11px] font-mono text-white/30">
+                                {new Date(approval.createdAt).toLocaleDateString(undefined, { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })}
+                              </span>
+                            </div>
+
+                            <h4 className="text-xs font-semibold text-white truncate">
+                              {approval.title}
+                            </h4>
+
+                            {(approval.excerpt || approval.description) && (
+                              <p className="text-xs text-white/40 line-clamp-1 leading-relaxed">
+                                {approval.excerpt || approval.description}
+                              </p>
+                            )}
+
+                            {approval.error && (
+                              <p className="text-[11px] font-mono text-red-400/90 bg-red-500/5 border border-red-500/15 px-2 py-1 rounded">
+                                Error: {approval.error}
+                              </p>
+                            )}
+                          </div>
+
+                          <div className="flex items-center gap-2 shrink-0 self-end lg:self-center">
+                            <button
+                              type="button"
+                              disabled={isApproving || isDismissing}
+                              onClick={() => handleDismissBroadcast(approval)}
+                              className="h-8 px-3 rounded-lg border border-white/10 bg-transparent text-xs font-mono text-white/40 hover:text-white hover:border-white/20 transition-colors disabled:opacity-40 flex items-center gap-1.5 cursor-pointer"
+                            >
+                              {isDismissing ? (
+                                <Loader2 className="h-3 w-3 animate-spin" />
+                              ) : (
+                                <X className="h-3 w-3" />
+                              )}
+                              <span>Dismiss</span>
+                            </button>
+
+                            <button
+                              type="button"
+                              disabled={isApproving || isDismissing}
+                              onClick={() => handleApproveBroadcast(approval)}
+                              className="h-8 px-3.5 rounded-lg bg-white text-black text-xs font-medium hover:bg-white/90 transition-colors disabled:opacity-40 flex items-center gap-1.5 shadow-sm cursor-pointer min-w-[145px] justify-center"
+                            >
+                              {isApproving ? (
+                                <>
+                                  <Loader2 className="h-3 w-3 animate-spin" />
+                                  <span>Broadcasting…</span>
+                                </>
+                              ) : (
+                                <>
+                                  <Send className="h-3 w-3" />
+                                  <span>Approve &amp; Broadcast</span>
+                                </>
+                              )}
+                            </button>
+                          </div>
+                        </div>
+                      )
+                    })}
+                  </div>
+                )}
+              </div>
+
             </div>
           )}
 
@@ -1751,7 +1981,7 @@ export default function AdminDashboard() {
                     </p>
                   </div>
                   <button 
-                    onClick={() => fetchOwners()}
+                    onClick={() => fetchData(true)}
                     className="h-8 px-3 rounded-lg text-xs transition-colors border border-[var(--color-border)] hover:bg-white/[0.05] flex items-center gap-1.5 font-medium text-white"
                   >
                     <RefreshCw className={cn("w-3.5 h-3.5", isLoading ? "animate-spin" : "")} />
@@ -1962,7 +2192,7 @@ export default function AdminDashboard() {
                     </p>
                     <div className="flex items-center gap-1">
                       <button
-                        onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
+                        onClick={() => changePage(Math.max(currentPage - 1, 1))}
                         disabled={currentPage === 1}
                         className="w-7 h-7 flex items-center justify-center rounded-md bg-white/[0.02] border border-[var(--color-border)] text-[var(--color-text-muted)] hover:text-white hover:border-white/15 disabled:opacity-30 disabled:pointer-events-none transition-colors cursor-pointer"
                       >
@@ -1972,7 +2202,7 @@ export default function AdminDashboard() {
                         {currentPage} / {Math.ceil(activeOwners.length / pageSize)}
                       </span>
                       <button
-                        onClick={() => setCurrentPage(prev => Math.min(prev + 1, Math.ceil(activeOwners.length / pageSize)))}
+                        onClick={() => changePage(Math.min(currentPage + 1, Math.ceil(activeOwners.length / pageSize)))}
                         disabled={currentPage === Math.ceil(activeOwners.length / pageSize)}
                         className="w-7 h-7 flex items-center justify-center rounded-md bg-white/[0.02] border border-[var(--color-border)] text-[var(--color-text-muted)] hover:text-white hover:border-white/15 disabled:opacity-30 disabled:pointer-events-none transition-colors cursor-pointer"
                       >
@@ -2005,7 +2235,7 @@ export default function AdminDashboard() {
                   </p>
                 </div>
                 <button 
-                  onClick={() => fetchDevelopers()}
+                  onClick={() => fetchData(true)}
                   className="h-8 px-3 rounded-lg text-xs transition-colors border border-[var(--color-border)] hover:bg-white/[0.05] flex items-center gap-1.5 font-medium text-white"
                 >
                   <RefreshCw className={cn("w-3.5 h-3.5", isLoading ? "animate-spin" : "")} />
@@ -2093,7 +2323,10 @@ export default function AdminDashboard() {
                                 <div className="flex items-center gap-2">
                                   <span className="truncate max-w-[140px] font-mono text-[11px] text-white/60">{maskToken(dev.token)}</span>
                                   <button
-                                    onClick={() => handleCopyToken(dev.token!, dev.id)}
+                                    onClick={() => {
+                                      navigator.clipboard.writeText(dev.token!)
+                                      toast('Token copied to clipboard', 'success')
+                                    }}
                                     className="p-1 hover:bg-white/10 rounded transition-colors text-[var(--color-text-muted)] hover:text-white"
                                     title="Copy full token"
                                   >
@@ -2169,7 +2402,7 @@ export default function AdminDashboard() {
                   </p>
                 </div>
                 <button 
-                  onClick={() => fetchEnquiries()}
+                  onClick={() => fetchData(true)}
                   className="h-8 px-3 rounded-lg text-xs transition-colors border border-[var(--color-border)] hover:bg-white/[0.05] flex items-center gap-1.5 font-medium text-white"
                 >
                   <RefreshCw className={cn("w-3.5 h-3.5", isLoading ? "animate-spin" : "")} />
@@ -2283,7 +2516,7 @@ export default function AdminDashboard() {
                     Export CSV
                   </button>
                   <button 
-                    onClick={() => fetchSubscribers()}
+                    onClick={() => fetchData(true)}
                     className="h-8 px-3 rounded-lg text-xs transition-colors border border-[var(--color-border)] hover:bg-white/[0.05] flex items-center gap-1.5 font-medium text-white"
                   >
                     <RefreshCw className={cn("w-3.5 h-3.5", isLoading ? "animate-spin" : "")} />
@@ -2413,7 +2646,7 @@ export default function AdminDashboard() {
                     </button>
                   )}
                   <button 
-                    onClick={() => fetchAdmins()}
+                    onClick={() => fetchData(true)}
                     className="h-8 px-3 rounded-lg text-xs transition-colors border border-[var(--color-border)] hover:bg-white/[0.05] flex items-center gap-1.5 font-medium text-white"
                   >
                     <RefreshCw className={cn("w-3.5 h-3.5", isLoading ? "animate-spin" : "")} />

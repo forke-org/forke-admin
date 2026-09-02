@@ -11,6 +11,7 @@
  */
 
 import { db, client } from './db'
+import { backupRuns } from './db/schema'
 import { sql } from 'drizzle-orm'
 import { getCurrentAdmin, isAdminAuthenticated } from './admin-actions'
 import { logAudit } from './actions/audit-actions'
@@ -1697,6 +1698,15 @@ export async function generateDatabaseBackupAction(): Promise<{
     }) + ' IST'
 
     await sendDatabaseBackupNotification(downloadUrl, expiryTimeIST)
+
+    await db.insert(backupRuns).values({
+      status: 'success',
+      tier: 'daily',
+      sizeBytes: zipBuffer.length,
+      r2Key: key,
+      triggeredBy: 'manual:admin',
+      finishedAt: new Date(),
+    })
 
     await logAudit({
       category: 'db',

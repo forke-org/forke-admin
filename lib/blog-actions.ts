@@ -496,7 +496,17 @@ export async function setBlogStatus(id: string, status: 'draft' | 'published') {
   })
 
   if (isFirstPublish) {
-    await announceBlogToSubscribers({ ...row[0], publishedAt })
+    const { createBroadcastApprovalAction } = await import('./actions/broadcast-actions')
+    await createBroadcastApprovalAction({
+      type: 'blog',
+      contentId: row[0].id,
+      title: row[0].title,
+      slug: row[0].slug,
+      excerpt: row[0].excerpt,
+      coverImage: row[0].coverImage,
+      authorName: row[0].authorName,
+      readingMinutes: row[0].readingMinutes,
+    })
   }
 
   revalidatePath('/admin')
@@ -599,9 +609,19 @@ export async function bulkSetBlogStatus(ids: string[], status: 'draft' | 'publis
     target: `${ids.length} posts`,
   })
 
-  // Announce each newly-published post to subscribers (fail-soft, sequential).
+  // Create broadcast approval requests for each newly-published post (fail-soft, sequential).
+  const { createBroadcastApprovalAction } = await import('./actions/broadcast-actions')
   for (const blog of firstPublishes) {
-    await announceBlogToSubscribers({ ...blog, publishedAt: new Date() })
+    await createBroadcastApprovalAction({
+      type: 'blog',
+      contentId: blog.id,
+      title: blog.title,
+      slug: blog.slug,
+      excerpt: blog.excerpt,
+      coverImage: blog.coverImage,
+      authorName: blog.authorName,
+      readingMinutes: blog.readingMinutes,
+    })
   }
 
   revalidatePath('/admin')

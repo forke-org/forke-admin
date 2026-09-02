@@ -334,7 +334,7 @@ export default function TrackerPanel() {
   }, [series, days])
 
   return (
-    <div className="flex flex-col min-h-0 flex-grow gap-4 overflow-y-auto pr-1">
+    <div className="flex flex-col min-h-0 flex-grow gap-4 overflow-y-auto overflow-x-hidden w-full max-w-full pr-1">
       {/* Header + range selector */}
       <div className="flex items-center justify-between gap-4 shrink-0">
         <div>
@@ -407,17 +407,23 @@ export default function TrackerPanel() {
             subtitle={days === -1 ? 'Daily tracked clicks · all time' : `Daily tracked clicks · last ${days} days`}
           >
             {chartSeries.length > 0 ? (
-              <div className="relative">
-                {/* Instant custom tooltip (no native-title delay) */}
-                {hoverBar && (
-                  <div
-                    className="pointer-events-none absolute -top-1 z-10 -translate-x-1/2 -translate-y-full whitespace-nowrap rounded-md border border-[var(--color-border)] bg-[#111] px-2.5 py-1.5 text-[11px] font-mono text-white shadow-lg"
-                    style={{ left: `${Math.min(Math.max(hoverBar.x, 8), 92)}%` }}
-                  >
-                    <span className="text-accent">{hoverBar.clicks}</span> click{hoverBar.clicks === 1 ? '' : 's'}
-                    <span className="text-[var(--color-text-muted)]"> · {hoverBar.day}</span>
-                  </div>
-                )}
+              <div className="relative w-full max-w-full overflow-hidden">
+                {/* Clean inline details badge — eliminates horizontal overflow */}
+                <div className="flex items-center justify-between min-h-[26px] mb-2 px-0.5">
+                  {hoverBar ? (
+                    <div className="inline-flex items-center gap-2 px-2.5 py-1 rounded-md border border-accent/30 bg-accent/10 text-xs font-mono shadow-sm animate-in fade-in duration-150">
+                      <span className="text-accent font-semibold">{hoverBar.clicks}</span>
+                      <span className="text-white/60">click{hoverBar.clicks === 1 ? '' : 's'}</span>
+                      <span className="text-white/30">•</span>
+                      <span className="text-white/90">{hoverBar.day}</span>
+                    </div>
+                  ) : (
+                    <span className="text-[11px] font-mono text-white/35 select-none">
+                      Hover or tap any bar for date details
+                    </span>
+                  )}
+                </div>
+
                 <div className="overflow-x-auto overflow-y-hidden pb-1 -mx-1 px-1">
                   <div
                     className="flex items-end gap-[2px] sm:gap-[3px] h-32"
@@ -442,7 +448,7 @@ export default function TrackerPanel() {
                     })()}
                   </div>
                 </div>
-                <div className="flex justify-between mt-2 text-[10px] font-mono text-[var(--color-text-muted)]">
+                <div className="flex justify-between mt-2 text-[10px] font-mono text-[var(--color-text-muted)] select-none">
                   <span>{chartSeries[0]?.day}</span>
                   <span>{chartSeries[chartSeries.length - 1]?.day}</span>
                 </div>
@@ -481,7 +487,10 @@ export default function TrackerPanel() {
           </div>
 
           {/* Geo — full width: 3D globe + searchable country table */}
-          <Card title="Clicks by country" subtitle="Spin the globe — countries glow by click volume. Search & page the table on the right.">
+          <Card
+            title="Geo distribution & conversions"
+            subtitle="Spin the 3D globe — countries glow by volume. Sort by Clicks or Subscribers high to low, search, and inspect country metrics."
+          >
             <WorldHeatmap data={countries} />
           </Card>
 
