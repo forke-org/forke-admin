@@ -32,20 +32,22 @@ export function hashIp(ip?: string | null): string | null {
   return createHash('sha256').update(IP_SALT + clean).digest('hex')
 }
 
-/** Pull the client IP from standard proxy headers (Vercel / nginx / RDS proxy). */
+/** Pull the client IP from Cloudflare or standard proxy headers (nginx / reverse proxy). */
 export function getClientIp(headers: Headers): string | null {
   return (
+    headers.get('cf-connecting-ip') ||
     headers.get('x-forwarded-for') ||
     headers.get('x-real-ip') ||
     null
   )
 }
 
-/** Coarse country from edge geo headers (Vercel sets x-vercel-ip-country). No IP retained. */
+/** Coarse country from edge geo headers (Cloudflare, Nginx GeoIP2). No IP retained. */
 export function getCountry(headers: Headers): string | null {
   return (
-    headers.get('x-vercel-ip-country') ||
     headers.get('cf-ipcountry') ||
+    headers.get('x-country-code') ||
+    headers.get('x-real-ip-country') ||
     null
   )
 }

@@ -721,14 +721,16 @@ export async function getTrackerData(days = 30): Promise<{ success: boolean; dat
       ? sql`1=1`
       : sql`created_at >= now() - (${days} || ' days')::interval`
 
+    const marketingFilterSql = sql`COALESCE(landing_path, '/') NOT LIKE '/admin%' AND COALESCE(landing_path, '/') NOT LIKE '/actuator%' AND COALESCE(landing_path, '/') NOT LIKE '/wp-%' AND COALESCE(landing_path, '/') NOT IN ('/crusader-404-probe', '/env', '/a', '/earnings', '/escrow', '/submissions', '/notifications', '/tasks', '/settings')`
+
     const [statsRows, seriesRows, funnelRows, landingRows, referrerRows, countryRows, recentRows] = await Promise.all([
       db.execute(sql`
         SELECT count(*)::int AS clicks, count(DISTINCT session_id)::int AS visitors
-        FROM public.page_visits WHERE is_bot = false AND ${windowSql}
+        FROM public.page_visits WHERE is_bot = false AND ${marketingFilterSql} AND ${windowSql}
       `),
       db.execute(sql`
         SELECT to_char(date_trunc('day', created_at), 'YYYY-MM-DD') AS day, count(*)::int AS clicks
-        FROM public.page_visits WHERE is_bot = false AND ${windowSql}
+        FROM public.page_visits WHERE is_bot = false AND ${marketingFilterSql} AND ${windowSql}
         GROUP BY 1 ORDER BY 1 ASC
       `),
       db.execute(sql`
@@ -740,7 +742,7 @@ export async function getTrackerData(days = 30): Promise<{ success: boolean; dat
             END AS source,
             count(*)::int AS clicks
           FROM public.page_visits
-          WHERE is_bot = false AND ${windowSql}
+          WHERE is_bot = false AND ${marketingFilterSql} AND ${windowSql}
           GROUP BY 1
         ),
         conv_by_source AS (
@@ -761,7 +763,7 @@ export async function getTrackerData(days = 30): Promise<{ success: boolean; dat
       `),
       db.execute(sql`
         SELECT COALESCE(NULLIF(landing_path, ''), '/') AS path, count(*)::int AS clicks
-        FROM public.page_visits WHERE is_bot = false AND ${windowSql}
+        FROM public.page_visits WHERE is_bot = false AND ${marketingFilterSql} AND ${windowSql}
         GROUP BY 1 ORDER BY clicks DESC LIMIT 10
       `),
       db.execute(sql`
@@ -782,14 +784,14 @@ export async function getTrackerData(days = 30): Promise<{ success: boolean; dat
           END AS referrer,
           count(*)::int AS clicks
         FROM public.page_visits
-        WHERE is_bot = false AND ${windowSql} AND referrer IS NOT NULL AND referrer <> ''
+        WHERE is_bot = false AND ${marketingFilterSql} AND ${windowSql} AND referrer IS NOT NULL AND referrer <> ''
         GROUP BY 1 ORDER BY clicks DESC LIMIT 10
       `),
       db.execute(sql`
         WITH clicks_by_country AS (
           SELECT COALESCE(NULLIF(UPPER(country), ''), 'unknown') AS country, count(*)::int AS clicks
           FROM public.page_visits
-          WHERE is_bot = false AND ${windowSql}
+          WHERE is_bot = false AND ${marketingFilterSql} AND ${windowSql}
           GROUP BY 1
         ),
         conversions_by_country AS (
@@ -817,7 +819,7 @@ export async function getTrackerData(days = 30): Promise<{ success: boolean; dat
           country, 
           to_char(created_at, 'YYYY-MM-DD"T"HH24:MI:SS.MS"Z"') AS created_at_iso,
           EXTRACT(EPOCH FROM created_at) * 1000 AS created_at_epoch
-        FROM public.page_visits WHERE is_bot = false AND ${windowSql}
+        FROM public.page_visits WHERE is_bot = false AND ${marketingFilterSql} AND ${windowSql}
         ORDER BY created_at DESC LIMIT 25
       `),
     ])

@@ -12,8 +12,8 @@
  * Image upload seam for the blog editor.
  *
  * Primary path (production): ask /api/blog-upload/presign for a short-lived
- * presigned R2 URL, then PUT the bytes DIRECTLY to R2. This bypasses Vercel's
- * ~4.5 MB serverless request-body limit, so large files (e.g. GIFs) upload fine.
+ * presigned R2 URL, then PUT the bytes DIRECTLY to R2. This bypasses proxy
+ * request-body limits, so large files (e.g. GIFs) upload fine.
  *
  * Fallback path (local dev / no R2): the presign route returns 409, and we POST
  * the file to /api/blog-upload, which writes it to /public/uploads and returns a
@@ -56,7 +56,7 @@ function putToPresignedUrl(
   })
 }
 
-/** Legacy path: POST the file through our serverless route (≤4.5 MB on Vercel). */
+/** Legacy path: POST the file through our server route. */
 function postThroughServer(
   blob: Blob,
   filename: string,
@@ -112,7 +112,7 @@ export async function uploadImage(
   // through untouched, so this never blocks an upload — it only ever shrinks it.
   const { blob, contentType, filename: outName } = await compressImage(file, filename)
 
-  // 1) Try the direct-to-R2 presigned path (no Vercel body limit).
+  // 1) Try the direct-to-R2 presigned path.
   try {
     const res = await fetch('/api/blog-upload/presign', {
       method: 'POST',

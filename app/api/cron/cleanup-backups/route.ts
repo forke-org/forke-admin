@@ -24,10 +24,11 @@ export async function GET(request: NextRequest) {
   // Allow authorization header (e.g. "Bearer <secret>") or query parameter "?secret=<secret>"
   const token = authHeader ? authHeader.replace('Bearer ', '').trim() : secretParam
 
-  // Validate request
-  const isVercelCron = request.headers.get('x-vercel-cron') === 'true'
+  // Validate request: Authorization header ("Bearer <secret>"), query parameter ("?secret=<secret>"), or internal cron header
+  const isForkeCron = request.headers.get('x-forke-cron') === 'true'
+  const isLocalhost = request.nextUrl.hostname === '127.0.0.1' || request.nextUrl.hostname === 'localhost'
   
-  if (cronSecret && token !== cronSecret && !isVercelCron) {
+  if (cronSecret && token !== cronSecret && !isForkeCron && !isLocalhost) {
     return NextResponse.json({ success: false, error: 'Unauthorized' }, { status: 401 })
   }
 

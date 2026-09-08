@@ -14,7 +14,7 @@ import { isAdminAuthenticated } from '@/lib/admin-actions'
 import { isR2Configured, presignUpload } from '@/lib/r2'
 
 // Returns a presigned PUT URL so the browser uploads the file DIRECTLY to R2,
-// bypassing this serverless function's ~4.5 MB request-body limit on Vercel.
+// bypassing any server/proxy request-body limits.
 // The request body here is tiny JSON metadata — never the file itself.
 //
 // When R2 isn't configured (local dev → disk fallback), this returns 409 and the

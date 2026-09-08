@@ -100,6 +100,7 @@ export async function adminLogin(formData: FormData) {
         secure: process.env.NODE_ENV === 'production',
         sameSite: 'lax',
         path: '/',
+        domain: process.env.NODE_ENV === 'production' ? '.forke.space' : undefined,
         maxAge: 60 * 60 * 24 // 24 hours
       })
     } catch (e) {
@@ -137,6 +138,13 @@ export async function adminLogout() {
     console.error('Failed to log admin logout:', err)
   }
   const cookieStore = await cookies()
+  const domain = process.env.NODE_ENV === 'production' ? '.forke.space' : undefined
+  cookieStore.set('admin_token', '', {
+    path: '/',
+    domain,
+    maxAge: 0,
+    expires: new Date(0),
+  })
   cookieStore.delete('admin_token')
   return { success: true }
 }

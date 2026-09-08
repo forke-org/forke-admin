@@ -220,8 +220,8 @@ export async function uploadToR2(
 
 /**
  * Generate a short-lived presigned PUT URL so the browser can upload a file
- * DIRECTLY to R2, bypassing the server entirely. This sidesteps Vercel's
- * ~4.5 MB serverless request-body limit (which a multi-MB GIF blows past).
+ * DIRECTLY to R2, bypassing the server entirely. This sidesteps any server/proxy
+ * request-body limits (which a multi-MB GIF blows past).
  *
  * The signed URL is bound to the exact key and Content-Type, so the client
  * must PUT with the same `Content-Type` header it declared here.

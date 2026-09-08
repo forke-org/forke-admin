@@ -132,7 +132,7 @@ function isUploadedBlogUrl(url: unknown): boolean {
     return true
   }
   
-  // Direct Vercel / Cloudflare default dev domain check
+  // Direct Cloudflare R2 default dev domain check
   if (url.includes('.r2.dev/blogs/')) return true
   
   return false

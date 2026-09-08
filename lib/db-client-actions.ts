@@ -708,7 +708,7 @@ export async function getDatabaseOverview() {
     // Accurate VM uptime calculation:
     // 1. If Go backend on OCI gave real Linux /proc/uptime, use it.
     // 2. Otherwise, use PostgreSQL uptime on the OCI VM (since PG runs on the same VM).
-    // 3. Prevent Vercel serverless sandbox os.uptime() (0m) from showing as VM uptime.
+    // 3. Fall back to local host os.uptime().
     const effectiveUptime =
       ociTelemetry?.systemUptimeSeconds && ociTelemetry.systemUptimeSeconds > 0
         ? ociTelemetry.systemUptimeSeconds
