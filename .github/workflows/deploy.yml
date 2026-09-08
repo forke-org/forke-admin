@@ -1,0 +1,51 @@
+name: Build, Verify & Deploy
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+  workflow_dispatch:
+
+jobs:
+  verify-build:
+    name: Build & Error Verification
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js 22
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: 'npm'
+
+      - name: Install Dependencies
+        run: npm ci
+
+      - name: Run Build Verification
+        run: npm run build
+        env:
+          NEXT_TELEMETRY_DISABLED: '1'
+          NODE_OPTIONS: '--max-old-space-size=4096'
+          NEXT_PUBLIC_APP_URL: 'https://forke.space'
+          NEXT_PUBLIC_DASHBOARD_URL: 'https://dashboard.forke.space'
+          NEXT_PUBLIC_ADMIN_URL: 'https://admin.forke.space'
+
+  deploy:
+    name: Deploy to Oracle Cloud
+    needs: verify-build
+    if: github.ref == 'refs/heads/main' && (github.event_name == 'push' || github.event_name == 'workflow_dispatch')
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Trigger Zero-Downtime Deployment on Oracle VM
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.ORACLE_HOST }}
+          username: ${{ secrets.ORACLE_USER }}
+          key: ${{ secrets.ORACLE_SSH_KEY }}
+          script: |
+            /opt/forke/scripts/deploy-app.sh forke-admin
