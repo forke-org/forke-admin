@@ -23,6 +23,7 @@ export type Attribution = {
   referrer?: string
   landingPage?: string
   firstSeenAt?: string
+  country?: string
   signupRole?: 'developer' | 'owner'
   sessionId?: string // forke_session cookie — joins this signup back to the click that produced it
 }
@@ -123,6 +124,7 @@ export async function readAttributionCookie(): Promise<Attribution> {
       referrer: typeof parsed.referrer === 'string' ? parsed.referrer.slice(0, 255) : undefined,
       landingPage: typeof parsed.landingPage === 'string' ? parsed.landingPage.slice(0, 255) : undefined,
       firstSeenAt: typeof parsed.firstSeenAt === 'string' ? parsed.firstSeenAt : undefined,
+      country: typeof parsed.country === 'string' && /^[A-Z]{2}$/i.test(parsed.country.trim()) ? parsed.country.trim().toUpperCase() : undefined,
     }
   } catch {
     return { source: 'direct' }
