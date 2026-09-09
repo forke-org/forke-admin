@@ -451,6 +451,37 @@ export async function updateBlog(id: string, input: BlogInput) {
   // deleted inline image, or a discarded upload).
   await sweepOrphanedImages()
 
+  // Synchronize any existing broadcast approval record with updated blog fields
+  const [updatedBlog] = await db
+    .select({
+      id: blogs.id,
+      title: blogs.title,
+      slug: blogs.slug,
+      excerpt: blogs.excerpt,
+      coverImage: blogs.coverImage,
+      authorName: blogs.authorName,
+      readingMinutes: blogs.readingMinutes,
+      status: blogs.status,
+    })
+    .from(blogs)
+    .where(eq(blogs.id, id))
+    .limit(1)
+
+  if (updatedBlog) {
+    const { syncBroadcastApprovalOnUpdateAction } = await import('./actions/broadcast-actions')
+    await syncBroadcastApprovalOnUpdateAction({
+      type: 'blog',
+      contentId: updatedBlog.id,
+      title: updatedBlog.title,
+      slug: updatedBlog.slug,
+      excerpt: updatedBlog.excerpt,
+      coverImage: updatedBlog.coverImage,
+      authorName: updatedBlog.authorName,
+      readingMinutes: updatedBlog.readingMinutes,
+      isPublished: updatedBlog.status === 'published',
+    }).catch((err) => console.error('Failed to sync broadcast approval on blog save:', err))
+  }
+
   await logAudit({ category: 'admin', action: 'blog.updated', target: title })
   revalidatePath('/admin')
   return { success: true as const, slug }
@@ -474,9 +505,6 @@ export async function setBlogStatus(id: string, status: 'draft' | 'published') {
     .limit(1)
   if (row.length === 0) return { success: false as const, error: 'Post not found' }
 
-  // First-publish = going live while it has never been published before. Only
-  // then do we announce it to subscribers — re-publishing a post never re-sends.
-  const isFirstPublish = status === 'published' && row[0].publishedAt == null
   const publishedAt = status === 'published' ? row[0].publishedAt ?? new Date() : row[0].publishedAt
 
   await db
@@ -495,19 +523,19 @@ export async function setBlogStatus(id: string, status: 'draft' | 'published') {
     target: row[0].title,
   })
 
-  if (isFirstPublish) {
-    const { createBroadcastApprovalAction } = await import('./actions/broadcast-actions')
-    await createBroadcastApprovalAction({
-      type: 'blog',
-      contentId: row[0].id,
-      title: row[0].title,
-      slug: row[0].slug,
-      excerpt: row[0].excerpt,
-      coverImage: row[0].coverImage,
-      authorName: row[0].authorName,
-      readingMinutes: row[0].readingMinutes,
-    })
-  }
+  // Synchronize broadcast approval status (transition between pending and draft)
+  const { syncBroadcastApprovalOnUpdateAction } = await import('./actions/broadcast-actions')
+  await syncBroadcastApprovalOnUpdateAction({
+    type: 'blog',
+    contentId: row[0].id,
+    title: row[0].title,
+    slug: row[0].slug,
+    excerpt: row[0].excerpt,
+    coverImage: row[0].coverImage,
+    authorName: row[0].authorName,
+    readingMinutes: row[0].readingMinutes,
+    isPublished: status === 'published',
+  }).catch((err) => console.error('Failed to sync broadcast approval on blog status toggle:', err))
 
   revalidatePath('/admin')
   return { success: true as const }
@@ -521,6 +549,9 @@ export async function deleteBlog(id: string) {
     .where(eq(blogs.id, id))
     .limit(1)
   if (row.length === 0) return { success: false as const, error: 'Post not found' }
+
+  const { deleteBroadcastApprovalByContentIdAction } = await import('./actions/broadcast-actions')
+  await deleteBroadcastApprovalByContentIdAction(id)
 
   await db.delete(blogs).where(eq(blogs.id, id))
   // Collect images from both JSON and HTML for maximum coverage.
@@ -551,6 +582,9 @@ export async function bulkDeleteBlogs(ids: string[]) {
     .from(blogs)
     .where(inArray(blogs.id, ids))
 
+  const { deleteBroadcastApprovalByContentIdAction } = await import('./actions/broadcast-actions')
+  await Promise.all(ids.map((id) => deleteBroadcastApprovalByContentIdAction(id)))
+
   await db.delete(blogs).where(inArray(blogs.id, ids))
 
   // Collect images from both JSON and HTML for maximum coverage, then delete.
@@ -573,24 +607,6 @@ export async function bulkSetBlogStatus(ids: string[], status: 'draft' | 'publis
   await ensureAdmin()
   if (ids.length === 0) return { success: true as const, count: 0 }
 
-  // Snapshot which of these will be first-time publishes (never published before),
-  // grabbing the fields the announcement email needs, before we mutate the rows.
-  const firstPublishes =
-    status === 'published'
-      ? await db
-          .select({
-            id: blogs.id,
-            title: blogs.title,
-            slug: blogs.slug,
-            excerpt: blogs.excerpt,
-            coverImage: blogs.coverImage,
-            authorName: blogs.authorName,
-            readingMinutes: blogs.readingMinutes,
-          })
-          .from(blogs)
-          .where(and(inArray(blogs.id, ids), sql`${blogs.publishedAt} IS NULL`))
-      : []
-
   await db
     .update(blogs)
     .set({
@@ -609,10 +625,23 @@ export async function bulkSetBlogStatus(ids: string[], status: 'draft' | 'publis
     target: `${ids.length} posts`,
   })
 
-  // Create broadcast approval requests for each newly-published post (fail-soft, sequential).
-  const { createBroadcastApprovalAction } = await import('./actions/broadcast-actions')
-  for (const blog of firstPublishes) {
-    await createBroadcastApprovalAction({
+  // Synchronize broadcast approvals for all updated posts
+  const { syncBroadcastApprovalOnUpdateAction } = await import('./actions/broadcast-actions')
+  const allUpdated = await db
+    .select({
+      id: blogs.id,
+      title: blogs.title,
+      slug: blogs.slug,
+      excerpt: blogs.excerpt,
+      coverImage: blogs.coverImage,
+      authorName: blogs.authorName,
+      readingMinutes: blogs.readingMinutes,
+    })
+    .from(blogs)
+    .where(inArray(blogs.id, ids))
+
+  for (const blog of allUpdated) {
+    await syncBroadcastApprovalOnUpdateAction({
       type: 'blog',
       contentId: blog.id,
       title: blog.title,
@@ -621,7 +650,8 @@ export async function bulkSetBlogStatus(ids: string[], status: 'draft' | 'publis
       coverImage: blog.coverImage,
       authorName: blog.authorName,
       readingMinutes: blog.readingMinutes,
-    })
+      isPublished: status === 'published',
+    }).catch((err) => console.error('Failed to sync broadcast approval in bulk blog status:', err))
   }
 
   revalidatePath('/admin')

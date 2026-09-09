@@ -35,7 +35,7 @@ export interface BroadcastApprovalItem {
   readingMinutes?: number | null
   improvements?: string[] | null
   fixes?: string[] | null
-  status: 'pending' | 'approved' | 'dismissed' | 'failed'
+  status: 'pending' | 'approved' | 'dismissed' | 'failed' | 'draft'
   broadcastId?: string | null
   sentCount?: number | null
   error?: string | null
@@ -198,6 +198,131 @@ export async function createBroadcastApprovalAction(data: {
   } catch (err) {
     console.error('Failed to create broadcast approval:', err)
     return { success: false }
+  }
+}
+
+/**
+ * Synchronize an existing broadcast approval record when the underlying content (changelog or blog)
+ * is updated, drafted/made private, or re-published.
+ */
+export async function syncBroadcastApprovalOnUpdateAction(data: {
+  type: 'blog' | 'changelog'
+  contentId: string
+  title: string
+  slug: string
+  tag?: string | null
+  excerpt?: string | null
+  description?: string | null
+  coverImage?: string | null
+  mediaUrl?: string | null
+  mediaType?: 'none' | 'image' | 'video'
+  authorName?: string | null
+  readingMinutes?: number | null
+  improvements?: string[] | null
+  fixes?: string[] | null
+  isPublished: boolean
+}): Promise<{ success: boolean; status?: string }> {
+  try {
+    await ensureAdmin()
+    await ensureBroadcastApprovalsTable()
+
+    // Find any existing approval record for this content
+    const existing = await db
+      .select({ id: broadcastApprovals.id, status: broadcastApprovals.status })
+      .from(broadcastApprovals)
+      .where(eq(broadcastApprovals.contentId, data.contentId))
+      .limit(1)
+
+    if (existing.length > 0) {
+      const record = existing[0]
+
+      // If the email was already broadcasted and sent to subscribers, don't revert or change its sent status
+      if (record.status === 'approved') {
+        return { success: true, status: 'approved' }
+      }
+
+      // If content is currently private / draft, keep status as 'draft' so it is paused from the pending queue
+      const targetStatus = data.isPublished ? 'pending' : 'draft'
+
+      await db
+        .update(broadcastApprovals)
+        .set({
+          title: data.title.trim(),
+          slug: data.slug.trim(),
+          tag: data.tag?.trim() || null,
+          excerpt: data.excerpt?.trim() || null,
+          description: data.description?.trim() || null,
+          coverImage: data.coverImage?.trim() || null,
+          mediaUrl: data.mediaUrl?.trim() || null,
+          mediaType: data.mediaType || 'none',
+          authorName: data.authorName?.trim() || null,
+          readingMinutes: data.readingMinutes || null,
+          improvements: data.improvements?.filter(Boolean) || [],
+          fixes: data.fixes?.filter(Boolean) || [],
+          status: targetStatus,
+          updatedAt: new Date(),
+        })
+        .where(eq(broadcastApprovals.id, record.id))
+
+      revalidatePath('/admin')
+      return { success: true, status: targetStatus }
+    } else {
+      // No existing record. If it is now published, create a pending approval request.
+      if (data.isPublished) {
+        return await createBroadcastApprovalAction(data)
+      }
+      return { success: true, status: 'draft' }
+    }
+  } catch (err) {
+    console.error('Failed to sync broadcast approval on update:', err)
+    return { success: false }
+  }
+}
+
+/**
+ * Update the publish state in broadcast approvals (e.g. when an item is drafted or re-published).
+ */
+export async function setBroadcastApprovalPublishStateAction(params: {
+  contentId: string
+  isPublished: boolean
+}): Promise<{ success: boolean }> {
+  try {
+    await ensureAdmin()
+    await ensureBroadcastApprovalsTable()
+
+    const existing = await db
+      .select({ id: broadcastApprovals.id, status: broadcastApprovals.status })
+      .from(broadcastApprovals)
+      .where(eq(broadcastApprovals.contentId, params.contentId))
+      .limit(1)
+
+    if (existing.length > 0 && existing[0].status !== 'approved') {
+      const nextStatus = params.isPublished ? 'pending' : 'draft'
+      await db
+        .update(broadcastApprovals)
+        .set({
+          status: nextStatus,
+          updatedAt: new Date(),
+        })
+        .where(eq(broadcastApprovals.id, existing[0].id))
+
+      revalidatePath('/admin')
+    }
+    return { success: true }
+  } catch (err) {
+    console.error('Failed to set broadcast approval publish state:', err)
+    return { success: false }
+  }
+}
+
+/**
+ * Remove any broadcast approval associated with a deleted item.
+ */
+export async function deleteBroadcastApprovalByContentIdAction(contentId: string): Promise<void> {
+  try {
+    await db.delete(broadcastApprovals).where(eq(broadcastApprovals.contentId, contentId))
+  } catch (err) {
+    console.error('Failed to delete broadcast approval by contentId:', err)
   }
 }
 
@@ -402,10 +527,13 @@ export async function getBroadcastEmailPreviewHtmlAction(params: {
   authorName?: string | null
   readingMinutes?: number | null
   coverImage?: string | null
-}): Promise<{ success: boolean; html: string; subject: string; error?: string }> {
+  isPublished?: boolean
+}): Promise<{ success: boolean; html: string; subject: string; isPublished?: boolean; error?: string }> {
   try {
     await ensureAdmin()
     const { buildBlogEmail, buildChangelogEmail } = await import('@/lib/email')
+    const isDraft = params.isPublished === false
+    const subjectPrefix = isDraft ? '[Draft Preview] ' : ''
 
     if (params.type === 'blog') {
       const baseUrl = 'https://www.forke.space'
@@ -418,11 +546,13 @@ export async function getBroadcastEmailPreviewHtmlAction(params: {
         authorName: params.authorName || 'The Forke Team',
         readingMinutes: params.readingMinutes || 3,
         unsubscribe: true,
+        isDraft,
       })
       return {
         success: true,
         html,
-        subject: `New on Forke: ${params.title}`,
+        subject: `${subjectPrefix}New on Forke: ${params.title}`,
+        isPublished: params.isPublished,
       }
     } else {
       const changelogUrl = params.slug
@@ -440,11 +570,13 @@ export async function getBroadcastEmailPreviewHtmlAction(params: {
         mediaType: params.mediaType || 'none',
         url: changelogUrl,
         unsubscribe: true,
+        isDraft,
       })
       return {
         success: true,
         html,
-        subject: `New in Forke: ${params.title}`,
+        subject: `${subjectPrefix}New in Forke: ${params.title}`,
+        isPublished: params.isPublished,
       }
     }
   } catch (err: any) {

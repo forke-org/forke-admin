@@ -232,10 +232,12 @@ function ChangelogListView({
   const [emailPreviewSubject, setEmailPreviewSubject] = useState('')
   const [emailPreviewHtml, setEmailPreviewHtml] = useState('')
   const [emailPreviewLoading, setEmailPreviewLoading] = useState(false)
+  const [emailPreviewIsPublished, setEmailPreviewIsPublished] = useState(true)
 
   const handlePreviewEmail = async (row: ChangelogRow) => {
     setEmailPreviewOpen(true)
     setEmailPreviewLoading(true)
+    setEmailPreviewIsPublished(row.isPublished)
     try {
       const res = await getBroadcastEmailPreviewHtmlAction({
         type: 'changelog',
@@ -247,6 +249,7 @@ function ChangelogListView({
         fixes: row.fixes,
         mediaUrl: row.mediaUrl,
         mediaType: row.mediaType,
+        isPublished: row.isPublished,
       })
       if (res.success) {
         setEmailPreviewHtml(res.html)
@@ -670,6 +673,7 @@ function ChangelogListView({
         subject={emailPreviewSubject}
         html={emailPreviewHtml}
         loading={emailPreviewLoading}
+        isPublished={emailPreviewIsPublished}
       />
 
       {confirm && <ConfirmModal state={confirm} onClose={() => setConfirm(null)} />}
@@ -721,6 +725,7 @@ function ChangelogEditorView({ id, onBack, onSaved }: EditorProps) {
         fixes: fixes.filter((s) => s.trim()),
         mediaUrl: mediaUrl.trim() || null,
         mediaType: (mediaType as any) || 'none',
+        isPublished,
       })
       if (res.success) {
         setEmailPreviewHtml(res.html)
@@ -1358,6 +1363,7 @@ function ChangelogEditorView({ id, onBack, onSaved }: EditorProps) {
       subject={emailPreviewSubject}
       html={emailPreviewHtml}
       loading={emailPreviewLoading}
+      isPublished={isPublished}
     />
 
     {/* Fullscreen Lightbox Modal */}

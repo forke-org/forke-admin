@@ -17,6 +17,8 @@ interface EmailSneakPeekModalProps {
   audienceCount?: number
   onApprove?: () => void
   approving?: boolean
+  isPublished?: boolean
+  statusLabel?: string
 }
 
 export default function EmailSneakPeekModal({
@@ -27,6 +29,8 @@ export default function EmailSneakPeekModal({
   loading = false,
   onApprove,
   approving = false,
+  isPublished,
+  statusLabel,
 }: EmailSneakPeekModalProps) {
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -148,27 +152,54 @@ export default function EmailSneakPeekModal({
         className="relative flex flex-col w-full max-w-3xl max-h-[94vh] rounded-xl sm:rounded-2xl border border-white/10 bg-[#08080a] shadow-[0_24px_80px_rgba(0,0,0,0.8)] overflow-hidden"
         onClick={(e) => e.stopPropagation()}
       >
-        {/* Top Window Bar: Subject + Actions (Uniform Height & Style) */}
+        {/* Top Window Bar: Subject + Status Badge + Actions */}
         <div className="shrink-0 flex items-center justify-between px-3.5 sm:px-6 py-2.5 sm:py-3 border-b border-white/[0.08] bg-white/[0.02] gap-2">
-          <div className="min-w-0 flex-1">
+          <div className="min-w-0 flex-1 flex items-center gap-2.5">
             <h3 className="text-xs sm:text-sm font-semibold text-white truncate tracking-tight">
               {subject || 'Email Preview'}
             </h3>
+            {isPublished !== undefined && (
+              <span
+                className={`shrink-0 inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[10px] font-mono font-medium tracking-wide uppercase border ${
+                  isPublished
+                    ? 'bg-emerald-500/10 border-emerald-500/25 text-emerald-400'
+                    : 'bg-amber-500/10 border-amber-500/25 text-amber-400'
+                }`}
+              >
+                <span
+                  className={`w-1.5 h-1.5 rounded-full ${
+                    isPublished ? 'bg-emerald-400' : 'bg-amber-400'
+                  }`}
+                />
+                {statusLabel || (isPublished ? 'Published' : 'Private Draft')}
+              </span>
+            )}
           </div>
 
           <div className="flex items-center gap-2 shrink-0">
             {onApprove && (
               <button
                 type="button"
-                disabled={approving || loading}
+                disabled={approving || loading || isPublished === false}
                 onClick={onApprove}
-                className="h-8 min-h-[32px] max-h-[32px] px-3.5 rounded-lg border border-white bg-white text-black text-xs font-medium hover:bg-white/90 hover:border-white/90 transition-colors disabled:opacity-40 flex items-center gap-1.5 shadow-sm cursor-pointer shrink-0 box-border leading-none"
+                title={
+                  isPublished === false
+                    ? 'Cannot broadcast a private draft. Publish this item first.'
+                    : 'Approve and dispatch email broadcast'
+                }
+                className={`h-8 min-h-[32px] max-h-[32px] px-3.5 rounded-lg border text-xs font-medium transition-colors flex items-center gap-1.5 shadow-sm shrink-0 box-border leading-none ${
+                  isPublished === false
+                    ? 'border-white/10 bg-white/5 text-white/30 cursor-not-allowed'
+                    : 'border-white bg-white text-black hover:bg-white/90 hover:border-white/90 cursor-pointer disabled:opacity-40'
+                }`}
               >
                 {approving ? (
                   <>
                     <Loader2 className="h-3.5 w-3.5 animate-spin shrink-0" />
                     <span className="hidden sm:inline leading-none">Broadcasting…</span>
                   </>
+                ) : isPublished === false ? (
+                  <span className="leading-none text-[11px]">Draft (Cannot Send)</span>
                 ) : (
                   <>
                     <Send className="h-3.5 w-3.5 shrink-0" />

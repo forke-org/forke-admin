@@ -162,8 +162,19 @@ function emailShell(opts: {
   maxWidth?: number
   /** Recent blogs to display at the bottom of the email. */
   recentPosts?: BlogEmailRecent[]
+  /** When true, renders a subtle warning bar at the top indicating private draft status. */
+  draftNotice?: boolean
 }): string {
   const cardW = opts.maxWidth ?? 600
+  const draftRow = opts.draftNotice
+    ? `<tr><td align="center" style="background:rgba(245,158,11,0.08);border-bottom:1px solid rgba(245,158,11,0.25);padding:10px 16px;">
+         <p style="margin:0;font-family:${BRAND.mono};font-size:10.5px;font-weight:600;letter-spacing:0.14em;text-transform:uppercase;color:#F59E0B;line-height:1.4;">
+           <span style="display:inline-block;width:6px;height:6px;border-radius:50%;background:#F59E0B;vertical-align:middle;margin-right:6px;"></span>
+           Draft Preview &middot; Content is private (not published)
+         </p>
+       </td></tr>`
+    : ''
+
   const bannerRow = opts.banner
     ? `<tr><td align="center" style="padding:0;line-height:0;font-size:0;">
          <img src="${BRAND.baseUrl}/forke-assets/email-banners/${opts.banner}" alt="Forke" width="${cardW}" style="width:100%;max-width:${cardW}px;height:auto;display:block;border-bottom:1px solid ${BRAND.hairlineSoft};" />
@@ -247,6 +258,7 @@ function emailShell(opts: {
               </td>
             </tr>
 
+            ${draftRow}
             ${bannerRow}
 
             <!-- Body -->
@@ -577,6 +589,8 @@ export interface BlogEmailData {
    * send time. Off for the preview page / any 1:1 use.
    */
   unsubscribe?: boolean
+  /** When true, flags this email as a preview of a private/draft post. */
+  isDraft?: boolean
 }
 
 function formatBlogDate(value: Date | string | null | undefined): string | null {
@@ -710,8 +724,9 @@ export function buildBlogEmail(data: BlogEmailData): string {
   return emailShell({
     maxWidth: data.maxWidth,
     title: data.title,
-    preheader: data.excerpt?.trim() || `New on the Forke blog: ${data.title}`,
+    preheader: (data.isDraft ? '[DRAFT PREVIEW] ' : '') + (data.excerpt?.trim() || `New on the Forke blog: ${data.title}`),
     footerLabel: 'New Blog Post',
+    draftNotice: data.isDraft,
     headStyle,
     footerExtra,
     fullBleedBody: true,
@@ -747,6 +762,8 @@ export interface ChangelogEmailData {
   unsubscribe?: boolean
   maxWidth?: number
   recentPosts?: BlogEmailRecent[]
+  /** When true, flags this email as a preview of a private/draft changelog. */
+  isDraft?: boolean
 }
 
 /**
@@ -827,8 +844,9 @@ export function buildChangelogEmail(data: ChangelogEmailData): string {
     maxWidth: data.maxWidth,
     title: data.title,
     banner: 'main-banner.png',
-    preheader: (data.description || '').replace(/\s+/g, ' ').trim().slice(0, 140) || `New in Forke Changelog: ${data.title}`,
+    preheader: (data.isDraft ? '[DRAFT PREVIEW] ' : '') + ((data.description || '').replace(/\s+/g, ' ').trim().slice(0, 140) || `New in Forke Changelog: ${data.title}`),
     footerLabel: 'Forke Release Notes',
+    draftNotice: data.isDraft,
     footerExtra,
     fullBleedBody: true,
     recentPosts: data.recentPosts,

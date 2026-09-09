@@ -498,6 +498,7 @@ export default function AdminDashboard() {
     setPreviewApprovalItem(item)
     setPreviewModalOpen(true)
     setPreviewLoading(true)
+    const isItemPublished = item.status !== 'draft'
     try {
       const res = await getBroadcastEmailPreviewHtmlAction({
         type: item.type,
@@ -513,6 +514,7 @@ export default function AdminDashboard() {
         authorName: item.authorName,
         readingMinutes: item.readingMinutes,
         coverImage: item.coverImage,
+        isPublished: isItemPublished,
       })
       if (res.success) {
         setPreviewHtml(res.html)
@@ -2021,6 +2023,7 @@ export default function AdminDashboard() {
                 approving={
                   previewApprovalItem ? approvingBroadcastId === previewApprovalItem.id : false
                 }
+                isPublished={previewApprovalItem ? previewApprovalItem.status !== 'draft' : true}
               />
 
             </div>

@@ -37,6 +37,8 @@ import { Button } from '@/components/ui/Button'
 import { Select } from '@/components/ui/Select'
 import { toast } from '@/components/shared/Toast'
 import ConfirmModal, { type ConfirmOptions } from '@/components/shared/ConfirmModal'
+import EmailSneakPeekModal from '@/components/shared/EmailSneakPeekModal'
+import { getBroadcastEmailPreviewHtmlAction } from '@/lib/actions/broadcast-actions'
 import { TableLoadingRows } from '@/components/ui/Skeleton'
 import { cn } from '@/lib/utils/cn'
 import {
@@ -44,6 +46,7 @@ import {
   ArrowLeft,
   Trash2,
   Pencil,
+  Eye,
   FileText,
   Clock,
   Globe,
@@ -262,6 +265,40 @@ function BlogList({
         }
       },
     })
+  }
+
+  const [emailPreviewOpen, setEmailPreviewOpen] = useState(false)
+  const [emailPreviewSubject, setEmailPreviewSubject] = useState('')
+  const [emailPreviewHtml, setEmailPreviewHtml] = useState('')
+  const [emailPreviewLoading, setEmailPreviewLoading] = useState(false)
+  const [emailPreviewIsPublished, setEmailPreviewIsPublished] = useState(true)
+
+  const handlePreviewEmail = async (row: BlogRow) => {
+    setEmailPreviewOpen(true)
+    setEmailPreviewLoading(true)
+    setEmailPreviewIsPublished(row.status === 'published')
+    try {
+      const res = await getBroadcastEmailPreviewHtmlAction({
+        type: 'blog',
+        title: row.title,
+        slug: row.slug,
+        excerpt: row.excerpt || undefined,
+        coverImage: row.coverImage || undefined,
+        authorName: row.authorName || undefined,
+        readingMinutes: row.readingMinutes || undefined,
+        isPublished: row.status === 'published',
+      })
+      if (res.success) {
+        setEmailPreviewHtml(res.html)
+        setEmailPreviewSubject(res.subject)
+      } else {
+        toast(res.error || 'Failed to generate email preview.', 'error')
+      }
+    } catch {
+      toast('Failed to load email preview.', 'error')
+    } finally {
+      setEmailPreviewLoading(false)
+    }
   }
 
   const togglePublish = async (row: BlogRow) => {
@@ -487,6 +524,13 @@ function BlogList({
                   <td className="px-3 py-2.5">
                     <div className="flex items-center justify-end gap-1">
                       <button
+                        onClick={() => handlePreviewEmail(row)}
+                        title="Preview Announcement Email"
+                        className="flex h-8 w-8 items-center justify-center rounded-md text-[var(--color-text-muted)] transition-colors hover:bg-white/[0.06] hover:text-white"
+                      >
+                        <Eye className="h-3.5 w-3.5" />
+                      </button>
+                      <button
                         onClick={() => togglePublish(row)}
                         title={row.status === 'published' ? 'Unpublish' : 'Publish'}
                         className="flex h-8 w-8 items-center justify-center rounded-md text-[var(--color-text-muted)] transition-colors hover:bg-white/[0.06] hover:text-white"
@@ -561,6 +605,15 @@ function BlogList({
       )}
 
       <ConfirmModal state={confirm} onClose={() => setConfirm(null)} />
+
+      <EmailSneakPeekModal
+        isOpen={emailPreviewOpen}
+        onClose={() => setEmailPreviewOpen(false)}
+        subject={emailPreviewSubject}
+        html={emailPreviewHtml}
+        loading={emailPreviewLoading}
+        isPublished={emailPreviewIsPublished}
+      />
     </div>
   )
 }
@@ -811,6 +864,48 @@ function BlogEditorView({ id, onBack, onSaved }: { id: string | null; onBack: ()
     if (savedId) toast('Changes saved.', 'success')
   }
 
+  const [emailPreviewOpen, setEmailPreviewOpen] = useState(false)
+  const [emailPreviewSubject, setEmailPreviewSubject] = useState('')
+  const [emailPreviewHtml, setEmailPreviewHtml] = useState('')
+  const [emailPreviewLoading, setEmailPreviewLoading] = useState(false)
+
+  const handleOpenEmailPreview = async () => {
+    setEmailPreviewOpen(true)
+    setEmailPreviewLoading(true)
+    try {
+      const v = valueRef.current
+      const currentTitle = v?.title?.trim() || initial?.title?.trim() || 'Untitled Post'
+      const currentExcerpt = v ? deriveExcerpt(v.contentHtml) : ''
+      const currentCover = v ? v.coverImage : initial?.coverImage
+      const currentAuthor = v ? v.authorName : initial?.authorName
+      const derivedSlug = currentTitle
+        .toLowerCase()
+        .trim()
+        .replace(/[^a-z0-9]+/g, '-')
+        .replace(/^-+|-+$/g, '')
+
+      const res = await getBroadcastEmailPreviewHtmlAction({
+        type: 'blog',
+        title: currentTitle,
+        slug: derivedSlug,
+        excerpt: currentExcerpt || undefined,
+        coverImage: currentCover || undefined,
+        authorName: currentAuthor || undefined,
+        isPublished: status === 'published',
+      })
+      if (res.success) {
+        setEmailPreviewHtml(res.html)
+        setEmailPreviewSubject(res.subject)
+      } else {
+        toast(res.error || 'Failed to generate email preview.', 'error')
+      }
+    } catch {
+      toast('Failed to load email preview.', 'error')
+    } finally {
+      setEmailPreviewLoading(false)
+    }
+  }
+
   return (
     <div className="flex flex-grow flex-col overflow-hidden">
       {/* Toolbar */}
@@ -835,6 +930,16 @@ function BlogEditorView({ id, onBack, onSaved }: { id: string | null; onBack: ()
             </span>
           )}
           <StatusBadge status={status} />
+
+          <button
+            type="button"
+            onClick={handleOpenEmailPreview}
+            title="Preview how this blog announcement email will look"
+            className="inline-flex h-9 items-center justify-center gap-1.5 rounded-lg border border-[var(--color-border)] px-3 text-xs font-medium text-white transition-colors hover:bg-white/[0.05]"
+          >
+            <Eye className="h-3.5 w-3.5 text-white/70" />
+            <span className="hidden sm:inline">Preview Email</span>
+          </button>
 
           {/* Secondary "Save draft" button — only meaningful for unpublished
               posts (for a published post, the primary Save handles it). */}
@@ -899,6 +1004,15 @@ function BlogEditorView({ id, onBack, onSaved }: { id: string | null; onBack: ()
       </div>
 
       <ConfirmModal state={confirm} onClose={() => setConfirm(null)} />
+
+      <EmailSneakPeekModal
+        isOpen={emailPreviewOpen}
+        onClose={() => setEmailPreviewOpen(false)}
+        subject={emailPreviewSubject}
+        html={emailPreviewHtml}
+        loading={emailPreviewLoading}
+        isPublished={status === 'published'}
+      />
     </div>
   )
 }

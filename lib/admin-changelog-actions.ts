@@ -173,21 +173,20 @@ export async function updateChangelogAction(id: string, input: Partial<Changelog
       target: `${updated.title} (${updated.slug})`,
     })
 
-    if (input.isPublished && !existing?.isPublished) {
-      const { createBroadcastApprovalAction } = await import('./actions/broadcast-actions')
-      await createBroadcastApprovalAction({
-        type: 'changelog',
-        contentId: updated.id,
-        title: updated.title,
-        slug: updated.slug,
-        tag: updated.tag,
-        description: updated.description,
-        improvements: updated.improvements || [],
-        fixes: updated.fixes || [],
-        mediaUrl: updated.mediaUrl,
-        mediaType: updated.mediaType as any,
-      })
-    }
+    const { syncBroadcastApprovalOnUpdateAction } = await import('./actions/broadcast-actions')
+    await syncBroadcastApprovalOnUpdateAction({
+      type: 'changelog',
+      contentId: updated.id,
+      title: updated.title,
+      slug: updated.slug,
+      tag: updated.tag,
+      description: updated.description,
+      improvements: (updated.improvements as string[]) || [],
+      fixes: (updated.fixes as string[]) || [],
+      mediaUrl: updated.mediaUrl,
+      mediaType: updated.mediaType as any,
+      isPublished: updated.isPublished,
+    }).catch((err) => console.error('Failed to sync broadcast approval on changelog update:', err))
 
     revalidatePath('/changelog')
     return { success: true }
@@ -255,21 +254,20 @@ export async function toggleChangelogPublishAction(id: string, isPublished: bool
       target: `${updated.title} (${updated.slug})`,
     })
 
-    if (isPublished) {
-      const { createBroadcastApprovalAction } = await import('./actions/broadcast-actions')
-      await createBroadcastApprovalAction({
-        type: 'changelog',
-        contentId: updated.id,
-        title: updated.title,
-        slug: updated.slug,
-        tag: updated.tag,
-        description: updated.description,
-        improvements: updated.improvements || [],
-        fixes: updated.fixes || [],
-        mediaUrl: updated.mediaUrl,
-        mediaType: updated.mediaType as any,
-      })
-    }
+    const { syncBroadcastApprovalOnUpdateAction } = await import('./actions/broadcast-actions')
+    await syncBroadcastApprovalOnUpdateAction({
+      type: 'changelog',
+      contentId: updated.id,
+      title: updated.title,
+      slug: updated.slug,
+      tag: updated.tag,
+      description: updated.description,
+      improvements: (updated.improvements as string[]) || [],
+      fixes: (updated.fixes as string[]) || [],
+      mediaUrl: updated.mediaUrl,
+      mediaType: updated.mediaType as any,
+      isPublished: updated.isPublished,
+    }).catch((err) => console.error('Failed to sync broadcast approval on toggle publish:', err))
 
     revalidatePath('/changelog')
     return { success: true }
@@ -295,6 +293,9 @@ export async function bulkDeleteChangelogsAction(ids: string[]) {
         .filter((item) => !!item.mediaUrl)
         .map((item) => deleteFileByUrl(item.mediaUrl!).catch(() => {}))
     )
+
+    const { deleteBroadcastApprovalByContentIdAction } = await import('./actions/broadcast-actions')
+    await Promise.all(ids.map((id) => deleteBroadcastApprovalByContentIdAction(id)))
 
     await db.delete(changelogs).where(inArray(changelogs.id, ids))
 
@@ -333,24 +334,21 @@ export async function bulkSetChangelogPublishAction(ids: string[], isPublished: 
       target: `${ids.length} changelogs`,
     })
 
-    if (isPublished) {
-      const { createBroadcastApprovalAction } = await import('./actions/broadcast-actions')
-      for (const item of existing) {
-        if (!item.isPublished) {
-          await createBroadcastApprovalAction({
-            type: 'changelog',
-            contentId: item.id,
-            title: item.title,
-            slug: item.slug,
-            tag: item.tag,
-            description: item.description,
-            improvements: (Array.isArray(item.improvements) ? item.improvements : []) as string[],
-            fixes: (Array.isArray(item.fixes) ? item.fixes : []) as string[],
-            mediaUrl: item.mediaUrl,
-            mediaType: item.mediaType as any,
-          }).catch((err) => console.error('Failed to create broadcast approval:', err))
-        }
-      }
+    const { syncBroadcastApprovalOnUpdateAction } = await import('./actions/broadcast-actions')
+    for (const item of existing) {
+      await syncBroadcastApprovalOnUpdateAction({
+        type: 'changelog',
+        contentId: item.id,
+        title: item.title,
+        slug: item.slug,
+        tag: item.tag,
+        description: item.description,
+        improvements: (Array.isArray(item.improvements) ? item.improvements : []) as string[],
+        fixes: (Array.isArray(item.fixes) ? item.fixes : []) as string[],
+        mediaUrl: item.mediaUrl,
+        mediaType: item.mediaType as any,
+        isPublished,
+      }).catch((err) => console.error('Failed to sync broadcast approval in bulk:', err))
     }
 
     revalidatePath('/changelog')
