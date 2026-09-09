@@ -602,13 +602,14 @@ export async function getBroadcastEmailPreviewHtmlAction(params: {
 }): Promise<{ success: boolean; html: string; subject: string; isPublished?: boolean; error?: string }> {
   try {
     await ensureAdmin()
-    const { buildBlogEmail, buildChangelogEmail } = await import('@/lib/email')
+    const { buildBlogEmail, buildChangelogEmail, getRecentPostsForEmail } = await import('@/lib/email')
     const isDraft = params.isPublished === false
     const subjectPrefix = isDraft ? '[Draft Preview] ' : ''
+    const baseUrl = 'https://www.forke.space'
+    const recentPosts = await getRecentPostsForEmail(params.type === 'blog' ? params.slug : undefined)
 
     if (params.type === 'blog') {
-      const baseUrl = 'https://www.forke.space'
-      const blogUrl = params.slug ? `${baseUrl}/blog/${params.slug}` : `${baseUrl}/blog`
+      const blogUrl = params.slug ? `${baseUrl}/blogs/${params.slug}` : `${baseUrl}/blogs`
       const html = buildBlogEmail({
         title: params.title,
         url: blogUrl,
@@ -616,6 +617,7 @@ export async function getBroadcastEmailPreviewHtmlAction(params: {
         coverImage: params.coverImage || params.mediaUrl || undefined,
         authorName: params.authorName || 'The Forke Team',
         readingMinutes: params.readingMinutes || 3,
+        recentPosts,
         unsubscribe: true,
         isDraft,
       })
@@ -627,8 +629,8 @@ export async function getBroadcastEmailPreviewHtmlAction(params: {
       }
     } else {
       const changelogUrl = params.slug
-        ? `https://www.forke.space/changelog#${params.slug}`
-        : 'https://www.forke.space/changelog'
+        ? `${baseUrl}/changelog#${params.slug}`
+        : `${baseUrl}/changelog`
 
       const html = buildChangelogEmail({
         title: params.title,
@@ -640,6 +642,7 @@ export async function getBroadcastEmailPreviewHtmlAction(params: {
         mediaUrl: params.mediaUrl || undefined,
         mediaType: params.mediaType || 'none',
         url: changelogUrl,
+        recentPosts,
         unsubscribe: true,
         isDraft,
       })

@@ -697,21 +697,8 @@ export function buildBlogEmail(data: BlogEmailData): string {
 
   const metaLine = [dateStr, `${minutes} min read`].filter(Boolean).join(' · ')
   const excerptLine = data.excerpt?.trim()
-    ? `<p class="fx fx-3" style="font-family:${BRAND.sans};font-size:15px;line-height:1.7;color:${BRAND.textBody};margin:0 0 12px;">${clampText(data.excerpt, 150)}</p>`
+    ? `<p style="font-family:${BRAND.sans};font-size:15px;line-height:1.7;color:${BRAND.textBody};margin:0 0 12px;">${clampText(data.excerpt, 150)}</p>`
     : ''
-
-  // Staggered fade-in (Apple Mail) for the featured post.
-  const headStyle = `
-    @media (prefers-reduced-motion: no-preference) {
-      .fx { opacity: 0; animation: forkeFade 0.9s ease-out forwards; }
-      .fx-1 { animation-delay: 0.05s; }
-      .fx-2 { animation-delay: 0.35s; }
-      .fx-3 { animation-delay: 0.65s; }
-      .fx-cta { opacity: 0; animation: forkeRise 1s ease-out 1.15s forwards; }
-    }
-    @keyframes forkeFade { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
-    @keyframes forkeRise { from { opacity: 0; transform: translateY(14px); } to { opacity: 1; transform: translateY(0); } }
-  `
 
   // Broadcasts require an unsubscribe link; Resend swaps the token at send time.
   const footerExtra = data.unsubscribe
@@ -727,21 +714,20 @@ export function buildBlogEmail(data: BlogEmailData): string {
     preheader: (data.isDraft ? '[DRAFT PREVIEW] ' : '') + (data.excerpt?.trim() || `New on the Forke blog: ${data.title}`),
     footerLabel: 'New Blog Post',
     draftNotice: data.isDraft,
-    headStyle,
     footerExtra,
     fullBleedBody: true,
     recentPosts: data.recentPosts,
     bodyHtml: `
       <!-- Featured (Apple-Newsroom) -->
       <table width="100%" cellpadding="0" cellspacing="0" border="0"><tr><td style="padding:34px 44px 24px;text-align:center;">
-        <p class="fx fx-1" style="font-family:${BRAND.mono};font-size:10.5px;letter-spacing:0.2em;text-transform:uppercase;color:${BRAND.accent};margin:0 0 16px;">From the Forke blog</p>
-        <h1 class="fx fx-1" style="font-family:${BRAND.sans};font-size:29px;font-weight:600;letter-spacing:-0.035em;line-height:1.2;color:${BRAND.textHigh};margin:0;"><a href="${targetUrl}" target="_blank" style="color:${BRAND.textHigh};text-decoration:none;">${data.title}</a></h1>
+        <p style="font-family:${BRAND.mono};font-size:10.5px;letter-spacing:0.2em;text-transform:uppercase;color:${BRAND.accent};margin:0 0 16px;">From the Forke blog</p>
+        <h1 style="font-family:${BRAND.sans};font-size:29px;font-weight:600;letter-spacing:-0.035em;line-height:1.2;color:${BRAND.textHigh};margin:0;"><a href="${targetUrl}" target="_blank" style="color:${BRAND.textHigh};text-decoration:none;">${data.title}</a></h1>
       </td></tr>
-      <tr><td style="padding:0 24px;line-height:0;font-size:0;"><div class="fx fx-2">${blogImg(data.coverImage, data.title, targetUrl, 14)}</div></td></tr>
+      <tr><td style="padding:0 24px;line-height:0;font-size:0;"><div>${blogImg(data.coverImage, data.title, targetUrl, 14)}</div></td></tr>
       <tr><td style="padding:24px 44px 34px;text-align:center;">
         ${excerptLine}
-        <p class="fx fx-3" style="font-family:${BRAND.mono};font-size:11px;color:${BRAND.textFaint};margin:0 0 22px;">${metaLine}</p>
-        <div class="fx-cta">${buttonPrimary(targetUrl, 'Read more')}</div>
+        <p style="font-family:${BRAND.mono};font-size:11px;color:${BRAND.textFaint};margin:0 0 22px;">${metaLine}</p>
+        <div>${buttonPrimary(targetUrl, 'Read more')}</div>
       </td></tr>
       </table>
     `,
@@ -1063,37 +1049,7 @@ export async function sendBlogPublishedBroadcast(blog: {
 
   // Latest 3 OTHER published posts, newest first, for the "Latest from the blog"
   // section. Best-effort — a query failure just omits the section.
-  let recentPosts: BlogEmailRecent[] = []
-  try {
-    const { db } = await import('./db')
-    const { blogs } = await import('./db/schema')
-    const { eq, and, ne, desc } = await import('drizzle-orm')
-    const rows = await db
-      .select({
-        title: blogs.title,
-        slug: blogs.slug,
-        excerpt: blogs.excerpt,
-        coverImage: blogs.coverImage,
-        readingMinutes: blogs.readingMinutes,
-      })
-      .from(blogs)
-      .where(
-        blog.slug
-          ? and(eq(blogs.status, 'published'), ne(blogs.slug, blog.slug))
-          : eq(blogs.status, 'published')
-      )
-      .orderBy(desc(blogs.publishedAt))
-      .limit(3)
-    recentPosts = rows.map((r) => ({
-      title: r.title,
-      excerpt: r.excerpt,
-      coverImage: r.coverImage,
-      readingMinutes: r.readingMinutes,
-      url: `${baseUrl}/blogs/${r.slug}`,
-    }))
-  } catch (err) {
-    console.error('Failed to load recent posts for blog broadcast:', err)
-  }
+  const recentPosts = await getRecentPostsForEmail(blog.slug)
 
   const html = buildBlogEmail({
     title: blog.title,
@@ -1223,6 +1179,7 @@ export async function sendChangelogPublishedBroadcast(changelog: {
 
   const baseUrl = resolveMarketingUrl()
   const changelogUrl = `${baseUrl}/changelog`
+  const recentPosts = await getRecentPostsForEmail()
 
   const html = buildChangelogEmail({
     title: changelog.title,
@@ -1235,6 +1192,7 @@ export async function sendChangelogPublishedBroadcast(changelog: {
     mediaType: changelog.mediaType || 'none',
     publishedAt: changelog.publishedAt || undefined,
     url: changelogUrl,
+    recentPosts,
     unsubscribe: true, // Broadcasts API requires an unsubscribe link.
   })
   const subject = `New in Forke: ${changelog.title}`
@@ -1297,11 +1255,14 @@ export async function sendChangelogPublishedBroadcast(changelog: {
   }
 }
 
-export async function getRecentPostsForEmail(): Promise<BlogEmailRecent[]> {
+export async function getRecentPostsForEmail(excludeSlug?: string): Promise<BlogEmailRecent[]> {
   try {
     const { db } = await import('./db')
     const { blogs } = await import('./db/schema')
-    const { eq, desc } = await import('drizzle-orm')
+    const { eq, and, ne, desc } = await import('drizzle-orm')
+    const condition = excludeSlug
+      ? and(eq(blogs.status, 'published'), ne(blogs.slug, excludeSlug))
+      : eq(blogs.status, 'published')
     const rows = await db
       .select({
         title: blogs.title,
@@ -1311,7 +1272,7 @@ export async function getRecentPostsForEmail(): Promise<BlogEmailRecent[]> {
         readingMinutes: blogs.readingMinutes,
       })
       .from(blogs)
-      .where(eq(blogs.status, 'published'))
+      .where(condition)
       .orderBy(desc(blogs.publishedAt))
       .limit(3)
     const baseUrl = resolveMarketingUrl()

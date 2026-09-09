@@ -65,6 +65,8 @@ export default function EmailSneakPeekModal({
         }
         *, *::before, *::after {
           box-sizing: border-box !important;
+          animation: none !important;
+          transition: none !important;
         }
         table {
           box-sizing: border-box !important;
