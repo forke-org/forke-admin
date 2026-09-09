@@ -806,11 +806,28 @@ export function buildChangelogEmail(data: ChangelogEmailData): string {
        </p>`
     : ''
 
+  const paragraphs = (data.description || '')
+    .split(/\n\s*\n/)
+    .map((p) => p.trim())
+    .filter(Boolean)
+
+  const descriptionHtml =
+    paragraphs.length > 0
+      ? paragraphs
+          .map(
+            (para, idx) =>
+              `<p style="font-family:${BRAND.sans};font-size:15px;line-height:1.7;color:${BRAND.textBody};margin:0 0 ${
+                idx === paragraphs.length - 1 ? 16 : 14
+              }px 0;text-align:left;white-space:pre-line;">${para.replace(/\n/g, '<br />')}</p>`
+          )
+          .join('')
+      : ''
+
   return emailShell({
     maxWidth: data.maxWidth,
     title: data.title,
     banner: 'main-banner.png',
-    preheader: data.description?.slice(0, 140) || `New in Forke Changelog: ${data.title}`,
+    preheader: (data.description || '').replace(/\s+/g, ' ').trim().slice(0, 140) || `New in Forke Changelog: ${data.title}`,
     footerLabel: 'Forke Release Notes',
     footerExtra,
     fullBleedBody: true,
@@ -822,13 +839,11 @@ export function buildChangelogEmail(data: ChangelogEmailData): string {
             <p style="font-family:${BRAND.mono};font-size:10.5px;letter-spacing:0.2em;text-transform:uppercase;color:${BRAND.accent};margin:0 0 14px;">
               From the Forke changelog &middot; ${tagLabel}
             </p>
-            <h1 style="font-family:${BRAND.sans};font-size:27px;font-weight:600;letter-spacing:-0.035em;line-height:1.22;color:${BRAND.textHigh};margin:0 0 14px;">
+            <h1 style="font-family:${BRAND.sans};font-size:27px;font-weight:600;letter-spacing:-0.035em;line-height:1.22;color:${BRAND.textHigh};margin:0 0 16px;">
               <a href="${changelogUrl}" target="_blank" style="color:${BRAND.textHigh};text-decoration:none;">${data.title}</a>
             </h1>
-            <p style="font-family:${BRAND.sans};font-size:15px;line-height:1.7;color:${BRAND.textBody};margin:0 0 12px;text-align:left;">
-              ${data.description}
-            </p>
-            <p style="font-family:${BRAND.mono};font-size:11px;color:${BRAND.textFaint};margin:0 0 20px;text-align:center;">
+            ${descriptionHtml}
+            <p style="font-family:${BRAND.mono};font-size:11px;color:${BRAND.textFaint};margin:16px 0 20px;text-align:center;">
               ${dateStr} &middot; Release Note
             </p>
           </td>
