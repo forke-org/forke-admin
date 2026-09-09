@@ -904,15 +904,29 @@ function resolveAudienceId(): string {
   return id
 }
 
-async function resendFetch(path: string, init: RequestInit, apiKey: string) {
-  return fetch(`${RESEND_API}${path}`, {
-    ...init,
-    headers: {
-      'Content-Type': 'application/json',
-      Authorization: `Bearer ${apiKey}`,
-      ...(init.headers || {}),
-    },
-  })
+async function resendFetch(path: string, init: RequestInit, apiKey: string, maxRetries = 3): Promise<Response> {
+  let attempt = 0
+  while (true) {
+    const res = await fetch(`${RESEND_API}${path}`, {
+      ...init,
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${apiKey}`,
+        ...(init.headers || {}),
+      },
+    })
+
+    if (res.status === 429 && attempt < maxRetries) {
+      attempt++
+      const retryAfterHeader = res.headers.get('retry-after')
+      const waitMs = retryAfterHeader ? Math.max(1000, parseInt(retryAfterHeader, 10) * 1000) : 1000 * Math.pow(2, attempt)
+      console.warn(`Resend rate limit hit (429) on ${path}. Backing off for ${waitMs}ms (attempt ${attempt}/${maxRetries})…`)
+      await sleep(waitMs)
+      continue
+    }
+
+    return res
+  }
 }
 
 async function findAudienceByName(name: string, apiKey: string): Promise<string | null> {
@@ -962,7 +976,7 @@ async function ensureAudience(apiKey: string): Promise<string | null> {
  */
 async function syncContactsToAudience(audienceId: string, emails: string[], apiKey: string): Promise<number> {
   let synced = 0
-  const chunkSize = 8
+  const chunkSize = 4
   for (let i = 0; i < emails.length; i += chunkSize) {
     const chunk = emails.slice(i, i + chunkSize)
     await Promise.all(
@@ -985,9 +999,11 @@ async function syncContactsToAudience(audienceId: string, emails: string[], apiK
       })
     )
     if (i + chunkSize < emails.length) {
-      await sleep(80)
+      await sleep(250)
     }
   }
+  // Brief pause before broadcast creation to let Resend rate limit bucket fully recover
+  await sleep(1000)
   return synced
 }
 

@@ -88,6 +88,8 @@ import {
   Trash2,
   Server,
   RefreshCw,
+  RotateCcw,
+  AlertTriangle,
   History,
   Send,
   Loader2
@@ -95,6 +97,7 @@ import {
 import {
   getPendingBroadcastApprovalsAction,
   approveBroadcastAction,
+  retryBroadcastAction,
   dismissBroadcastAction,
   getBroadcastEmailPreviewHtmlAction,
   type BroadcastApprovalItem
@@ -143,6 +146,22 @@ function formatLocalDateTime(iso: string | Date | null | undefined): string {
   } catch {
     return typeof iso === 'string' ? iso : '—'
   }
+}
+
+function formatBroadcastError(rawError?: string | null): string {
+  if (!rawError) return 'Unknown broadcast error'
+  try {
+    const parsed = JSON.parse(rawError)
+    if (parsed.message) {
+      if (parsed.statusCode === 429 || parsed.name === 'rate_limit_exceeded') {
+        return `Rate Limit Exceeded: ${parsed.message}`
+      }
+      return parsed.message
+    }
+  } catch {
+    // not json
+  }
+  return rawError
 }
 
 export default function AdminDashboard() {
@@ -284,6 +303,7 @@ export default function AdminDashboard() {
   const [broadcastApprovals, setBroadcastApprovals] = useState<BroadcastApprovalItem[]>([])
   const [broadcastSubCount, setBroadcastSubCount] = useState<number>(0)
   const [approvingBroadcastId, setApprovingBroadcastId] = useState<string | null>(null)
+  const [retryingBroadcastId, setRetryingBroadcastId] = useState<string | null>(null)
   const [dismissingBroadcastId, setDismissingBroadcastId] = useState<string | null>(null)
   const [previewModalOpen, setPreviewModalOpen] = useState(false)
   const [previewSubject, setPreviewSubject] = useState('')
@@ -474,6 +494,27 @@ export default function AdminDashboard() {
     } catch {
       toast('Network error while approving broadcast.', 'error')
       setBroadcastApprovals((prev) => [item, ...prev])
+    }
+  }
+
+  const handleRetryBroadcast = async (item: BroadcastApprovalItem) => {
+    setRetryingBroadcastId(item.id)
+    toast('Initiating broadcast retry in background…', 'info')
+    try {
+      const res = await retryBroadcastAction(item.id)
+      if (res.success) {
+        toast('Broadcast retry initiated! Emails are being dispatched.', 'success')
+        const updated = await getPendingBroadcastApprovalsAction()
+        if (updated.success) {
+          setBroadcastApprovals(updated.approvals)
+        }
+      } else {
+        toast(res.error || 'Failed to retry broadcast.', 'error')
+      }
+    } catch {
+      toast('Network error while retrying broadcast.', 'error')
+    } finally {
+      setRetryingBroadcastId(null)
     }
   }
 
@@ -1196,14 +1237,22 @@ export default function AdminDashboard() {
                   activeTab === 'dashboard' ? 'text-accent' : 'text-[var(--color-text-muted)]'
                 )} />
                 {sidebarCollapsed && broadcastApprovals.length > 0 && (
-                  <span className="absolute -top-1 -right-1 w-2 h-2 rounded-full bg-accent animate-pulse" />
+                  <span className={cn(
+                    "absolute -top-1 -right-1 w-2 h-2 rounded-full animate-pulse",
+                    broadcastApprovals.some((a) => a.status === 'failed') ? "bg-red-500" : "bg-accent"
+                  )} />
                 )}
               </div>
               {!sidebarCollapsed && (
                 <div className="flex items-center justify-between flex-1 min-w-0 animate-in fade-in duration-200">
                   <span>Overview</span>
                   {broadcastApprovals.length > 0 && (
-                    <span className="px-1.5 py-0.2 rounded-full bg-accent/20 border border-accent/40 text-[10px] font-mono font-bold text-accent">
+                    <span className={cn(
+                      "px-1.5 py-0.2 rounded-full border text-[10px] font-mono font-bold",
+                      broadcastApprovals.some((a) => a.status === 'failed')
+                        ? "bg-red-500/20 border-red-500/40 text-red-400"
+                        : "bg-accent/20 border-accent/40 text-accent"
+                    )}>
                       {broadcastApprovals.length}
                     </span>
                   )}
@@ -1879,15 +1928,34 @@ export default function AdminDashboard() {
                     <Mail className="h-4 w-4 text-white/50 shrink-0" />
                     <div className="flex items-center gap-2 flex-wrap">
                       <h3 className="text-sm font-medium text-white">Broadcast Email Approvals</h3>
-                      {broadcastApprovals.length > 0 ? (
-                        <span className="rounded px-2 py-0.5 font-mono text-[10px] bg-white/[0.04] border border-white/10 text-white/80 shrink-0">
-                          {broadcastApprovals.length} pending
-                        </span>
-                      ) : (
-                        <span className="rounded px-2 py-0.5 font-mono text-[10px] text-white/30 shrink-0">
-                          all cleared
-                        </span>
-                      )}
+                      {(() => {
+                        const failedCount = broadcastApprovals.filter((a) => a.status === 'failed').length
+                        const pendingCount = broadcastApprovals.filter((a) => a.status === 'pending').length
+
+                        if (broadcastApprovals.length === 0) {
+                          return (
+                            <span className="rounded px-2 py-0.5 font-mono text-[10px] text-white/30 shrink-0">
+                              all cleared
+                            </span>
+                          )
+                        }
+
+                        return (
+                          <div className="flex items-center gap-1.5">
+                            {failedCount > 0 && (
+                              <span className="rounded px-2 py-0.5 font-mono text-[10px] bg-red-500/10 border border-red-500/25 text-red-400 shrink-0 flex items-center gap-1 font-medium">
+                                <AlertTriangle className="h-3 w-3" />
+                                {failedCount} failed
+                              </span>
+                            )}
+                            {pendingCount > 0 && (
+                              <span className="rounded px-2 py-0.5 font-mono text-[10px] bg-white/[0.04] border border-white/10 text-white/80 shrink-0">
+                                {pendingCount} pending
+                              </span>
+                            )}
+                          </div>
+                        )
+                      })()}
                     </div>
                   </div>
 
@@ -1910,17 +1978,31 @@ export default function AdminDashboard() {
                   <div className="space-y-2.5">
                     {broadcastApprovals.map((approval) => {
                       const isApproving = approvingBroadcastId === approval.id
+                      const isRetrying = retryingBroadcastId === approval.id
                       const isDismissing = dismissingBroadcastId === approval.id
+                      const isFailed = approval.status === 'failed'
+
                       return (
                         <div
                           key={approval.id}
-                          className="rounded-lg border border-white/[0.06] bg-white/[0.01] p-3 sm:p-4 hover:border-white/10 transition-colors flex flex-col lg:flex-row lg:items-center justify-between gap-3.5"
+                          className={cn(
+                            "rounded-lg border p-3 sm:p-4 transition-colors flex flex-col lg:flex-row lg:items-center justify-between gap-3.5",
+                            isFailed
+                              ? "border-red-500/25 bg-red-500/[0.02] hover:border-red-500/40"
+                              : "border-white/[0.06] bg-white/[0.01] hover:border-white/10"
+                          )}
                         >
-                          <div className="space-y-1 min-w-0 flex-1">
+                          <div className="space-y-1.5 min-w-0 flex-1">
                             <div className="flex flex-wrap items-center gap-2">
                               <span className="rounded border border-white/10 bg-white/[0.03] px-2 py-0.5 font-mono text-[10px] text-white/70 uppercase tracking-wider">
                                 {approval.type}
                               </span>
+                              {isFailed && (
+                                <span className="rounded border border-red-500/30 bg-red-500/15 px-2 py-0.5 font-mono text-[10px] text-red-400 font-semibold tracking-wider flex items-center gap-1">
+                                  <AlertTriangle className="h-3 w-3" />
+                                  FAILED
+                                </span>
+                              )}
                               {approval.tag && (
                                 <span className="rounded border border-white/10 px-1.5 py-0.5 font-mono text-[10px] text-white/50">
                                   {approval.tag}
@@ -1941,14 +2023,17 @@ export default function AdminDashboard() {
                               </p>
                             )}
 
-                            {approval.error && (
-                              <p className="text-[11px] font-mono text-red-400/90 bg-red-500/5 border border-red-500/15 px-2 py-1 rounded">
-                                Error: {approval.error}
-                              </p>
+                            {isFailed && approval.error && (
+                              <div className="text-[11px] font-mono text-red-400/95 bg-red-500/10 border border-red-500/20 px-2.5 py-1.5 rounded flex items-start gap-1.5 mt-1">
+                                <AlertTriangle className="h-3.5 w-3.5 text-red-400 shrink-0 mt-0.5" />
+                                <span className="leading-relaxed">
+                                  <strong className="text-red-300">Failure reason:</strong> {formatBroadcastError(approval.error)}
+                                </span>
+                              </div>
                             )}
                           </div>
 
-                          <div className="flex flex-wrap sm:flex-nowrap items-center gap-2 w-full lg:w-auto justify-end pt-1 lg:pt-0">
+                          <div className="flex flex-wrap sm:flex-nowrap items-center gap-2 w-full lg:w-auto justify-end pt-1 lg:pt-0 shrink-0">
                             <button
                               type="button"
                               onClick={() => handlePreviewBroadcast(approval)}
@@ -1961,7 +2046,7 @@ export default function AdminDashboard() {
 
                             <button
                               type="button"
-                              disabled={isApproving || isDismissing}
+                              disabled={isApproving || isRetrying || isDismissing}
                               onClick={() => handleDismissBroadcast(approval)}
                               className="h-8 min-h-[32px] max-h-[32px] px-3.5 sm:min-w-[92px] rounded-lg border border-red-500/20 bg-red-500/10 text-xs font-medium text-red-400 hover:text-red-300 hover:bg-red-500/20 hover:border-red-500/30 transition-colors disabled:opacity-40 flex items-center gap-1.5 cursor-pointer flex-1 sm:flex-none justify-center shrink-0 box-border leading-none"
                             >
@@ -1973,24 +2058,46 @@ export default function AdminDashboard() {
                               <span className="leading-none">Dismiss</span>
                             </button>
 
-                            <button
-                              type="button"
-                              disabled={isApproving || isDismissing}
-                              onClick={() => handleApproveBroadcast(approval)}
-                              className="h-8 min-h-[32px] max-h-[32px] px-3.5 sm:min-w-[92px] rounded-lg border border-white bg-white text-black text-xs font-medium hover:bg-white/90 hover:border-white/90 transition-colors disabled:opacity-40 flex items-center gap-1.5 shadow-sm cursor-pointer flex-1 sm:flex-none justify-center shrink-0 box-border leading-none"
-                            >
-                              {isApproving ? (
-                                <>
-                                  <Loader2 className="h-3.5 w-3.5 animate-spin shrink-0" />
-                                  <span className="leading-none">Approving…</span>
-                                </>
-                              ) : (
-                                <>
-                                  <Send className="h-3.5 w-3.5 shrink-0" />
-                                  <span className="leading-none">Approve</span>
-                                </>
-                              )}
-                            </button>
+                            {isFailed ? (
+                              <button
+                                type="button"
+                                disabled={isApproving || isRetrying || isDismissing}
+                                onClick={() => handleRetryBroadcast(approval)}
+                                className="h-8 min-h-[32px] max-h-[32px] px-3.5 sm:min-w-[92px] rounded-lg border border-amber-500/40 bg-amber-500/15 text-xs font-semibold text-amber-300 hover:text-amber-200 hover:bg-amber-500/25 hover:border-amber-500/50 transition-colors disabled:opacity-40 flex items-center gap-1.5 shadow-sm cursor-pointer flex-1 sm:flex-none justify-center shrink-0 box-border leading-none"
+                                title="Retry sending this broadcast"
+                              >
+                                {isRetrying ? (
+                                  <>
+                                    <Loader2 className="h-3.5 w-3.5 animate-spin shrink-0" />
+                                    <span className="leading-none">Retrying…</span>
+                                  </>
+                                ) : (
+                                  <>
+                                    <RotateCcw className="h-3.5 w-3.5 shrink-0" />
+                                    <span className="leading-none">Retry</span>
+                                  </>
+                                )}
+                              </button>
+                            ) : (
+                              <button
+                                type="button"
+                                disabled={isApproving || isRetrying || isDismissing}
+                                onClick={() => handleApproveBroadcast(approval)}
+                                className="h-8 min-h-[32px] max-h-[32px] px-3.5 sm:min-w-[92px] rounded-lg border border-white bg-white text-black text-xs font-medium hover:bg-white/90 hover:border-white/90 transition-colors disabled:opacity-40 flex items-center gap-1.5 shadow-sm cursor-pointer flex-1 sm:flex-none justify-center shrink-0 box-border leading-none"
+                              >
+                                {isApproving ? (
+                                  <>
+                                    <Loader2 className="h-3.5 w-3.5 animate-spin shrink-0" />
+                                    <span className="leading-none">Approving…</span>
+                                  </>
+                                ) : (
+                                  <>
+                                    <Send className="h-3.5 w-3.5 shrink-0" />
+                                    <span className="leading-none">Approve</span>
+                                  </>
+                                )}
+                              </button>
+                            )}
                           </div>
                         </div>
                       )

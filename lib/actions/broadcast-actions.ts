@@ -100,7 +100,7 @@ export async function getPendingBroadcastApprovalsAction(): Promise<{
       db
         .select()
         .from(broadcastApprovals)
-        .where(eq(broadcastApprovals.status, 'pending'))
+        .where(sql`${broadcastApprovals.status} IN ('pending', 'failed')`)
         .orderBy(desc(broadcastApprovals.createdAt)),
       db
         .select({ count: sql<number>`count(*)::int` })
@@ -327,6 +327,88 @@ export async function deleteBroadcastApprovalByContentIdAction(contentId: string
 }
 
 /**
+ * Helper to dispatch broadcast to subscribers in the background.
+ */
+async function executeBroadcastDispatch(id: string, row: typeof broadcastApprovals.$inferSelect) {
+  try {
+    let broadcastResult: { success: boolean; sentCount: number; broadcastId?: string; error?: string }
+
+    if (row.type === 'blog') {
+      broadcastResult = await sendBlogPublishedBroadcast({
+        id: row.contentId,
+        title: row.title,
+        slug: row.slug,
+        excerpt: row.excerpt,
+        coverImage: row.coverImage,
+        authorName: row.authorName,
+        readingMinutes: row.readingMinutes,
+      })
+    } else {
+      broadcastResult = await sendChangelogPublishedBroadcast({
+        id: row.contentId,
+        title: row.title,
+        slug: row.slug,
+        tag: row.tag || 'FEATURE',
+        description: row.description || '',
+        improvements: (row.improvements as string[]) || [],
+        fixes: (row.fixes as string[]) || [],
+        mediaUrl: row.mediaUrl,
+        mediaType: (row.mediaType as any) || 'none',
+      })
+    }
+
+    if (broadcastResult.success) {
+      await db
+        .update(broadcastApprovals)
+        .set({
+          status: 'approved',
+          broadcastId: broadcastResult.broadcastId || null,
+          sentCount: broadcastResult.sentCount || 0,
+          error: null,
+          updatedAt: new Date(),
+        })
+        .where(eq(broadcastApprovals.id, id))
+
+      await logAudit({
+        category: 'content',
+        action: 'broadcast.dispatched',
+        target: `${row.type.toUpperCase()}: ${row.title}`,
+        metadata: {
+          sentCount: broadcastResult.sentCount,
+          broadcastId: broadcastResult.broadcastId,
+        },
+      })
+    } else {
+      await db
+        .update(broadcastApprovals)
+        .set({
+          status: 'failed',
+          error: broadcastResult.error || 'Failed to dispatch broadcast via Resend',
+          updatedAt: new Date(),
+        })
+        .where(eq(broadcastApprovals.id, id))
+
+      await logAudit({
+        category: 'system',
+        action: 'broadcast.failed',
+        target: `${row.type.toUpperCase()}: ${row.title}`,
+        metadata: { error: broadcastResult.error },
+      })
+    }
+  } catch (bgErr) {
+    console.error('Background broadcast dispatch error:', bgErr)
+    await db
+      .update(broadcastApprovals)
+      .set({
+        status: 'failed',
+        error: bgErr instanceof Error ? bgErr.message : 'Unknown background dispatch error',
+        updatedAt: new Date(),
+      })
+      .where(eq(broadcastApprovals.id, id))
+  }
+}
+
+/**
  * Approve a broadcast request and trigger the bulk email to Resend audience.
  */
 export async function approveBroadcastAction(id: string): Promise<{
@@ -377,81 +459,7 @@ export async function approveBroadcastAction(id: string): Promise<{
     // Run dispatch asynchronously in the background so the user is never blocked,
     // and work continues uninterrupted even if the user closes the tab or leaves the page.
     ;(async () => {
-      try {
-        let broadcastResult: { success: boolean; sentCount: number; broadcastId?: string; error?: string }
-
-        if (row.type === 'blog') {
-          broadcastResult = await sendBlogPublishedBroadcast({
-            id: row.contentId,
-            title: row.title,
-            slug: row.slug,
-            excerpt: row.excerpt,
-            coverImage: row.coverImage,
-            authorName: row.authorName,
-            readingMinutes: row.readingMinutes,
-          })
-        } else {
-          broadcastResult = await sendChangelogPublishedBroadcast({
-            id: row.contentId,
-            title: row.title,
-            slug: row.slug,
-            tag: row.tag || 'FEATURE',
-            description: row.description || '',
-            improvements: (row.improvements as string[]) || [],
-            fixes: (row.fixes as string[]) || [],
-            mediaUrl: row.mediaUrl,
-            mediaType: (row.mediaType as any) || 'none',
-          })
-        }
-
-        if (broadcastResult.success) {
-          await db
-            .update(broadcastApprovals)
-            .set({
-              broadcastId: broadcastResult.broadcastId || null,
-              sentCount: broadcastResult.sentCount || 0,
-              error: null,
-              updatedAt: new Date(),
-            })
-            .where(eq(broadcastApprovals.id, id))
-
-          await logAudit({
-            category: 'content',
-            action: 'broadcast.dispatched',
-            target: `${row.type.toUpperCase()}: ${row.title}`,
-            metadata: {
-              sentCount: broadcastResult.sentCount,
-              broadcastId: broadcastResult.broadcastId,
-            },
-          })
-        } else {
-          await db
-            .update(broadcastApprovals)
-            .set({
-              status: 'failed',
-              error: broadcastResult.error || 'Failed to dispatch broadcast via Resend',
-              updatedAt: new Date(),
-            })
-            .where(eq(broadcastApprovals.id, id))
-
-          await logAudit({
-            category: 'system',
-            action: 'broadcast.failed',
-            target: `${row.type.toUpperCase()}: ${row.title}`,
-            metadata: { error: broadcastResult.error },
-          })
-        }
-      } catch (bgErr) {
-        console.error('Background broadcast dispatch error:', bgErr)
-        await db
-          .update(broadcastApprovals)
-          .set({
-            status: 'failed',
-            error: bgErr instanceof Error ? bgErr.message : 'Unknown background dispatch error',
-            updatedAt: new Date(),
-          })
-          .where(eq(broadcastApprovals.id, id))
-      }
+      await executeBroadcastDispatch(id, row)
     })().catch((err) => {
       console.error('Fatal background broadcast runner error:', err)
     })
@@ -465,6 +473,69 @@ export async function approveBroadcastAction(id: string): Promise<{
     return {
       success: false,
       error: err instanceof Error ? err.message : 'Unknown approval error',
+    }
+  }
+}
+
+/**
+ * Retry a failed broadcast dispatch.
+ */
+export async function retryBroadcastAction(id: string): Promise<{
+  success: boolean
+  error?: string
+}> {
+  try {
+    await ensureAdmin()
+    const admin = await getCurrentAdmin()
+
+    const [row] = await db
+      .select()
+      .from(broadcastApprovals)
+      .where(eq(broadcastApprovals.id, id))
+      .limit(1)
+
+    if (!row) {
+      return { success: false, error: 'Broadcast approval item not found.' }
+    }
+
+    if (row.status === 'approved' && !row.error) {
+      return { success: false, error: 'This broadcast has already been sent successfully.' }
+    }
+
+    // Reset error and mark as approved in database so background retry can run
+    await db
+      .update(broadcastApprovals)
+      .set({
+        status: 'approved',
+        error: null,
+        approvedAt: new Date(),
+        approvedBy: admin?.email || admin?.name || row.approvedBy || 'Admin',
+        updatedAt: new Date(),
+      })
+      .where(eq(broadcastApprovals.id, id))
+
+    await logAudit({
+      category: 'content',
+      action: 'broadcast.retry_requested',
+      target: `${row.type.toUpperCase()}: ${row.title}`,
+      metadata: { contentId: row.contentId },
+    })
+
+    revalidatePath('/admin')
+
+    // Run dispatch asynchronously in background
+    ;(async () => {
+      await executeBroadcastDispatch(id, row)
+    })().catch((err) => {
+      console.error('Fatal background broadcast retry runner error:', err)
+    })
+
+    return { success: true }
+  } catch (err) {
+    console.error('Failed to retry broadcast:', err)
+    return {
+      success: false,
+      error: err instanceof Error ? err.message : 'Unknown retry error',
     }
   }
 }
