@@ -125,24 +125,10 @@ export async function uploadImage(
       await putToPresignedUrl(uploadUrl, blob, contentType, onProgress)
       return { url: publicUrl }
     }
-
-    // 409 = R2 not configured → fall through to the server POST path.
-    // Any other non-OK status is a real error (auth, too large, bad type).
-    if (res.status !== 409) {
-      let message = 'Upload failed.'
-      try {
-        message = (await res.json()).error || message
-      } catch {
-        /* keep default */
-      }
-      throw new Error(message)
-    }
   } catch (err) {
-    // A thrown Error above is a genuine failure — surface it. A network/parse
-    // failure on the presign request itself also falls through to the fallback.
-    if (err instanceof Error && err.message !== 'Failed to fetch') throw err
+    console.warn('Direct upload attempt failed; falling back to server-side upload:', err)
   }
 
-  // 2) Fallback: POST through the server (local dev / no R2).
+  // 2) Reliable fallback: POST through server-side /api/blog-upload route
   return postThroughServer(blob, outName, onProgress)
 }

@@ -25,6 +25,7 @@ export interface BackupRun {
   r2Key: string | null
   triggeredBy: string | null
   errorMessage: string | null
+  isAvailable?: boolean
 }
 
 export async function getBackupRuns(): Promise<{ success: boolean; runs?: BackupRun[]; error?: string }> {
@@ -38,21 +39,45 @@ export async function getBackupRuns(): Promise<{ success: boolean; runs?: Backup
       .select()
       .from(backupRuns)
       .orderBy(desc(backupRuns.startedAt))
-      .limit(90)
+      .limit(100)
+
+    // Check which backup keys actually exist in Cloudflare R2 right now
+    const existingKeys = new Set<string>()
+    try {
+      const { listObjects, isR2Configured } = await import('@/lib/r2')
+      if (isR2Configured()) {
+        const [backupsList, prodList] = await Promise.allSettled([
+          listObjects('backups/'),
+          listObjects('prod-db-backups/'),
+        ])
+        if (backupsList.status === 'fulfilled') {
+          backupsList.value.forEach((o) => existingKeys.add(o.key))
+        }
+        if (prodList.status === 'fulfilled') {
+          prodList.value.forEach((o) => existingKeys.add(o.key))
+        }
+      }
+    } catch (r2Err) {
+      console.warn('Could not inspect R2 keys for backup availability:', r2Err)
+    }
 
     return {
       success: true,
-      runs: rows.map((r) => ({
-        id: r.id,
-        startedAt: r.startedAt.toISOString(),
-        finishedAt: r.finishedAt ? r.finishedAt.toISOString() : null,
-        status: r.status,
-        tier: r.tier,
-        sizeBytes: r.sizeBytes,
-        r2Key: r.r2Key,
-        triggeredBy: r.triggeredBy,
-        errorMessage: r.errorMessage,
-      })),
+      runs: rows.map((r) => {
+        const keyExists = !!(r.r2Key && existingKeys.has(r.r2Key))
+        return {
+          id: r.id,
+          startedAt: r.startedAt.toISOString(),
+          finishedAt: r.finishedAt ? r.finishedAt.toISOString() : null,
+          status: r.status,
+          tier: r.tier,
+          sizeBytes: r.sizeBytes,
+          r2Key: r.r2Key,
+          triggeredBy: r.triggeredBy,
+          errorMessage: r.errorMessage,
+          isAvailable: keyExists,
+        }
+      }),
     }
   } catch (error: any) {
     return { success: false, error: error.message || 'Failed to load backup history.' }

@@ -10,7 +10,7 @@
  * commercial license from Forke Inc. is strictly prohibited.
  */
 
-import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect, useMemo } from 'react'
 import {
   getBackupRuns,
   getBackupStats,
@@ -29,6 +29,8 @@ import {
   Play,
   Download,
   Loader2,
+  ChevronLeft,
+  ChevronRight,
 } from 'lucide-react'
 import { toast } from '@/components/shared/Toast'
 
@@ -64,6 +66,8 @@ const TIER_LABEL: Record<string, string> = {
   on_demand: 'On-Demand',
 }
 
+const PAGE_SIZE = 10
+
 export default function BackupsPanel() {
   const [runs, setRuns] = useState<BackupRun[]>([])
   const [stats, setStats] = useState<{
@@ -75,6 +79,7 @@ export default function BackupsPanel() {
   const [loading, setLoading] = useState(true)
   const [triggering, setTriggering] = useState(false)
   const [downloadingKey, setDownloadingKey] = useState<string | null>(null)
+  const [page, setPage] = useState(1)
 
   async function loadData() {
     setLoading(true)
@@ -128,6 +133,14 @@ export default function BackupsPanel() {
       setDownloadingKey(null)
     }
   }
+
+  // Pagination calculations
+  const totalPages = Math.max(1, Math.ceil(runs.length / PAGE_SIZE))
+  const safePage = Math.min(Math.max(1, page), totalPages)
+  const paginatedRuns = useMemo(() => {
+    const start = (safePage - 1) * PAGE_SIZE
+    return runs.slice(start, start + PAGE_SIZE)
+  }, [runs, safePage])
 
   if (loading) {
     return <PanelSkeleton />
@@ -227,81 +240,160 @@ export default function BackupsPanel() {
         </div>
       </div>
 
-      {/* Table */}
-      <div className="flex-grow overflow-auto rounded-xl border border-[var(--color-border)] bg-white/[0.018]">
-        <table className="w-full border-collapse text-left">
-          <thead>
-            <tr className="border-b border-[var(--color-border)] text-[10px] uppercase tracking-wider text-white/35 font-medium">
-              <th className="px-4 py-2.5">Started (Local)</th>
-              <th className="px-4 py-2.5">Tier</th>
-              <th className="px-4 py-2.5">Status</th>
-              <th className="px-4 py-2.5">Size</th>
-              <th className="px-4 py-2.5">Trigger</th>
-              <th className="px-4 py-2.5 text-right font-medium">Error</th>
-              <th className="px-4 py-2.5 text-right font-medium">Action</th>
-            </tr>
-          </thead>
-          <tbody className="divide-y divide-[var(--color-border)]">
-            {runs.length === 0 ? (
-              <tr>
-                <td colSpan={7} className="px-4 py-12 text-center text-[var(--color-text-muted)] text-xs font-mono">
-                  No backup runs recorded yet.
-                </td>
+      {/* Table Container */}
+      <div className="flex-grow flex flex-col justify-between overflow-hidden rounded-xl border border-[var(--color-border)] bg-white/[0.018]">
+        <div className="overflow-auto flex-grow">
+          <table className="w-full border-collapse text-left">
+            <thead>
+              <tr className="border-b border-[var(--color-border)] text-[10px] uppercase tracking-wider text-white/35 font-medium sticky top-0 bg-[#0d0d0f] z-10">
+                <th className="px-4 py-2.5">Started (Local)</th>
+                <th className="px-4 py-2.5">Tier</th>
+                <th className="px-4 py-2.5">Status</th>
+                <th className="px-4 py-2.5">Size</th>
+                <th className="px-4 py-2.5">Trigger</th>
+                <th className="px-4 py-2.5 text-right font-medium">Error</th>
+                <th className="px-4 py-2.5 text-right font-medium">Action</th>
               </tr>
-            ) : (
-              runs.map((run) => (
-                <tr key={run.id} className="group hover:bg-white/[0.015] transition-colors">
-                  <td className="px-4 py-3 text-white/80 font-mono text-xs">
-                    {formatLocalDateTime(run.startedAt)}
-                  </td>
-                  <td className="px-4 py-3">
-                    <span className="px-1.5 py-0.5 rounded font-mono text-[10px] font-medium uppercase tracking-wider bg-white/[0.03] border border-[var(--color-border)] text-white/70">
-                      {TIER_LABEL[run.tier] || run.tier}
-                    </span>
-                  </td>
-                  <td className="px-4 py-3">
-                    {run.status === 'success' ? (
-                      <span className="inline-flex items-center gap-1 rounded px-1.5 py-0.5 font-mono text-[10px] font-medium uppercase tracking-wider border border-emerald-500/30 bg-emerald-500/10 text-emerald-400">
-                        <span className="h-1.5 w-1.5 rounded-full bg-emerald-400" /> Success
-                      </span>
-                    ) : (
-                      <span className="inline-flex items-center gap-1 rounded px-1.5 py-0.5 font-mono text-[10px] font-medium uppercase tracking-wider border border-red-500/30 bg-red-500/10 text-red-400">
-                        <span className="h-1.5 w-1.5 rounded-full bg-red-400" /> Failed
-                      </span>
-                    )}
-                  </td>
-                  <td className="px-4 py-3 text-white/60 font-mono text-xs">{formatBytes(run.sizeBytes)}</td>
-                  <td className="px-4 py-3 text-white/60 font-mono text-xs">{run.triggeredBy || 'cron'}</td>
-                  <td
-                    className="px-4 py-3 text-right text-red-400/80 font-mono text-xs max-w-[200px] truncate"
-                    title={run.errorMessage || ''}
-                  >
-                    {run.errorMessage || '—'}
-                  </td>
-                  <td className="px-4 py-3 text-right">
-                    {run.status === 'success' && run.r2Key ? (
-                      <button
-                        onClick={() => handleDownload(run.r2Key!)}
-                        disabled={downloadingKey === run.r2Key}
-                        title="Download Backup"
-                        className="inline-flex items-center gap-1 px-2 py-1 rounded text-[11px] font-mono border border-white/10 hover:border-white/20 hover:bg-white/[0.05] text-white/70 hover:text-white transition-colors disabled:opacity-40"
-                      >
-                        {downloadingKey === run.r2Key ? (
-                          <Loader2 className="w-3 h-3 animate-spin" />
-                        ) : (
-                          <Download className="w-3 h-3" />
-                        )}
-                        <span>Download</span>
-                      </button>
-                    ) : (
-                      <span className="text-white/20 text-xs font-mono">—</span>
-                    )}
+            </thead>
+            <tbody className="divide-y divide-[var(--color-border)]">
+              {runs.length === 0 ? (
+                <tr>
+                  <td colSpan={7} className="px-4 py-12 text-center text-[var(--color-text-muted)] text-xs font-mono">
+                    No backup runs recorded yet.
                   </td>
                 </tr>
-              ))
-            )}
-          </tbody>
-        </table>
+              ) : (
+                paginatedRuns.map((run) => (
+                  <tr key={run.id} className="group hover:bg-white/[0.015] transition-colors">
+                    <td className="px-4 py-3 text-white/80 font-mono text-xs">
+                      {formatLocalDateTime(run.startedAt)}
+                    </td>
+                    <td className="px-4 py-3">
+                      <span className="px-1.5 py-0.5 rounded font-mono text-[10px] font-medium uppercase tracking-wider bg-white/[0.03] border border-[var(--color-border)] text-white/70">
+                        {TIER_LABEL[run.tier] || run.tier}
+                      </span>
+                    </td>
+                    <td className="px-4 py-3">
+                      {run.status === 'success' ? (
+                        <span className="inline-flex items-center gap-1 rounded px-1.5 py-0.5 font-mono text-[10px] font-medium uppercase tracking-wider border border-emerald-500/30 bg-emerald-500/10 text-emerald-400">
+                          <span className="h-1.5 w-1.5 rounded-full bg-emerald-400" /> Success
+                        </span>
+                      ) : (
+                        <span className="inline-flex items-center gap-1 rounded px-1.5 py-0.5 font-mono text-[10px] font-medium uppercase tracking-wider border border-red-500/30 bg-red-500/10 text-red-400">
+                          <span className="h-1.5 w-1.5 rounded-full bg-red-400" /> Failed
+                        </span>
+                      )}
+                    </td>
+                    <td className="px-4 py-3 text-white/60 font-mono text-xs">{formatBytes(run.sizeBytes)}</td>
+                    <td className="px-4 py-3 text-white/60 font-mono text-xs">{run.triggeredBy || 'cron'}</td>
+                    <td
+                      className="px-4 py-3 text-right text-red-400/80 font-mono text-xs max-w-[200px] truncate"
+                      title={run.errorMessage || ''}
+                    >
+                      {run.errorMessage || '—'}
+                    </td>
+                    <td className="px-4 py-3 text-right">
+                      {run.status === 'success' ? (
+                        run.isAvailable && run.r2Key ? (
+                          <button
+                            onClick={() => handleDownload(run.r2Key!)}
+                            disabled={downloadingKey === run.r2Key}
+                            title="Download Backup Dump"
+                            className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded text-[11px] font-mono border border-emerald-500/25 bg-emerald-500/[0.06] hover:bg-emerald-500/15 text-emerald-400 hover:text-emerald-300 transition-colors disabled:opacity-40 select-none shadow-[0_0_12px_rgba(16,185,129,0.08)]"
+                          >
+                            {downloadingKey === run.r2Key ? (
+                              <Loader2 className="w-3 h-3 animate-spin" />
+                            ) : (
+                              <Download className="w-3 h-3" />
+                            )}
+                            <span>Download</span>
+                          </button>
+                        ) : (
+                          <span
+                            className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[10px] font-mono border border-white/10 text-white/35 bg-white/[0.02] select-none"
+                            title="Backup file pruned per 7-day retention policy"
+                          >
+                            <span>Purged</span>
+                          </span>
+                        )
+                      ) : (
+                        <span className="text-white/20 text-xs font-mono">—</span>
+                      )}
+                    </td>
+                  </tr>
+                ))
+              )}
+            </tbody>
+          </table>
+        </div>
+
+        {/* Sleek Pagination Footer */}
+        {runs.length > 0 && (
+          <div className="flex items-center justify-between px-4 py-3 border-t border-[var(--color-border)] bg-white/[0.01]">
+            <div className="text-xs text-white/50 font-mono">
+              Showing <span className="text-white/80 font-medium">{(safePage - 1) * PAGE_SIZE + 1}</span> to{' '}
+              <span className="text-white/80 font-medium">
+                {Math.min(safePage * PAGE_SIZE, runs.length)}
+              </span>{' '}
+              of <span className="text-white/80 font-medium">{runs.length}</span> backups
+            </div>
+
+            <div className="flex items-center gap-1.5">
+              <button
+                onClick={() => setPage((p) => Math.max(1, p - 1))}
+                disabled={safePage <= 1}
+                className="h-7 px-2.5 rounded text-xs font-mono border border-[var(--color-border)] text-white/70 hover:text-white hover:bg-white/[0.05] disabled:opacity-30 disabled:cursor-not-allowed transition-colors flex items-center gap-1 select-none"
+              >
+                <ChevronLeft className="w-3.5 h-3.5" />
+                <span className="hidden sm:inline">Prev</span>
+              </button>
+
+              <div className="flex items-center gap-1 px-1">
+                {Array.from({ length: totalPages }, (_, i) => i + 1).map((p) => {
+                  if (
+                    totalPages > 7 &&
+                    p !== 1 &&
+                    p !== totalPages &&
+                    Math.abs(p - safePage) > 1
+                  ) {
+                    if (p === 2 || p === totalPages - 1) {
+                      return (
+                        <span key={p} className="text-white/30 text-xs px-1 font-mono">
+                          ...
+                        </span>
+                      )
+                    }
+                    return null
+                  }
+
+                  const isActive = p === safePage
+                  return (
+                    <button
+                      key={p}
+                      onClick={() => setPage(p)}
+                      className={`h-7 min-w-[28px] px-1.5 rounded text-xs font-mono transition-colors select-none ${
+                        isActive
+                          ? 'bg-accent text-black font-semibold shadow-[0_0_10px_rgba(255,122,0,0.2)]'
+                          : 'text-white/60 hover:text-white hover:bg-white/[0.04] border border-transparent'
+                      }`}
+                    >
+                      {p}
+                    </button>
+                  )
+                })}
+              </div>
+
+              <button
+                onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
+                disabled={safePage >= totalPages}
+                className="h-7 px-2.5 rounded text-xs font-mono border border-[var(--color-border)] text-white/70 hover:text-white hover:bg-white/[0.05] disabled:opacity-30 disabled:cursor-not-allowed transition-colors flex items-center gap-1 select-none"
+              >
+                <span className="hidden sm:inline">Next</span>
+                <ChevronRight className="w-3.5 h-3.5" />
+              </button>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   )
