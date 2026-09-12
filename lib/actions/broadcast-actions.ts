@@ -6,7 +6,7 @@
  */
 
 import { db } from '@/lib/db'
-import { broadcastApprovals, subscribers } from '@/lib/db/schema'
+import { broadcastApprovals, subscribers, blogs, changelogs } from '@/lib/db/schema'
 import { eq, desc, and, sql } from 'drizzle-orm'
 import { isAdminAuthenticated, getCurrentAdmin } from '@/lib/admin-actions'
 import { logAudit } from './audit-actions'
@@ -84,6 +84,74 @@ export async function ensureBroadcastApprovalsTable() {
 }
 
 /**
+ * Helper to determine whether a blog or changelog is an "old" / historical item.
+ * An item is old if:
+ * 1. It is not the latest item of its type (newer items exist in the database)
+ * 2. It was already published in the past (historical publication, e.g. published > 5 minutes ago)
+ */
+async function isContentOld(type: 'blog' | 'changelog', contentId: string): Promise<boolean> {
+  try {
+    if (type === 'blog') {
+      const [latestBlog] = await db
+        .select({ id: blogs.id, createdAt: blogs.createdAt, publishedAt: blogs.publishedAt })
+        .from(blogs)
+        .orderBy(desc(blogs.createdAt))
+        .limit(1)
+
+      // If there is a newer blog, this one is definitely an old blog
+      if (latestBlog && latestBlog.id !== contentId) {
+        return true
+      }
+
+      const [currentBlog] = await db
+        .select({ id: blogs.id, createdAt: blogs.createdAt, publishedAt: blogs.publishedAt })
+        .from(blogs)
+        .where(eq(blogs.id, contentId))
+        .limit(1)
+
+      if (!currentBlog) return true
+
+      // If currentBlog was already published in the past (publishedAt is older than 5 minutes)
+      if (currentBlog.publishedAt) {
+        const elapsed = Date.now() - new Date(currentBlog.publishedAt).getTime()
+        if (elapsed > 5 * 60 * 1000) {
+          return true
+        }
+      }
+    } else {
+      // changelog
+      const [latestChangelog] = await db
+        .select({ id: changelogs.id, createdAt: changelogs.createdAt, publishedAt: changelogs.publishedAt })
+        .from(changelogs)
+        .orderBy(desc(changelogs.createdAt))
+        .limit(1)
+
+      // If there is a newer changelog, this one is definitely an old changelog
+      if (latestChangelog && latestChangelog.id !== contentId) {
+        return true
+      }
+
+      const [currentChangelog] = await db
+        .select({ id: changelogs.id, createdAt: changelogs.createdAt, publishedAt: changelogs.publishedAt })
+        .from(changelogs)
+        .where(eq(changelogs.id, contentId))
+        .limit(1)
+
+      if (!currentChangelog) return true
+
+      // If created more than 5 minutes ago, it's an existing/historical changelog being toggled
+      const elapsed = Date.now() - new Date(currentChangelog.createdAt).getTime()
+      if (elapsed > 5 * 60 * 1000) {
+        return true
+      }
+    }
+  } catch (err) {
+    console.error('Error checking isContentOld:', err)
+  }
+  return false
+}
+
+/**
  * Fetch all pending broadcast approvals along with total audience count.
  */
 export async function getPendingBroadcastApprovalsAction(): Promise<{
@@ -109,9 +177,25 @@ export async function getPendingBroadcastApprovalsAction(): Promise<{
 
     const subscriberCount = subRows[0]?.count || 0
 
+    // Filter out any approval item for old content or content that is no longer valid
+    const validApprovals: BroadcastApprovalItem[] = []
+    for (const item of approvalRows) {
+      const isOld = await isContentOld(item.type as any, item.contentId)
+      if (isOld) {
+        // Silently dismiss stale approval for old content so it leaves the queue
+        await db
+          .update(broadcastApprovals)
+          .set({ status: 'dismissed', updatedAt: new Date() })
+          .where(eq(broadcastApprovals.id, item.id))
+          .catch(() => {})
+        continue
+      }
+      validApprovals.push(item as BroadcastApprovalItem)
+    }
+
     return {
       success: true,
-      approvals: approvalRows as BroadcastApprovalItem[],
+      approvals: validApprovals,
       subscriberCount,
     }
   } catch (err) {
@@ -148,21 +232,26 @@ export async function createBroadcastApprovalAction(data: {
     await ensureAdmin()
     await ensureBroadcastApprovalsTable()
 
-    // Deduplicate: check if an active pending or approved entry exists for this content
+    // Deduplicate: check if an active pending, approved, or dismissed entry exists for this content
     const existing = await db
       .select({ id: broadcastApprovals.id, status: broadcastApprovals.status })
       .from(broadcastApprovals)
       .where(
         and(
           eq(broadcastApprovals.contentId, data.contentId),
-          sql`${broadcastApprovals.status} IN ('pending', 'approved')`
+          sql`${broadcastApprovals.status} IN ('pending', 'approved', 'dismissed')`
         )
       )
       .limit(1)
 
     if (existing.length > 0) {
-      // Already has a pending request or already sent
+      // Already has a pending request, already sent, or already dismissed
       return { success: true, id: existing[0].id }
+    }
+
+    // Guard: Never create broadcast approvals for old/historical blogs or changelogs
+    if (await isContentOld(data.type, data.contentId)) {
+      return { success: true }
     }
 
     const [inserted] = await db
@@ -236,12 +325,48 @@ export async function syncBroadcastApprovalOnUpdateAction(data: {
     if (existing.length > 0) {
       const record = existing[0]
 
-      // If the email was already broadcasted and sent to subscribers, don't revert or change its sent status
-      if (record.status === 'approved') {
-        return { success: true, status: 'approved' }
+      // If the email was already approved or dismissed, NEVER revert or change its status to pending!
+      if (record.status === 'approved' || record.status === 'dismissed') {
+        // Sync any updated metadata, preserving approved/dismissed status
+        await db
+          .update(broadcastApprovals)
+          .set({
+            title: data.title.trim(),
+            slug: data.slug.trim(),
+            tag: data.tag?.trim() || null,
+            excerpt: data.excerpt?.trim() || null,
+            description: data.description?.trim() || null,
+            coverImage: data.coverImage?.trim() || null,
+            mediaUrl: data.mediaUrl?.trim() || null,
+            mediaType: data.mediaType || 'none',
+            authorName: data.authorName?.trim() || null,
+            readingMinutes: data.readingMinutes || null,
+            improvements: data.improvements?.filter(Boolean) || [],
+            fixes: data.fixes?.filter(Boolean) || [],
+            updatedAt: new Date(),
+          })
+          .where(eq(broadcastApprovals.id, record.id))
+        return { success: true, status: record.status }
       }
 
-      // If content is currently private / draft, keep status as 'draft' so it is paused from the pending queue
+      // If content is an old item, do NOT transition to pending on republish/save
+      const isOld = await isContentOld(data.type, data.contentId)
+      if (isOld) {
+        const nextStatus = record.status === 'pending' ? 'dismissed' : record.status
+        await db
+          .update(broadcastApprovals)
+          .set({
+            title: data.title.trim(),
+            slug: data.slug.trim(),
+            status: nextStatus,
+            updatedAt: new Date(),
+          })
+          .where(eq(broadcastApprovals.id, record.id))
+        revalidatePath('/admin')
+        return { success: true, status: nextStatus }
+      }
+
+      // Fresh/latest content: toggle between pending and draft
       const targetStatus = data.isPublished ? 'pending' : 'draft'
 
       await db
@@ -267,7 +392,14 @@ export async function syncBroadcastApprovalOnUpdateAction(data: {
       revalidatePath('/admin')
       return { success: true, status: targetStatus }
     } else {
-      // No existing record. If it is now published, create a pending approval request.
+      // No existing record.
+      // If it is an old item, NEVER create a broadcast approval request!
+      const isOld = await isContentOld(data.type, data.contentId)
+      if (isOld) {
+        return { success: true, status: 'dismissed' }
+      }
+
+      // If fresh content is now published, create a pending approval request.
       if (data.isPublished) {
         return await createBroadcastApprovalAction(data)
       }
@@ -291,12 +423,16 @@ export async function setBroadcastApprovalPublishStateAction(params: {
     await ensureBroadcastApprovalsTable()
 
     const existing = await db
-      .select({ id: broadcastApprovals.id, status: broadcastApprovals.status })
+      .select({ id: broadcastApprovals.id, status: broadcastApprovals.status, type: broadcastApprovals.type })
       .from(broadcastApprovals)
       .where(eq(broadcastApprovals.contentId, params.contentId))
       .limit(1)
 
-    if (existing.length > 0 && existing[0].status !== 'approved') {
+    if (existing.length > 0 && existing[0].status !== 'approved' && existing[0].status !== 'dismissed') {
+      const isOld = await isContentOld(existing[0].type as any, params.contentId)
+      if (isOld) {
+        return { success: true }
+      }
       const nextStatus = params.isPublished ? 'pending' : 'draft'
       await db
         .update(broadcastApprovals)
