@@ -37,21 +37,25 @@ async function handleLogout(request: Request) {
   }
 
   const isProd = process.env.NODE_ENV === 'production'
-  const redirectUrl = new URL('/login', request.url)
+  const host = request.headers.get('x-forwarded-host') || request.headers.get('host') || (isProd ? 'admin.forke.space' : 'localhost:3002')
+  const proto = request.headers.get('x-forwarded-proto') || (isProd ? 'https' : 'http')
+  const redirectUrl = new URL('/login', `${proto}://${host}`)
   const response = NextResponse.redirect(redirectUrl)
 
-  const domains = isProd ? ['.forke.space', undefined] : [undefined]
+  const cookieNames = ['admin_token', 'forke_role', 'forke_access_token', 'forke_username']
+  const domains: (string | undefined)[] = isProd ? ['.forke.space', undefined] : [undefined]
 
-  for (const domain of domains) {
-    response.cookies.set('admin_token', '', {
-      path: '/',
-      domain,
-      maxAge: 0,
-      expires: new Date(0),
-      secure: isProd,
-      sameSite: 'lax',
-      httpOnly: true,
-    })
+  for (const name of cookieNames) {
+    for (const domain of domains) {
+      if (name.startsWith('__Host-') && domain) continue
+
+      let cookie = `${name}=; Path=/; Expires=Thu, 01 Jan 1970 00:00:00 GMT; Max-Age=0; SameSite=Lax`
+      if (domain) cookie += `; Domain=${domain}`
+      if (isProd) cookie += '; Secure'
+      if (name === 'admin_token') cookie += '; HttpOnly'
+
+      response.headers.append('Set-Cookie', cookie)
+    }
   }
 
   return response
