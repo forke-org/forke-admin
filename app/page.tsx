@@ -734,16 +734,8 @@ export default function AdminDashboard() {
     }
   }
 
-  async function handleLogout() {
-    try {
-      await adminLogout()
-    } catch (err) {
-      console.error('Logout error:', err)
-    } finally {
-      document.cookie = 'admin_token=; path=/; domain=.forke.space; expires=Thu, 01 Jan 1970 00:00:00 GMT;'
-      document.cookie = 'admin_token=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT;'
-      window.location.href = '/login'
-    }
+  function handleLogout() {
+    window.location.href = '/api/auth/logout'
   }
 
   function handleDeleteSubscriber(id: string) {
@@ -1737,8 +1729,12 @@ export default function AdminDashboard() {
               </div>
             )}
           </div>
-          <button 
-            onClick={handleLogout} 
+          <a 
+            href="/api/auth/logout"
+            onClick={(e) => {
+              e.preventDefault()
+              window.location.href = '/api/auth/logout'
+            }}
             className={cn(
               "flex items-center gap-2 px-2 py-2 text-[11px] font-medium text-[var(--color-text-muted)] hover:text-red-400 transition-colors cursor-pointer w-full",
               sidebarCollapsed && "justify-center px-0"
@@ -1747,7 +1743,7 @@ export default function AdminDashboard() {
           >
             <LogOut className="w-4 h-4 shrink-0" />
             {!sidebarCollapsed && <span className="animate-in fade-in duration-200">Sign Out</span>}
-          </button>
+          </a>
         </div>
 
       </aside>
