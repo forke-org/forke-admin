@@ -736,13 +736,13 @@ export default function AdminDashboard() {
 
   async function handleLogout() {
     try {
-      const res = await adminLogout()
-      if (res.success) {
-        router.push('/login')
-        router.refresh()
-      }
+      await adminLogout()
     } catch (err) {
       console.error('Logout error:', err)
+    } finally {
+      document.cookie = 'admin_token=; path=/; domain=.forke.space; expires=Thu, 01 Jan 1970 00:00:00 GMT;'
+      document.cookie = 'admin_token=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT;'
+      window.location.href = '/login'
     }
   }
 

@@ -138,14 +138,21 @@ export async function adminLogout() {
     console.error('Failed to log admin logout:', err)
   }
   const cookieStore = await cookies()
-  const domain = process.env.NODE_ENV === 'production' ? '.forke.space' : undefined
+  const isProd = process.env.NODE_ENV === 'production'
+  
+  if (isProd) {
+    cookieStore.set('admin_token', '', {
+      path: '/',
+      domain: '.forke.space',
+      maxAge: 0,
+      expires: new Date(0),
+    })
+  }
   cookieStore.set('admin_token', '', {
     path: '/',
-    domain,
     maxAge: 0,
     expires: new Date(0),
   })
-  cookieStore.delete('admin_token')
   return { success: true }
 }
 
