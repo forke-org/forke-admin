@@ -59,7 +59,7 @@ export function r2Client(creds: R2Credentials): AwsClient {
 // Same key sanitization used everywhere below so keys stay consistent across
 // upload/presign/delete paths.
 function sanitizeKey(key: string): string {
-  return key.replace(/[^a-zA-Z0-9.-_/]/g, '_')
+  return key.replace(/[^a-zA-Z0-9._\/-]/g, '_')
 }
 
 // Encode each path segment individually so slashes stay as folder separators.
@@ -328,14 +328,17 @@ export async function deleteFileByUrl(url: string): Promise<boolean> {
  */
 export async function getPresignedDownloadUrl(
   key: string,
-  expiresIn = 43200 // 12 hours in seconds
+  expiresIn = 43200, // 12 hours in seconds
+  filename?: string
 ): Promise<string> {
   const creds = getR2Credentials()
   const cleanKey = sanitizeKey(key)
   const client = r2Client(creds)
 
+  const downloadFilename = filename || cleanKey.split('/').pop() || 'backup.dump'
   const urlToSign = new URL(objectUrl(creds.endpoint, creds.bucketName, cleanKey))
   urlToSign.searchParams.set('X-Amz-Expires', String(expiresIn))
+  urlToSign.searchParams.set('response-content-disposition', `attachment; filename="${downloadFilename}"`)
 
   const signedRequest = await client.sign(urlToSign.toString(), {
     method: 'GET',

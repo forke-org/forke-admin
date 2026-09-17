@@ -123,7 +123,12 @@ export default function BackupsPanel() {
     try {
       const res = await getBackupDownloadUrl(r2Key)
       if (res.success && res.url) {
-        window.open(res.url, '_blank')
+        const downloadAnchor = document.createElement('a')
+        downloadAnchor.setAttribute('href', res.url)
+        downloadAnchor.setAttribute('download', r2Key.split('/').pop() || 'database-backup.dump')
+        document.body.appendChild(downloadAnchor)
+        downloadAnchor.click()
+        downloadAnchor.remove()
       } else {
         toast(res.error || 'Failed to get download URL', 'error')
       }

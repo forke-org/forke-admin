@@ -148,7 +148,8 @@ export async function getBackupDownloadUrl(r2Key: string): Promise<{
 
   try {
     const { getPresignedDownloadUrl } = await import('@/lib/r2')
-    const url = await getPresignedDownloadUrl(r2Key, 3600) // 1 hour link
+    const filename = r2Key.split('/').pop() || 'database-backup.dump'
+    const url = await getPresignedDownloadUrl(r2Key, 3600, filename)
     return { success: true, url }
   } catch (err: any) {
     return { success: false, error: err.message || 'Failed to generate download URL' }
