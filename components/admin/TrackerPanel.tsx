@@ -11,11 +11,12 @@
  */
 
 import React, { useCallback, useEffect, useState, useMemo } from 'react'
-import { MousePointerClick, Users, Target, FileText, ExternalLink, RefreshCw, ChevronLeft, ChevronRight } from 'lucide-react'
+import { MousePointerClick, Users, Target, FileText, ExternalLink, RefreshCw, ChevronLeft, ChevronRight, Bot, LineChart } from 'lucide-react'
 import { getTrackerData, getSignupSourceBreakdown, type TrackerData } from '@/lib/admin-dashboard-actions'
 import { Skeleton } from '@/components/ui/Skeleton'
 import { cn } from '@/lib/utils/cn'
 import WorldHeatmap, { countryName } from '@/components/admin/WorldHeatmap'
+import CrawlerIntelligenceView from '@/components/admin/CrawlerIntelligenceView'
 
 const RANGES: { label: string; days: number }[] = [
   { label: '7d', days: 7 },
@@ -281,6 +282,7 @@ function SignupSourceCard({
 }
 
 export default function TrackerPanel() {
+  const [activeTab, setActiveTab] = useState<'traffic' | 'crawlers'>('traffic')
   const [days, setDays] = useState(30)
   const [data, setData] = useState<TrackerData>(EMPTY)
   const [isLoading, setIsLoading] = useState(true)
@@ -344,42 +346,78 @@ export default function TrackerPanel() {
 
   return (
     <div className="flex flex-col min-h-0 flex-grow gap-4 overflow-y-auto overflow-x-hidden w-full max-w-full pr-1">
-      {/* Header + range selector */}
-      <div className="flex items-center justify-between gap-4 shrink-0">
+      {/* Header + mode selector + range selector */}
+      <div className="flex flex-wrap items-center justify-between gap-4 shrink-0">
         <div>
-          <h2 className="text-base font-semibold text-white">Tracker</h2>
-          <p className="text-xs text-[var(--color-text-muted)] mt-0.5">
-            Link clicks, sources & conversions from your <span className="font-mono text-white/70">?source=</span> tags.
-          </p>
-        </div>
-        <div className="flex items-center gap-2">
-          <div className="flex items-center rounded-lg border border-[var(--color-border)] p-0.5">
-            {RANGES.map((r) => (
+          <div className="flex items-center gap-3">
+            <h2 className="text-base font-semibold text-white">Tracker & Analytics</h2>
+            {/* View Mode Switcher */}
+            <div className="flex items-center gap-1 bg-white/[0.03] p-1 rounded-lg border border-[var(--color-border)]">
               <button
-                key={r.days}
-                onClick={() => setDays(r.days)}
+                onClick={() => setActiveTab('traffic')}
                 className={cn(
-                  'px-2.5 py-1 rounded-md text-xs font-mono transition-colors',
-                  days === r.days
-                    ? 'bg-accent/15 text-accent font-semibold'
+                  'flex items-center gap-1.5 px-2.5 py-1 rounded-md text-xs font-medium transition-colors cursor-pointer',
+                  activeTab === 'traffic'
+                    ? 'bg-white/10 text-white font-semibold shadow-sm'
                     : 'text-[var(--color-text-muted)] hover:text-white'
                 )}
               >
-                {r.label}
+                <LineChart className="w-3.5 h-3.5" />
+                Human Traffic
               </button>
-            ))}
+              <button
+                onClick={() => setActiveTab('crawlers')}
+                className={cn(
+                  'flex items-center gap-1.5 px-2.5 py-1 rounded-md text-xs font-medium transition-colors cursor-pointer',
+                  activeTab === 'crawlers'
+                    ? 'bg-accent/15 text-accent font-semibold shadow-sm'
+                    : 'text-[var(--color-text-muted)] hover:text-white'
+                )}
+              >
+                <Bot className="w-3.5 h-3.5" />
+                Bot & Crawler Intelligence
+              </button>
+            </div>
           </div>
-          <button
-            onClick={() => load(days)}
-            className="p-1.5 rounded-lg border border-[var(--color-border)] text-[var(--color-text-muted)] hover:text-white hover:bg-white/[0.03] transition-colors"
-            title="Refresh"
-          >
-            <RefreshCw className={cn('w-3.5 h-3.5', isLoading && 'animate-spin')} />
-          </button>
+          <p className="text-xs text-[var(--color-text-muted)] mt-1">
+            {activeTab === 'traffic'
+              ? 'Human link clicks, sources & waitlist conversions (verified bots excluded).'
+              : 'Automated search bots, LLM crawlers, and vulnerability scanner telemetry.'}
+          </p>
         </div>
+
+        {activeTab === 'traffic' && (
+          <div className="flex items-center gap-2">
+            <div className="flex items-center rounded-lg border border-[var(--color-border)] p-0.5">
+              {RANGES.map((r) => (
+                <button
+                  key={r.days}
+                  onClick={() => setDays(r.days)}
+                  className={cn(
+                    'px-2.5 py-1 rounded-md text-xs font-mono transition-colors cursor-pointer',
+                    days === r.days
+                      ? 'bg-accent/15 text-accent font-semibold'
+                      : 'text-[var(--color-text-muted)] hover:text-white'
+                  )}
+                >
+                  {r.label}
+                </button>
+              ))}
+            </div>
+            <button
+              onClick={() => load(days)}
+              className="p-1.5 rounded-lg border border-[var(--color-border)] text-[var(--color-text-muted)] hover:text-white hover:bg-white/[0.03] transition-colors cursor-pointer"
+              title="Refresh"
+            >
+              <RefreshCw className={cn('w-3.5 h-3.5', isLoading && 'animate-spin')} />
+            </button>
+          </div>
+        )}
       </div>
 
-      {isLoading ? (
+      {activeTab === 'crawlers' ? (
+        <CrawlerIntelligenceView />
+      ) : isLoading ? (
         <div className="space-y-4">
           <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
             <Skeleton className="h-20 rounded-xl" />

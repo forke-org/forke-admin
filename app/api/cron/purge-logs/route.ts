@@ -42,8 +42,12 @@ export async function GET(request: NextRequest) {
     await db.delete(users).where(sql`deletion_scheduled_at < now() - interval '30 days'`)
 
     // Purge auth security log older than 90 days — enforces the IP-retention window
-    // promised in the privacy policy. (page_visits is non-PII analytics and is kept.)
+    // promised in the privacy policy.
     await db.delete(authEvents).where(sql`created_at < now() - interval '90 days'`)
+
+    // Tiered retention for page_visits: bots older than 14 days, humans older than 90 days
+    await db.execute(sql`DELETE FROM page_visits WHERE is_bot = true AND created_at < now() - interval '14 days'`)
+    await db.execute(sql`DELETE FROM page_visits WHERE is_bot = false AND created_at < now() - interval '90 days'`)
 
     // Log the purge action itself in the database
     await logAudit({

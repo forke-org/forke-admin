@@ -15,6 +15,7 @@ import {
   integer,
   bigint,
   timestamp,
+  date,
   pgEnum,
   boolean,
   jsonb,
@@ -346,7 +347,25 @@ export const pageVisits = pgTable('page_visits', {
   landingPath: text('landing_path'),               // first page they hit
   country: text('country'),                         // coarse geo only (from edge header), never the IP
   isBot: boolean('is_bot').default(false).notNull(),
+  botCategory: text('bot_category'),               // 'search_engine' | 'ai_agent' | 'social_preview' | 'malicious_scanner' | 'uptime_monitor'
+  botName: text('bot_name'),                       // 'Googlebot', 'GPTBot', 'PerplexityBot', etc.
+  userAgentSnippet: text('user_agent_snippet'),   // truncated UA for verification
   createdAt: timestamp('created_at').defaultNow().notNull(),
+})
+
+// ===== PERMANENT ANALYTICS DAILY ROLLUPS (Permanent Historical Intelligence) =====
+export const analyticsDailyRollups = pgTable('analytics_daily_rollups', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  date: date('date').notNull(),
+  pageGroup: text('page_group').notNull(),
+  source: text('source').notNull(),
+  country: text('country').notNull().default('XX'),
+  isBot: boolean('is_bot').default(false).notNull(),
+  botCategory: text('bot_category'),
+  botName: text('bot_name'),
+  visitCount: integer('visit_count').default(1).notNull(),
+  uniqueSessions: integer('unique_sessions').default(1).notNull(),
+  createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
 })
 
 // ===== AUTH SECURITY LOG (separate from marketing attribution by design) =====

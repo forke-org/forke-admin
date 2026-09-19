@@ -875,3 +875,149 @@ export async function getTrackerData(days = 30): Promise<{ success: boolean; dat
   }
 }
 
+// ===== CRAWLER & BOT INTELLIGENCE =====
+
+export type CrawlerIntelligenceData = {
+  summary: {
+    totalBotHits: number
+    aiAgentHits: number
+    searchEngineHits: number
+    scannerHits: number
+    socialPreviewHits: number
+    uptimeMonitorHits: number
+  }
+  categoryBreakdown: { category: string; count: number; percentage: number }[]
+  topCrawlers: { name: string; category: string; count: number }[]
+  topProbedPaths: { path: string; count: number }[]
+  dailySeries: { day: string; ai: number; search: number; scanner: number; other: number }[]
+  recentBotVisits: {
+    botName: string | null
+    botCategory: string | null
+    landingPath: string | null
+    userAgentSnippet: string | null
+    createdAt: string
+  }[]
+}
+
+const EMPTY_CRAWLER_INTEL: CrawlerIntelligenceData = {
+  summary: {
+    totalBotHits: 0,
+    aiAgentHits: 0,
+    searchEngineHits: 0,
+    scannerHits: 0,
+    socialPreviewHits: 0,
+    uptimeMonitorHits: 0,
+  },
+  categoryBreakdown: [],
+  topCrawlers: [],
+  topProbedPaths: [],
+  dailySeries: [],
+  recentBotVisits: [],
+}
+
+export async function getCrawlerIntelligenceData(days = 14): Promise<{ success: boolean; data: CrawlerIntelligenceData }> {
+  await ensureAdmin()
+  try {
+    const isAllTime = days === -1
+    const rollupDateSql = isAllTime ? sql`1=1` : sql`date >= current_date - (${days} || ' days')::interval`
+    const rawDateSql = isAllTime ? sql`1=1` : sql`created_at >= now() - (${days} || ' days')::interval`
+
+    const [categoryRows, topCrawlersRows, probedPathsRows, seriesRows, recentRows] = await Promise.all([
+      db.execute(sql`
+        SELECT COALESCE(bot_category, 'other') AS category, sum(visit_count)::int AS count
+        FROM public.analytics_daily_rollups
+        WHERE is_bot = true AND ${rollupDateSql}
+        GROUP BY 1 ORDER BY count DESC
+      `),
+      db.execute(sql`
+        SELECT COALESCE(bot_name, 'Unknown') AS name, COALESCE(bot_category, 'other') AS category, sum(visit_count)::int AS count
+        FROM public.analytics_daily_rollups
+        WHERE is_bot = true AND ${rollupDateSql}
+        GROUP BY 1, 2 ORDER BY count DESC LIMIT 15
+      `),
+      db.execute(sql`
+        SELECT landing_path AS path, count(*)::int AS count
+        FROM public.page_visits
+        WHERE is_bot = true AND ${rawDateSql}
+        GROUP BY 1 ORDER BY count DESC LIMIT 15
+      `),
+      db.execute(sql`
+        SELECT 
+          to_char(date, 'YYYY-MM-DD') AS day,
+          sum(CASE WHEN bot_category = 'ai_agent' THEN visit_count ELSE 0 END)::int AS ai,
+          sum(CASE WHEN bot_category = 'search_engine' THEN visit_count ELSE 0 END)::int AS search,
+          sum(CASE WHEN bot_category = 'malicious_scanner' THEN visit_count ELSE 0 END)::int AS scanner,
+          sum(CASE WHEN bot_category NOT IN ('ai_agent', 'search_engine', 'malicious_scanner') THEN visit_count ELSE 0 END)::int AS other
+        FROM public.analytics_daily_rollups
+        WHERE is_bot = true AND ${rollupDateSql}
+        GROUP BY 1 ORDER BY 1 ASC
+      `),
+      db.execute(sql`
+        SELECT 
+          bot_name, 
+          bot_category, 
+          landing_path, 
+          user_agent_snippet, 
+          to_char(created_at, 'YYYY-MM-DD"T"HH24:MI:SS.MS"Z"') AS created_at_iso
+        FROM public.page_visits
+        WHERE is_bot = true
+        ORDER BY created_at DESC LIMIT 50
+      `),
+    ])
+
+    const catList = (categoryRows as any[]).map(r => ({
+      category: String(r.category),
+      count: Number(r.count || 0)
+    }))
+
+    const totalBotHits = catList.reduce((acc, cur) => acc + cur.count, 0)
+    const categoryBreakdown = catList.map(c => ({
+      ...c,
+      percentage: totalBotHits > 0 ? Math.round((c.count / totalBotHits) * 1000) / 10 : 0
+    }))
+
+    const summary = {
+      totalBotHits,
+      aiAgentHits: catList.find(c => c.category === 'ai_agent')?.count || 0,
+      searchEngineHits: catList.find(c => c.category === 'search_engine')?.count || 0,
+      scannerHits: catList.find(c => c.category === 'malicious_scanner')?.count || 0,
+      socialPreviewHits: catList.find(c => c.category === 'social_preview')?.count || 0,
+      uptimeMonitorHits: catList.find(c => c.category === 'uptime_monitor')?.count || 0,
+    }
+
+    const data: CrawlerIntelligenceData = {
+      summary,
+      categoryBreakdown,
+      topCrawlers: (topCrawlersRows as any[]).map(r => ({
+        name: String(r.name),
+        category: String(r.category),
+        count: Number(r.count || 0)
+      })),
+      topProbedPaths: (probedPathsRows as any[]).map(r => ({
+        path: String(r.path || '/'),
+        count: Number(r.count || 0)
+      })),
+      dailySeries: (seriesRows as any[]).map(r => ({
+        day: String(r.day),
+        ai: Number(r.ai || 0),
+        search: Number(r.search || 0),
+        scanner: Number(r.scanner || 0),
+        other: Number(r.other || 0),
+      })),
+      recentBotVisits: (recentRows as any[]).map(r => ({
+        botName: r.bot_name ? String(r.bot_name) : null,
+        botCategory: r.bot_category ? String(r.bot_category) : null,
+        landingPath: r.landing_path ? String(r.landing_path) : null,
+        userAgentSnippet: r.user_agent_snippet ? String(r.user_agent_snippet) : null,
+        createdAt: String(r.created_at_iso || new Date().toISOString())
+      }))
+    }
+
+    return { success: true, data }
+  } catch (error) {
+    console.error('getCrawlerIntelligenceData failed:', error)
+    return { success: false, data: EMPTY_CRAWLER_INTEL }
+  }
+}
+
+
