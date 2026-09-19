@@ -738,6 +738,16 @@ export async function getTrackerData(days = 30): Promise<{ success: boolean; dat
           SELECT 
             CASE 
               WHEN source = 'direct' AND referrer ~* 'google|bing|yahoo|duckduckgo|brave|ecosia|baidu|startpage|kagi' THEN 'organic'
+              WHEN source = 'direct' AND user_agent_snippet ~* '(whatsapp|wa\.me)' THEN 'whatsapp'
+              WHEN source = 'direct' AND user_agent_snippet ~* 'instagram' THEN 'instagram'
+              WHEN source = 'direct' AND user_agent_snippet ~* 'linkedin' THEN 'linkedin'
+              WHEN source = 'direct' AND user_agent_snippet ~* '(fban|fbav|fb_iab|fbios|fb4a)' THEN 'facebook'
+              WHEN source = 'direct' AND user_agent_snippet ~* 'telegram' THEN 'telegram'
+              WHEN source = 'direct' AND user_agent_snippet ~* '(twitter|tweetie)' THEN 'twitter'
+              WHEN source = 'direct' AND user_agent_snippet ~* 'discord' THEN 'discord'
+              WHEN source = 'direct' AND user_agent_snippet ~* 'slack' THEN 'slack'
+              WHEN source = 'direct' AND user_agent_snippet ~* 'threads' THEN 'threads'
+              WHEN source = 'direct' AND user_agent_snippet ~* '(tiktok|bytedance)' THEN 'tiktok'
               ELSE COALESCE(NULLIF(source, ''), 'direct')
             END AS source,
             count(*)::int AS clicks
@@ -817,6 +827,7 @@ export async function getTrackerData(days = 30): Promise<{ success: boolean; dat
           landing_path, 
           referrer, 
           country, 
+          user_agent_snippet,
           to_char(created_at, 'YYYY-MM-DD"T"HH24:MI:SS.MS"Z"') AS created_at_iso,
           EXTRACT(EPOCH FROM created_at) * 1000 AS created_at_epoch
         FROM public.page_visits WHERE is_bot = false AND ${marketingFilterSql} AND ${windowSql}
@@ -855,9 +866,22 @@ export async function getTrackerData(days = 30): Promise<{ success: boolean; dat
           createdAtIso = str.endsWith('Z') ? str : (str.replace(' ', 'T') + 'Z')
         }
         const refStr = (r.referrer as string) || ''
+        const uaStr = (r.user_agent_snippet as string) || ''
         let src = (r.source as string) || 'direct'
         if (src === 'direct' && refStr && /google|bing|yahoo|duckduckgo|brave|ecosia|baidu|startpage|kagi/i.test(refStr)) {
           src = 'organic'
+        } else if (src === 'direct' && !refStr && uaStr) {
+          const uaLower = uaStr.toLowerCase()
+          if (uaLower.includes('whatsapp') || uaLower.includes('wa.me')) src = 'whatsapp'
+          else if (uaLower.includes('instagram')) src = 'instagram'
+          else if (uaLower.includes('linkedin')) src = 'linkedin'
+          else if (uaLower.includes('fban') || uaLower.includes('fbav')) src = 'facebook'
+          else if (uaLower.includes('telegram')) src = 'telegram'
+          else if (uaLower.includes('twitter') || uaLower.includes('tweetie')) src = 'twitter'
+          else if (uaLower.includes('discord')) src = 'discord'
+          else if (uaLower.includes('slack')) src = 'slack'
+          else if (uaLower.includes('threads')) src = 'threads'
+          else if (uaLower.includes('tiktok') || uaLower.includes('bytedance')) src = 'tiktok'
         }
         return {
           source: src,
