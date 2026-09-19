@@ -20,6 +20,7 @@ import CrawlerIntelligenceView from '@/components/admin/CrawlerIntelligenceView'
 
 const RANGES: { label: string; days: number }[] = [
   { label: '7d', days: 7 },
+  { label: '14d', days: 14 },
   { label: '30d', days: 30 },
   { label: '90d', days: 90 },
   { label: 'all', days: -1 },
@@ -347,16 +348,16 @@ export default function TrackerPanel() {
   return (
     <div className="flex flex-col min-h-0 flex-grow gap-4 overflow-y-auto overflow-x-hidden w-full max-w-full pr-1">
       {/* Header + mode selector + range selector */}
-      <div className="flex flex-wrap items-center justify-between gap-4 shrink-0">
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-3.5 shrink-0 pb-1 border-b border-[var(--color-border)]/40">
         <div>
-          <div className="flex items-center gap-3">
+          <div className="flex flex-col sm:flex-row sm:items-center gap-2.5">
             <h2 className="text-base font-semibold text-white">Tracker & Analytics</h2>
             {/* View Mode Switcher */}
-            <div className="flex items-center gap-1 bg-white/[0.03] p-1 rounded-lg border border-[var(--color-border)]">
+            <div className="grid grid-cols-2 sm:flex sm:items-center gap-1 bg-white/[0.03] p-1 rounded-lg border border-[var(--color-border)]">
               <button
                 onClick={() => setActiveTab('traffic')}
                 className={cn(
-                  'flex items-center gap-1.5 px-2.5 py-1 rounded-md text-xs font-medium transition-colors cursor-pointer',
+                  'flex items-center justify-center gap-1.5 px-2.5 py-1 rounded-md text-xs font-medium transition-colors cursor-pointer',
                   activeTab === 'traffic'
                     ? 'bg-white/10 text-white font-semibold shadow-sm'
                     : 'text-[var(--color-text-muted)] hover:text-white'
@@ -368,14 +369,14 @@ export default function TrackerPanel() {
               <button
                 onClick={() => setActiveTab('crawlers')}
                 className={cn(
-                  'flex items-center gap-1.5 px-2.5 py-1 rounded-md text-xs font-medium transition-colors cursor-pointer',
+                  'flex items-center justify-center gap-1.5 px-2.5 py-1 rounded-md text-xs font-medium transition-colors cursor-pointer',
                   activeTab === 'crawlers'
                     ? 'bg-accent/15 text-accent font-semibold shadow-sm'
                     : 'text-[var(--color-text-muted)] hover:text-white'
                 )}
               >
                 <Bot className="w-3.5 h-3.5" />
-                Bot & Crawler Intelligence
+                Bot Intelligence
               </button>
             </div>
           </div>
@@ -386,40 +387,39 @@ export default function TrackerPanel() {
           </p>
         </div>
 
-        {activeTab === 'traffic' && (
-          <div className="flex items-center gap-2">
-            <div className="flex items-center rounded-lg border border-[var(--color-border)] p-0.5">
-              {RANGES.map((r) => (
-                <button
-                  key={r.days}
-                  onClick={() => setDays(r.days)}
-                  className={cn(
-                    'px-2.5 py-1 rounded-md text-xs font-mono transition-colors cursor-pointer',
-                    days === r.days
-                      ? 'bg-accent/15 text-accent font-semibold'
-                      : 'text-[var(--color-text-muted)] hover:text-white'
-                  )}
-                >
-                  {r.label}
-                </button>
-              ))}
-            </div>
-            <button
-              onClick={() => load(days)}
-              className="p-1.5 rounded-lg border border-[var(--color-border)] text-[var(--color-text-muted)] hover:text-white hover:bg-white/[0.03] transition-colors cursor-pointer"
-              title="Refresh"
-            >
-              <RefreshCw className={cn('w-3.5 h-3.5', isLoading && 'animate-spin')} />
-            </button>
+        {/* Global unified range selector for both views */}
+        <div className="flex items-center justify-between sm:justify-end gap-2">
+          <div className="flex items-center rounded-lg border border-[var(--color-border)] p-0.5 overflow-x-auto">
+            {RANGES.map((r) => (
+              <button
+                key={r.days}
+                onClick={() => setDays(r.days)}
+                className={cn(
+                  'px-2.5 py-1 rounded-md text-xs font-mono transition-colors cursor-pointer whitespace-nowrap',
+                  days === r.days
+                    ? 'bg-accent/15 text-accent font-semibold'
+                    : 'text-[var(--color-text-muted)] hover:text-white'
+                )}
+              >
+                {r.label}
+              </button>
+            ))}
           </div>
-        )}
+          <button
+            onClick={() => load(days)}
+            className="p-1.5 rounded-lg border border-[var(--color-border)] text-[var(--color-text-muted)] hover:text-white hover:bg-white/[0.03] transition-colors cursor-pointer shrink-0"
+            title="Refresh"
+          >
+            <RefreshCw className={cn('w-3.5 h-3.5', isLoading && 'animate-spin')} />
+          </button>
+        </div>
       </div>
 
       {activeTab === 'crawlers' ? (
-        <CrawlerIntelligenceView />
+        <CrawlerIntelligenceView days={days} />
       ) : isLoading ? (
         <div className="space-y-4">
-          <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
             <Skeleton className="h-20 rounded-xl" />
             <Skeleton className="h-20 rounded-xl" />
             <Skeleton className="h-20 rounded-xl" />
@@ -431,7 +431,7 @@ export default function TrackerPanel() {
       ) : (
         <>
           {/* Headline stats */}
-          <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 shrink-0">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 shrink-0">
             {[
               { icon: MousePointerClick, label: 'Clicks', value: stats.clicks.toLocaleString() },
               { icon: Users, label: 'Unique visitors', value: stats.visitors.toLocaleString() },

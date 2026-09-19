@@ -960,7 +960,7 @@ export async function getCrawlerIntelligenceData(days = 14): Promise<{ success: 
           user_agent_snippet, 
           to_char(created_at, 'YYYY-MM-DD"T"HH24:MI:SS.MS"Z"') AS created_at_iso
         FROM public.page_visits
-        WHERE is_bot = true
+        WHERE is_bot = true AND ${rawDateSql}
         ORDER BY created_at DESC LIMIT 50
       `),
     ])

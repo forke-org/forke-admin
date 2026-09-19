@@ -10,7 +10,7 @@
  * commercial license from Forke Inc. is strictly prohibited.
  */
 
-import React, { useState, useEffect, useCallback } from 'react'
+import React, { useState, useEffect, useCallback, useMemo } from 'react'
 import {
   Bot,
   ShieldAlert,
@@ -19,12 +19,9 @@ import {
   Share2,
   Activity,
   RefreshCw,
-  Terminal,
-  Clock,
-  ExternalLink,
   ChevronLeft,
   ChevronRight,
-  Database,
+  Info,
 } from 'lucide-react'
 import {
   getCrawlerIntelligenceData,
@@ -33,12 +30,9 @@ import {
 import { Skeleton } from '@/components/ui/Skeleton'
 import { cn } from '@/lib/utils/cn'
 
-const RANGES: { label: string; days: number }[] = [
-  { label: '7d', days: 7 },
-  { label: '14d', days: 14 },
-  { label: '30d', days: 30 },
-  { label: 'all', days: -1 },
-]
+interface CrawlerIntelligenceViewProps {
+  days?: number
+}
 
 function getCategoryBadge(category?: string | null) {
   switch (category) {
@@ -107,8 +101,8 @@ function Card({
   badge?: React.ReactNode
 }) {
   return (
-    <div className="rounded-xl bg-white/[0.018] border border-[var(--color-border)] p-5">
-      <div className="flex items-start justify-between mb-4">
+    <div className="rounded-xl bg-white/[0.018] border border-[var(--color-border)] p-4 sm:p-5">
+      <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-2 mb-4">
         <div>
           <h3 className="text-sm font-medium text-white">{title}</h3>
           {subtitle && (
@@ -117,15 +111,14 @@ function Card({
             </p>
           )}
         </div>
-        {badge}
+        {badge && <div className="shrink-0">{badge}</div>}
       </div>
       {children}
     </div>
   )
 }
 
-export default function CrawlerIntelligenceView() {
-  const [days, setDays] = useState(14)
+export default function CrawlerIntelligenceView({ days = 14 }: CrawlerIntelligenceViewProps) {
   const [data, setData] = useState<CrawlerIntelligenceData | null>(null)
   const [isLoading, setIsLoading] = useState(true)
   const [feedPage, setFeedPage] = useState(0)
@@ -156,10 +149,44 @@ export default function CrawlerIntelligenceView() {
     load(days)
   }, [days, load])
 
+  // Generate a complete continuous day array for the requested time window
+  const chartSeries = useMemo(() => {
+    if (!data || !data.dailySeries) return []
+    const map = new Map<string, { ai: number; search: number; scanner: number; other: number }>()
+    for (const item of data.dailySeries) {
+      map.set(item.day, { ai: item.ai, search: item.search, scanner: item.scanner, other: item.other })
+    }
+
+    const today = new Date()
+    let numDays = days
+    if (days === -1) {
+      if (data.dailySeries.length === 0) return []
+      const earliest = new Date(data.dailySeries[0].day)
+      const diffMs = today.getTime() - earliest.getTime()
+      numDays = Math.max(15, Math.ceil(diffMs / (1000 * 60 * 60 * 24)) + 1)
+    }
+
+    const result = []
+    for (let i = numDays - 1; i >= 0; i--) {
+      const d = new Date(today)
+      d.setDate(today.getDate() - i)
+      const y = d.getFullYear()
+      const m = String(d.getMonth() + 1).padStart(2, '0')
+      const dayStr = String(d.getDate()).padStart(2, '0')
+      const key = `${y}-${m}-${dayStr}`
+      const entry = map.get(key) || { ai: 0, search: 0, scanner: 0, other: 0 }
+      result.push({
+        day: key,
+        ...entry,
+      })
+    }
+    return result
+  }, [data, days])
+
   if (isLoading || !data) {
     return (
       <div className="space-y-4">
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
           <Skeleton className="h-20 rounded-xl" />
           <Skeleton className="h-20 rounded-xl" />
           <Skeleton className="h-20 rounded-xl" />
@@ -176,15 +203,13 @@ export default function CrawlerIntelligenceView() {
 
   const {
     summary,
-    categoryBreakdown,
     topCrawlers,
     topProbedPaths,
-    dailySeries,
     recentBotVisits,
   } = data
 
   const maxDaily = Math.max(
-    ...dailySeries.map((d) => d.ai + d.search + d.scanner + d.other),
+    ...chartSeries.map((d) => d.ai + d.search + d.scanner + d.other),
     1
   )
 
@@ -197,47 +222,26 @@ export default function CrawlerIntelligenceView() {
 
   return (
     <div className="space-y-4">
-      {/* Sub-header controls */}
-      <div className="flex items-center justify-between gap-4">
+      {/* Sub-header banner & retention note */}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 px-3.5 py-2.5 rounded-xl bg-white/[0.015] border border-[var(--color-border)]">
         <div className="flex items-center gap-2">
-          <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-xs font-mono">
+          <div className="flex items-center gap-1.5 px-2 py-0.5 rounded-md bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-xs font-mono shrink-0">
             <span className="inline-block w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
-            Active Bot Classification Engine
+            Bot Classification Engine
           </div>
-          <span className="text-xs text-[var(--color-text-muted)]">
-            Tiered retention: 14d raw logs · permanent daily rollups
+          <span className="text-xs text-white/80 font-medium">
+            Active telemetry for {days === -1 ? 'all time' : `last ${days} days`}
           </span>
         </div>
 
-        <div className="flex items-center gap-2">
-          <div className="flex items-center rounded-lg border border-[var(--color-border)] p-0.5">
-            {RANGES.map((r) => (
-              <button
-                key={r.days}
-                onClick={() => setDays(r.days)}
-                className={cn(
-                  'px-2.5 py-1 rounded-md text-xs font-mono transition-colors',
-                  days === r.days
-                    ? 'bg-accent/15 text-accent font-semibold'
-                    : 'text-[var(--color-text-muted)] hover:text-white'
-                )}
-              >
-                {r.label}
-              </button>
-            ))}
-          </div>
-          <button
-            onClick={() => load(days)}
-            className="p-1.5 rounded-lg border border-[var(--color-border)] text-[var(--color-text-muted)] hover:text-white hover:bg-white/[0.03] transition-colors"
-            title="Refresh crawler data"
-          >
-            <RefreshCw className={cn('w-3.5 h-3.5', isLoading && 'animate-spin')} />
-          </button>
+        <div className="flex items-center gap-1.5 text-[11px] text-[var(--color-text-muted)] font-mono">
+          <Info className="w-3.5 h-3.5 text-accent shrink-0" />
+          <span>Raw bot hits kept 14d · Daily aggregates kept forever</span>
         </div>
       </div>
 
       {/* Summary KPI Cards */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
         <div className="rounded-xl bg-white/[0.018] border border-[var(--color-border)] px-4 py-3">
           <div className="flex items-center gap-2 text-[var(--color-text-muted)]">
             <Bot className="w-3.5 h-3.5" />
@@ -308,7 +312,7 @@ export default function CrawlerIntelligenceView() {
             : `Daily automated traffic breakdown · last ${days} days`
         }
         badge={
-          <div className="flex items-center gap-3 text-[11px] font-mono">
+          <div className="flex flex-wrap items-center gap-2.5 text-[11px] font-mono">
             <span className="flex items-center gap-1 text-emerald-400">
               <span className="w-2 h-2 rounded-full bg-emerald-400" /> AI
             </span>
@@ -324,16 +328,16 @@ export default function CrawlerIntelligenceView() {
           </div>
         }
       >
-        {dailySeries.length === 0 ? (
+        {chartSeries.length === 0 ? (
           <p className="text-xs text-[var(--color-text-muted)] py-8 text-center">
             No crawler data in selected time window.
           </p>
         ) : (
           <div>
             {/* Inline tooltip if hovering */}
-            <div className="h-6 mb-2 flex items-center justify-between text-xs font-mono">
+            <div className="min-h-6 mb-2 flex items-center justify-between text-xs font-mono overflow-x-auto">
               {hoverBar ? (
-                <div className="flex items-center gap-4 text-white">
+                <div className="flex flex-wrap items-center gap-3 text-white">
                   <span className="text-[var(--color-text-muted)]">
                     {hoverBar.day}:
                   </span>
@@ -361,67 +365,76 @@ export default function CrawlerIntelligenceView() {
                 </div>
               ) : (
                 <span className="text-[var(--color-text-muted)]">
-                  Hover over bars to inspect daily breakdown
+                  Hover over bars to inspect daily breakdown ({chartSeries.length} days plotted)
                 </span>
               )}
             </div>
 
-            {/* Stacked Bars */}
-            <div className="flex items-end gap-1.5 h-36 w-full pt-4 border-b border-[var(--color-border)]">
-              {dailySeries.map((item) => {
-                const total = item.ai + item.search + item.scanner + item.other
-                const totalPct = Math.min(100, (total / maxDaily) * 100)
+            {/* Scrollable Stacked Bars on narrow viewports */}
+            <div className="overflow-x-auto pb-2 -mx-1 px-1">
+              <div className="flex items-end gap-1.5 h-36 min-w-[420px] sm:min-w-full pt-4 border-b border-[var(--color-border)]">
+                {chartSeries.map((item) => {
+                  const total = item.ai + item.search + item.scanner + item.other
+                  const totalPct = Math.min(100, (total / maxDaily) * 100)
 
-                const aiPct = total > 0 ? (item.ai / total) * 100 : 0
-                const searchPct = total > 0 ? (item.search / total) * 100 : 0
-                const scannerPct = total > 0 ? (item.scanner / total) * 100 : 0
-                const otherPct = total > 0 ? (item.other / total) * 100 : 0
+                  const aiPct = total > 0 ? (item.ai / total) * 100 : 0
+                  const searchPct = total > 0 ? (item.search / total) * 100 : 0
+                  const scannerPct = total > 0 ? (item.scanner / total) * 100 : 0
+                  const otherPct = total > 0 ? (item.other / total) * 100 : 0
 
-                return (
-                  <div
-                    key={item.day}
-                    className="flex-1 flex flex-col justify-end h-full group relative cursor-pointer"
-                    onMouseEnter={() => setHoverBar(item)}
-                    onMouseLeave={() => setHoverBar(null)}
-                  >
+                  return (
                     <div
-                      className="w-full rounded-t-sm flex flex-col-reverse overflow-hidden transition-all duration-150 group-hover:brightness-125"
-                      style={{ height: `${Math.max(4, totalPct)}%` }}
+                      key={item.day}
+                      className="flex-1 flex flex-col justify-end h-full group relative cursor-pointer min-w-[4px]"
+                      onMouseEnter={() => setHoverBar(item)}
+                      onMouseLeave={() => setHoverBar(null)}
                     >
-                      {item.scanner > 0 && (
-                        <div
-                          style={{ height: `${scannerPct}%` }}
-                          className="w-full bg-rose-500/80"
-                        />
-                      )}
-                      {item.search > 0 && (
-                        <div
-                          style={{ height: `${searchPct}%` }}
-                          className="w-full bg-blue-500/80"
-                        />
-                      )}
-                      {item.ai > 0 && (
-                        <div
-                          style={{ height: `${aiPct}%` }}
-                          className="w-full bg-emerald-500/80"
-                        />
-                      )}
-                      {item.other > 0 && (
-                        <div
-                          style={{ height: `${otherPct}%` }}
-                          className="w-full bg-purple-500/80"
-                        />
-                      )}
+                      <div
+                        className="w-full rounded-t-sm flex flex-col-reverse overflow-hidden transition-all duration-150 group-hover:brightness-125"
+                        style={{ height: `${Math.max(total > 0 ? 4 : 1, totalPct)}%` }}
+                      >
+                        {total === 0 ? (
+                          <div className="w-full h-full bg-white/[0.04]" />
+                        ) : (
+                          <>
+                            {item.scanner > 0 && (
+                              <div
+                                style={{ height: `${scannerPct}%` }}
+                                className="w-full bg-rose-500/80"
+                              />
+                            )}
+                            {item.search > 0 && (
+                              <div
+                                style={{ height: `${searchPct}%` }}
+                                className="w-full bg-blue-500/80"
+                              />
+                            )}
+                            {item.ai > 0 && (
+                              <div
+                                style={{ height: `${aiPct}%` }}
+                                className="w-full bg-emerald-500/80"
+                              />
+                            )}
+                            {item.other > 0 && (
+                              <div
+                                style={{ height: `${otherPct}%` }}
+                                className="w-full bg-purple-500/80"
+                              />
+                            )}
+                          </>
+                        )}
+                      </div>
                     </div>
-                  </div>
-                )
-              })}
-            </div>
+                  )
+                })}
+              </div>
 
-            {/* X-axis labels */}
-            <div className="flex justify-between items-center text-[10px] font-mono text-[var(--color-text-muted)] mt-2">
-              <span>{dailySeries[0]?.day}</span>
-              <span>{dailySeries[dailySeries.length - 1]?.day}</span>
+              {/* X-axis labels */}
+              <div className="flex justify-between items-center text-[10px] font-mono text-[var(--color-text-muted)] mt-2 min-w-[420px] sm:min-w-full">
+                <span>{chartSeries[0]?.day}</span>
+                <span>{chartSeries[Math.floor(chartSeries.length / 2)]?.day}</span>
+                <span>{chartSeries[chartSeries.length - 1]?.day}</span>
+              </div>
             </div>
           </div>
         )}
@@ -436,7 +449,7 @@ export default function CrawlerIntelligenceView() {
         >
           {topCrawlers.length === 0 ? (
             <p className="text-xs text-[var(--color-text-muted)] py-4 text-center">
-              No crawler records found.
+              No crawler records found in this time range.
             </p>
           ) : (
             <div className="space-y-2.5">
@@ -445,8 +458,8 @@ export default function CrawlerIntelligenceView() {
                 const badge = getCategoryBadge(c.category)
                 const Icon = badge.icon
                 return (
-                  <div key={c.name} className="flex items-center gap-3">
-                    <div className="w-36 shrink-0 flex items-center gap-1.5">
+                  <div key={c.name} className="flex items-center gap-2.5 sm:gap-3">
+                    <div className="w-28 sm:w-40 shrink-0 flex items-center gap-1.5">
                       <Icon className="w-3 h-3 text-[var(--color-text-muted)] shrink-0" />
                       <span
                         className="text-xs font-mono text-white/90 truncate"
@@ -470,7 +483,7 @@ export default function CrawlerIntelligenceView() {
                       />
                     </div>
 
-                    <span className="w-20 shrink-0 text-right text-xs font-mono text-white/80">
+                    <span className="w-16 sm:w-20 shrink-0 text-right text-xs font-mono text-white/80">
                       {c.count.toLocaleString()}
                     </span>
                   </div>
@@ -487,7 +500,7 @@ export default function CrawlerIntelligenceView() {
         >
           {topProbedPaths.length === 0 ? (
             <p className="text-xs text-[var(--color-text-muted)] py-4 text-center">
-              No probed paths recorded.
+              No probed paths recorded in this time range.
             </p>
           ) : (
             <div className="space-y-2.5">
@@ -501,10 +514,10 @@ export default function CrawlerIntelligenceView() {
                   p.path.includes('ssh') ||
                   p.path.includes('wp-')
                 return (
-                  <div key={p.path} className="flex items-center gap-3">
+                  <div key={p.path} className="flex items-center gap-2.5 sm:gap-3">
                     <span
                       className={cn(
-                        'w-48 shrink-0 text-xs font-mono truncate',
+                        'w-32 sm:w-48 shrink-0 text-xs font-mono truncate',
                         isMalicious ? 'text-rose-400' : 'text-white/80'
                       )}
                       title={p.path}
@@ -522,7 +535,7 @@ export default function CrawlerIntelligenceView() {
                       />
                     </div>
 
-                    <span className="w-16 shrink-0 text-right text-xs font-mono text-white/80">
+                    <span className="w-14 sm:w-16 shrink-0 text-right text-xs font-mono text-white/80">
                       {p.count.toLocaleString()}
                     </span>
                   </div>
@@ -536,7 +549,7 @@ export default function CrawlerIntelligenceView() {
       {/* Live Recent Crawler Feed */}
       <Card
         title="Live Crawler Audit Stream"
-        subtitle="Recent 50 automated visits captured in 14-day operational log"
+        subtitle="Most recent 50 automated visits matching the active time range"
         badge={
           <div className="flex items-center gap-2">
             <span className="text-xs font-mono text-[var(--color-text-muted)]">
@@ -545,7 +558,7 @@ export default function CrawlerIntelligenceView() {
             <button
               onClick={() => setFeedPage((p) => Math.max(0, p - 1))}
               disabled={feedPage === 0}
-              className="p-1 rounded border border-[var(--color-border)] text-[var(--color-text-muted)] hover:text-white disabled:opacity-30 disabled:pointer-events-none"
+              className="p-1 rounded border border-[var(--color-border)] text-[var(--color-text-muted)] hover:text-white disabled:opacity-30 disabled:pointer-events-none cursor-pointer"
             >
               <ChevronLeft className="w-3.5 h-3.5" />
             </button>
@@ -554,15 +567,15 @@ export default function CrawlerIntelligenceView() {
                 setFeedPage((p) => Math.min(totalFeedPages - 1, p + 1))
               }
               disabled={feedPage >= totalFeedPages - 1}
-              className="p-1 rounded border border-[var(--color-border)] text-[var(--color-text-muted)] hover:text-white disabled:opacity-30 disabled:pointer-events-none"
+              className="p-1 rounded border border-[var(--color-border)] text-[var(--color-text-muted)] hover:text-white disabled:opacity-30 disabled:pointer-events-none cursor-pointer"
             >
               <ChevronRight className="w-3.5 h-3.5" />
             </button>
           </div>
         }
       >
-        <div className="overflow-x-auto">
-          <table className="w-full text-left text-xs font-mono">
+        <div className="overflow-x-auto -mx-4 sm:-mx-5 px-4 sm:px-5">
+          <table className="w-full min-w-[620px] text-left text-xs font-mono">
             <thead>
               <tr className="text-[var(--color-text-muted)] border-b border-[var(--color-border)] pb-2">
                 <th className="pb-2 font-normal">Timestamp</th>
@@ -573,41 +586,49 @@ export default function CrawlerIntelligenceView() {
               </tr>
             </thead>
             <tbody className="divide-y divide-white/[0.04]">
-              {paginatedFeed.map((visit, idx) => {
-                const badge = getCategoryBadge(visit.botCategory)
-                return (
-                  <tr
-                    key={idx}
-                    className="hover:bg-white/[0.02] transition-colors"
-                  >
-                    <td className="py-2.5 text-[var(--color-text-muted)] whitespace-nowrap">
-                      {timeAgo(visit.createdAt)}
-                    </td>
-                    <td className="py-2.5 text-white font-medium whitespace-nowrap">
-                      {visit.botName || 'Generic Bot'}
-                    </td>
-                    <td className="py-2.5">
-                      <span
-                        className={cn(
-                          'inline-flex items-center gap-1 px-2 py-0.5 rounded text-[10px] border',
-                          badge.style
-                        )}
-                      >
-                        {badge.label}
-                      </span>
-                    </td>
-                    <td className="py-2.5 text-white/80 max-w-[200px] truncate">
-                      {visit.landingPath || '/'}
-                    </td>
-                    <td
-                      className="py-2.5 text-[var(--color-text-muted)] max-w-[260px] truncate"
-                      title={visit.userAgentSnippet || '—'}
+              {paginatedFeed.length === 0 ? (
+                <tr>
+                  <td colSpan={5} className="py-6 text-center text-[var(--color-text-muted)]">
+                    No recent crawler events recorded in this time range.
+                  </td>
+                </tr>
+              ) : (
+                paginatedFeed.map((visit, idx) => {
+                  const badge = getCategoryBadge(visit.botCategory)
+                  return (
+                    <tr
+                      key={idx}
+                      className="hover:bg-white/[0.02] transition-colors"
                     >
-                      {visit.userAgentSnippet || '—'}
-                    </td>
-                  </tr>
-                )
-              })}
+                      <td className="py-2.5 text-[var(--color-text-muted)] whitespace-nowrap">
+                        {timeAgo(visit.createdAt)}
+                      </td>
+                      <td className="py-2.5 text-white font-medium whitespace-nowrap">
+                        {visit.botName || 'Generic Bot'}
+                      </td>
+                      <td className="py-2.5">
+                        <span
+                          className={cn(
+                            'inline-flex items-center gap-1 px-2 py-0.5 rounded text-[10px] border whitespace-nowrap',
+                            badge.style
+                          )}
+                        >
+                          {badge.label}
+                        </span>
+                      </td>
+                      <td className="py-2.5 text-white/80 max-w-[200px] truncate" title={visit.landingPath || '/'}>
+                        {visit.landingPath || '/'}
+                      </td>
+                      <td
+                        className="py-2.5 text-[var(--color-text-muted)] max-w-[260px] truncate"
+                        title={visit.userAgentSnippet || '—'}
+                      >
+                        {visit.userAgentSnippet || '—'}
+                      </td>
+                    </tr>
+                  )
+                })
+              )}
             </tbody>
           </table>
         </div>
