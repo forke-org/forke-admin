@@ -17,6 +17,7 @@ import { Skeleton } from '@/components/ui/Skeleton'
 import { cn } from '@/lib/utils/cn'
 import WorldHeatmap, { countryName } from '@/components/admin/WorldHeatmap'
 import CrawlerIntelligenceView from '@/components/admin/CrawlerIntelligenceView'
+import CampaignLinkBuilderCard from '@/components/admin/CampaignLinkBuilderCard'
 
 const RANGES: { label: string; days: number }[] = [
   { label: '7d', days: 7 },
@@ -509,6 +510,9 @@ export default function TrackerPanel() {
 
           {/* Per-source funnel */}
           <FunnelCard funnel={funnel} />
+
+          {/* 1-Click Campaign Link Generator */}
+          <CampaignLinkBuilderCard />
 
           {/* All-time signups by source */}
           {signupSources.length > 0 && (
