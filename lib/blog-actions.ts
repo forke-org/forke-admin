@@ -28,7 +28,7 @@ async function ensureAdmin() {
 }
 
 /**
- * Fire the new-blog email to all subscribers, fail-soft. Never throws — a Resend
+ * Fire the new-blog email to all subscribers, fail-soft. Never throws — a Forke Mail
  * outage or a subscriber-query error must not roll back or block a publish.
  */
 async function announceBlogToSubscribers(blog: {
@@ -44,7 +44,7 @@ async function announceBlogToSubscribers(blog: {
   try {
     const { success, sentCount, broadcastId, error } = await sendBlogPublishedBroadcast(blog)
     // Record the TRUE outcome — a silent "sent" entry on a failed send is what
-    // previously hid a broadcast stuck in Resend's "draft" state.
+    // previously hid a broadcast stuck in Forke Mail's "draft" state.
     await logAudit({
       category: 'system',
       action: success ? 'blog.broadcast_sent' : 'blog.broadcast_failed',

@@ -12,6 +12,7 @@
 
 import { db } from './db'
 import { users, owners, subscribers, admins, developers, accounts } from './db/schema'
+import { removeSubscriberFromForkeMail } from './email'
 import { eq, and, desc, sql } from 'drizzle-orm'
 import { sendAdminInvitation, sendOwnerApprovedEmail, sendOwnerDeclinedEmail, sendOwnerBannedEmail, sendDeveloperBannedEmail } from './email'
 import { isAdminAuthenticated, getCurrentAdmin } from './admin-actions'
@@ -225,7 +226,9 @@ export async function deleteSubscriber(id: string) {
   try {
     const sub = await db.query.subscribers.findFirst({ where: eq(subscribers.id, id), columns: { email: true } })
     await db.delete(subscribers).where(eq(subscribers.id, id))
-    await logAudit({ category: 'system', action: 'subscriber.deleted', target: sub?.email || id })
+    // Also drop them from Forke Mail, otherwise they would keep getting broadcasts.
+    const removedFromMail = sub?.email ? await removeSubscriberFromForkeMail(sub.email) : true
+    await logAudit({ category: 'system', action: 'subscriber.deleted', target: sub?.email || id, metadata: { removedFromForkeMail: removedFromMail } })
     revalidatePath('/admin')
     return { success: true }
   } catch (error) {

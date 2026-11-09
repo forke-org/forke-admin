@@ -521,7 +521,7 @@ async function executeBroadcastDispatch(id: string, row: typeof broadcastApprova
         .update(broadcastApprovals)
         .set({
           status: 'failed',
-          error: broadcastResult.error || 'Failed to dispatch broadcast via Resend',
+          error: broadcastResult.error || 'Failed to dispatch broadcast via Forke Mail',
           updatedAt: new Date(),
         })
         .where(eq(broadcastApprovals.id, id))
@@ -547,7 +547,7 @@ async function executeBroadcastDispatch(id: string, row: typeof broadcastApprova
 }
 
 /**
- * Approve a broadcast request and trigger the bulk email to Resend audience.
+ * Approve a broadcast request and trigger the bulk email to Forke Mail audience.
  */
 export async function approveBroadcastAction(id: string): Promise<{
   success: boolean

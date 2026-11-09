@@ -116,7 +116,7 @@ export async function purgeAuditLogsAction() {
 
 /** Server Action: Get global live activity log feed status. */
 export async function getActivityLogLiveStatusAction() {
-  if (!(await getCurrentAdmin())) throw new Error('Unauthorized')
+  if (!(await getCurrentAdmin())) return { success: false, live: false }
   try {
     const live = await isActivityLogLive()
     return { success: true, live }
@@ -171,7 +171,7 @@ const ev = (
  * instrument the rest of the app.
  */
 export async function getActivityFeed(opts?: { category?: ActivityCategory | 'all'; limit?: number }) {
-  if (!(await getCurrentAdmin())) throw new Error('Unauthorized')
+  if (!(await getCurrentAdmin())) return { success: false, events: [] as ActivityEvent[], error: 'Unauthorized' }
   const limit = opts?.limit ?? 120
   const events: ActivityEvent[] = []
 
