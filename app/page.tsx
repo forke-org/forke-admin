@@ -298,6 +298,7 @@ export default function AdminDashboard() {
   const [waitlistEnabled, setWaitlistEnabled] = useState(true)
   const [isTogglingWaitlist, setIsTogglingWaitlist] = useState(false)
   const [searchQuery, setSearchQuery] = useState('')
+  const [subscriberStatus, setSubscriberStatus] = useState<string>('all')
 
   // Broadcast email approvals notification state
   const [broadcastApprovals, setBroadcastApprovals] = useState<BroadcastApprovalItem[]>([])
@@ -944,12 +945,14 @@ export default function AdminDashboard() {
   }
 
   async function handleExportCSV() {
-    const headers = ['ID', 'Email', 'Source', 'Country', 'Medium', 'Campaign', 'Referrer', 'Created At']
+    const headers = ['ID', 'Email', 'Status', 'Status Reason', 'Source', 'Country', 'Medium', 'Campaign', 'Referrer', 'Created At']
     const rows = filteredSubscribers.map((sub) => {
       const a = (sub.attribution as Record<string, any> | null) || {}
       return [
         sub.id,
         sub.email,
+        subscriberBucket(sub),
+        sub.statusReason || '',
         sub.source || 'direct',
         (a.country as string | null | undefined)?.toUpperCase() || '',
         a.medium || '',
@@ -1008,7 +1011,20 @@ export default function AdminDashboard() {
            enq.message.toLowerCase().includes(searchQuery.toLowerCase())
   })
 
+  // Lifecycle status mirrored from Forke Mail; paused counts as its own bucket.
+  const subscriberBucket = (sub: any): string => {
+    const status = sub.status || 'active'
+    if (status === 'active' && sub.pausedUntil && new Date(sub.pausedUntil) > new Date()) return 'paused'
+    return status
+  }
+  const subscriberStatusCounts = subscribersList.reduce<Record<string, number>>((acc, sub) => {
+    const b = subscriberBucket(sub)
+    acc[b] = (acc[b] || 0) + 1
+    return acc
+  }, {})
+
   const filteredSubscribers = subscribersList.filter((sub) => {
+    if (subscriberStatus !== 'all' && subscriberBucket(sub) !== subscriberStatus) return false
     const q = searchQuery.toLowerCase()
     const a = (sub.attribution as Record<string, any> | null) || {}
     const country = (a.country as string | null | undefined) || ''
@@ -2687,9 +2703,12 @@ export default function AdminDashboard() {
                     <span className="bg-white/[0.04] border border-white/[0.08] text-white/70 px-2 py-0.5 rounded font-mono text-[10px]">
                       {subscribersList.length} SUBSCRIBERS
                     </span>
+                    <span className="bg-emerald-500/10 border border-emerald-500/20 text-emerald-300 px-2 py-0.5 rounded font-mono text-[10px]">
+                      {(subscriberStatusCounts.active || 0).toLocaleString()} ACTIVE
+                    </span>
                   </div>
                   <p className="mt-0.5 text-xs text-[var(--color-text-muted)]">
-                    Verified email subscriptions, attribution sources, and audience lists.
+                    Email subscriptions and attribution. Status syncs from Forke Mail: only active subscribers receive broadcasts.
                   </p>
                 </div>
                 <div className="flex items-center gap-2">
@@ -2711,8 +2730,8 @@ export default function AdminDashboard() {
 
               <div className="rounded-xl bg-white/[0.018] border border-[var(--color-border)] overflow-hidden flex flex-col min-h-0 flex-grow">
 
-                {/* Search */}
-                <div className="p-4 border-b border-[var(--color-border)] bg-white/[0.005]">
+                {/* Search + status filter */}
+                <div className="p-4 border-b border-[var(--color-border)] bg-white/[0.005] flex flex-col gap-3 lg:flex-row lg:items-center">
                   <div className="relative w-full max-w-md">
                     <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[var(--color-text-muted)]" />
                     <input 
@@ -2723,6 +2742,26 @@ export default function AdminDashboard() {
                       className="w-full h-9 bg-white/[0.02] border border-[var(--color-border)] rounded-lg pl-9 pr-3 text-[13px] text-white focus:outline-none focus:border-accent transition-colors"
                     />
                   </div>
+                  <div className="flex flex-wrap gap-1.5">
+                    {['all', 'active', 'paused', 'unsubscribed', 'bounced', 'complained'].map((st) => {
+                      const count = st === 'all' ? subscribersList.length : subscriberStatusCounts[st] || 0
+                      if (st !== 'all' && st !== 'active' && count === 0) return null
+                      return (
+                        <button
+                          key={st}
+                          onClick={() => { setSubscriberStatus(st); setCurrentPage(1) }}
+                          className={cn(
+                            "h-8 px-2.5 rounded-lg text-[11px] font-mono uppercase tracking-wider border transition-colors",
+                            subscriberStatus === st
+                              ? "border-accent/40 bg-accent/10 text-accent"
+                              : "border-[var(--color-border)] text-white/60 hover:bg-white/[0.04] hover:text-white"
+                          )}
+                        >
+                          {st} <span className="opacity-60">{count}</span>
+                        </button>
+                      )
+                    })}
+                  </div>
                 </div>
 
                 {/* Table */}
@@ -2732,6 +2771,7 @@ export default function AdminDashboard() {
                       <tr className="border-b border-[var(--color-border)] text-[10px] uppercase tracking-wider text-white/35 font-medium">
                         <th className="px-4 py-2.5 whitespace-nowrap">Subscriber ID</th>
                         <th className="px-4 py-2.5 whitespace-nowrap">Email Address</th>
+                        <th className="px-4 py-2.5 whitespace-nowrap">Status</th>
                         <th className="px-4 py-2.5 whitespace-nowrap">Source</th>
                         <th className="px-4 py-2.5 whitespace-nowrap">Country</th>
                         <th className="px-4 py-2.5 whitespace-nowrap">Joined (Local)</th>
@@ -2740,10 +2780,10 @@ export default function AdminDashboard() {
                     </thead>
                     <tbody className="divide-y divide-[var(--color-border)]">
                       {isLoading ? (
-                        <TableLoadingRows cols={6} rows={6} />
+                        <TableLoadingRows cols={7} rows={6} />
                       ) : filteredSubscribers.length === 0 ? (
                         <tr>
-                          <td colSpan={6} className="px-4 py-12 text-center text-[var(--color-text-muted)] text-xs font-mono">No matching records found</td>
+                          <td colSpan={7} className="px-4 py-12 text-center text-[var(--color-text-muted)] text-xs font-mono">No matching records found</td>
                         </tr>
                       ) : (
                         paginatedSubscribers.map((sub) => {
@@ -2756,6 +2796,29 @@ export default function AdminDashboard() {
                               </td>
                               <td className="px-4 py-3 whitespace-nowrap">
                                 <p className="text-[13px] font-medium text-white">{sub.email}</p>
+                              </td>
+                              <td className="px-4 py-3 whitespace-nowrap">
+                                {(() => {
+                                  const b = subscriberBucket(sub)
+                                  const tone =
+                                    b === 'active' ? 'bg-emerald-500/10 border-emerald-500/20 text-emerald-300'
+                                    : b === 'paused' ? 'bg-sky-500/10 border-sky-500/20 text-sky-300'
+                                    : b === 'unsubscribed' ? 'bg-amber-500/10 border-amber-500/20 text-amber-300'
+                                    : 'bg-red-500/10 border-red-500/20 text-red-300'
+                                  return (
+                                    <div title={sub.statusChangedAt ? `Changed ${formatLocalDateTime(sub.statusChangedAt)}` : undefined}>
+                                      <span className={cn("inline-flex items-center px-1.5 py-0.5 rounded font-mono text-[10px] font-medium uppercase tracking-wider border", tone)}>
+                                        {b}
+                                      </span>
+                                      {b !== 'active' && sub.statusReason && (
+                                        <p className="text-[10px] text-[var(--color-text-muted)] font-mono mt-0.5">{String(sub.statusReason).replace(/_/g, ' ')}</p>
+                                      )}
+                                      {b === 'active' && Array.isArray(sub.topicsOptedOut) && sub.topicsOptedOut.length > 0 && (
+                                        <p className="text-[10px] text-[var(--color-text-muted)] font-mono mt-0.5">no {sub.topicsOptedOut.join(', ')}</p>
+                                      )}
+                                    </div>
+                                  )
+                                })()}
                               </td>
                               <td className="px-4 py-3 whitespace-nowrap">
                                 <span className="inline-flex items-center px-1.5 py-0.5 rounded font-mono text-[10px] font-medium uppercase tracking-wider bg-white/[0.03] border border-[var(--color-border)] text-white/70">

@@ -20,6 +20,7 @@ import {
   boolean,
   jsonb,
 } from 'drizzle-orm/pg-core'
+import { sql } from 'drizzle-orm'
 
 export const userRoleEnum = pgEnum('user_role', ['developer', 'owner'])
 export const taskStatusEnum = pgEnum('task_status', [
@@ -219,6 +220,19 @@ export const subscribers = pgTable('subscribers', {
   source: text('source').notNull().default('direct'), // primary, queryable marketing channel
   attribution: jsonb('attribution'), // full first-touch blob { medium, campaign, referrer, landingPage }
   createdAt: timestamp('created_at').defaultNow().notNull(),
+  // Lifecycle, mirrored from Forke Mail by /api/webhooks/forke-mail.
+  status: text('status').notNull().default('active'), // active | unsubscribed | bounced | complained | invalid
+  statusReason: text('status_reason'), // Forke Mail suppression source, e.g. unsubscribe_link, ses_bounce, dormancy
+  statusChangedAt: timestamp('status_changed_at', { withTimezone: true }),
+  pausedUntil: timestamp('paused_until', { withTimezone: true }),
+  topicsOptedOut: text('topics_opted_out').array().notNull().default(sql`'{}'::text[]`),
+})
+
+// Forke Mail webhook delivery ids already applied (replay protection).
+export const forkeMailWebhookDeliveries = pgTable('forke_mail_webhook_deliveries', {
+  deliveryId: text('delivery_id').primaryKey(),
+  eventType: text('event_type').notNull(),
+  receivedAt: timestamp('received_at', { withTimezone: true }).defaultNow().notNull(),
 })
 
 export const systemSettings = pgTable('system_settings', {

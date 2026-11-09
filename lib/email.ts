@@ -363,7 +363,7 @@ async function sendResendEmailResult(
     return { ok: false, retryable: false }
   }
   try {
-    const res = await fetch('https://api.resend.com/emails', {
+    const res = await fetch(`${RESEND_API}/emails`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -879,7 +879,30 @@ export function buildChangelogEmail(data: ChangelogEmailData): string {
 // the DB emails into a Resend audience as contacts.
 // ----------------------------------------------------------------------------
 
-const RESEND_API = 'https://api.resend.com'
+// EMAIL_API_URL switches every send from Resend to Forke Mail's
+// Resend-compatible API (e.g. https://mail.forke.space/api/resend).
+const RESEND_API = (process.env.EMAIL_API_URL || 'https://api.resend.com').replace(/\/+$/, '')
+const USING_FORKE_MAIL = !RESEND_API.includes('api.resend.com')
+
+/**
+ * Subscribers who should receive a broadcast on `topic`: status active, not
+ * paused, and not opted out of the topic. Statuses are mirrored from Forke Mail
+ * by /api/webhooks/forke-mail.
+ */
+async function loadBroadcastRecipients(topic: string): Promise<string[]> {
+  const { db } = await import('./db')
+  const { sql } = await import('drizzle-orm')
+  const result = await db.execute(sql`
+    SELECT DISTINCT ON (lower(email)) trim(email) AS email
+    FROM public.subscribers
+    WHERE status = 'active'
+      AND (paused_until IS NULL OR paused_until <= now())
+      AND NOT (${topic} = ANY(topics_opted_out))
+      AND trim(email) <> ''
+    ORDER BY lower(email)`)
+  const rows = ((result as any).rows ?? result) as { email: string }[]
+  return rows.map((r) => r.email)
+}
 
 function resolveAudienceId(): string {
   let id = process.env.RESEND_AUDIENCE_ID || ''
@@ -1018,21 +1041,10 @@ export async function sendBlogPublishedBroadcast(blog: {
     return { success: false, sentCount: 0 }
   }
 
-  // Resolve recipients from our DB (de-duplicated, case-insensitive).
-  const emails: string[] = []
+  // Resolve recipients: active, not paused, and not opted out of this topic.
+  let emails: string[] = []
   try {
-    const { db } = await import('./db')
-    const { subscribers } = await import('./db/schema')
-    const rows = await db.select({ email: subscribers.email }).from(subscribers)
-    const seen = new Set<string>()
-    for (const r of rows) {
-      const e = r.email?.trim()
-      if (!e) continue
-      const key = e.toLowerCase()
-      if (seen.has(key)) continue
-      seen.add(key)
-      emails.push(e)
-    }
+    emails = await loadBroadcastRecipients('blog')
   } catch (err) {
     console.error('Failed to load subscribers for blog broadcast:', err)
     return { success: false, sentCount: 0 }
@@ -1070,6 +1082,7 @@ export async function sendBlogPublishedBroadcast(blog: {
       method: 'POST',
       body: JSON.stringify({
         audience_id: audienceId,
+        ...(USING_FORKE_MAIL ? { topic: 'blog' } : {}),
         from: 'Forke Blog <blog@forke.space>',
         reply_to: 'support@forke.space',
         subject,
@@ -1151,21 +1164,10 @@ export async function sendChangelogPublishedBroadcast(changelog: {
     return { success: false, sentCount: 0, error: 'RESEND_API_KEY is not configured.' }
   }
 
-  // Resolve recipients from our DB (de-duplicated, case-insensitive).
-  const emails: string[] = []
+  // Resolve recipients: active, not paused, and not opted out of this topic.
+  let emails: string[] = []
   try {
-    const { db } = await import('./db')
-    const { subscribers } = await import('./db/schema')
-    const rows = await db.select({ email: subscribers.email }).from(subscribers)
-    const seen = new Set<string>()
-    for (const r of rows) {
-      const e = r.email?.trim()
-      if (!e) continue
-      const key = e.toLowerCase()
-      if (seen.has(key)) continue
-      seen.add(key)
-      emails.push(e)
-    }
+    emails = await loadBroadcastRecipients('changelog')
   } catch (err) {
     console.error('Failed to load subscribers for changelog broadcast:', err)
     return { success: false, sentCount: 0, error: 'Failed to load subscribers from database.' }
@@ -1205,6 +1207,7 @@ export async function sendChangelogPublishedBroadcast(changelog: {
         method: 'POST',
         body: JSON.stringify({
           audience_id: audienceId,
+        ...(USING_FORKE_MAIL ? { topic: 'changelog' } : {}),
           from: 'Forke Changelog <changelog@forke.space>',
           reply_to: 'support@forke.space',
           subject,
@@ -1307,21 +1310,10 @@ export async function sendSiteLiveBroadcast(): Promise<{ success: boolean; sentC
     return { success: false, sentCount: 0 }
   }
 
-  // Resolve recipients from our DB (de-duplicated, case-insensitive).
-  const emails: string[] = []
+  // Resolve recipients: active, not paused, and not opted out of this topic.
+  let emails: string[] = []
   try {
-    const { db } = await import('./db')
-    const { subscribers } = await import('./db/schema')
-    const rows = await db.select({ email: subscribers.email }).from(subscribers)
-    const seen = new Set<string>()
-    for (const r of rows) {
-      const e = r.email?.trim()
-      if (!e) continue
-      const key = e.toLowerCase()
-      if (seen.has(key)) continue
-      seen.add(key)
-      emails.push(e)
-    }
+    emails = await loadBroadcastRecipients('product')
   } catch (err) {
     console.error('Failed to load subscribers for site-live broadcast:', err)
     return { success: false, sentCount: 0 }
@@ -1348,6 +1340,7 @@ export async function sendSiteLiveBroadcast(): Promise<{ success: boolean; sentC
       method: 'POST',
       body: JSON.stringify({
         audience_id: audienceId,
+        ...(USING_FORKE_MAIL ? { topic: 'product' } : {}),
         from: 'Forke Waitlist <waitlist@forke.space>',
         reply_to: 'support@forke.space',
         subject,

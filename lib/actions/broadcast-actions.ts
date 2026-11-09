@@ -172,7 +172,8 @@ export async function getPendingBroadcastApprovalsAction(): Promise<{
         .orderBy(desc(broadcastApprovals.createdAt)),
       db
         .select({ count: sql<number>`count(*)::int` })
-        .from(subscribers),
+        .from(subscribers)
+        .where(sql`${subscribers.status} = 'active' AND (${subscribers.pausedUntil} IS NULL OR ${subscribers.pausedUntil} <= now())`),
     ])
 
     const subscriberCount = subRows[0]?.count || 0
