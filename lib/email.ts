@@ -975,6 +975,16 @@ async function ensureAudience(apiKey: string): Promise<string | null> {
   }
 }
 
+/** Number of recipients Forke Mail actually queued (after suppressions and topic opt-outs). */
+async function queuedRecipients(res: Response, fallback: number): Promise<number> {
+  try {
+    const json = (await res.clone().json()) as { recipients?: number }
+    return typeof json.recipients === 'number' ? json.recipients : fallback
+  } catch {
+    return fallback
+  }
+}
+
 /**
  * Remove a deleted subscriber from Forke Mail so they stop receiving
  * broadcasts. Their suppression record (if any) is kept by Forke Mail.
@@ -1136,7 +1146,7 @@ export async function sendBlogPublishedBroadcast(blog: {
       if (sendRes.ok) {
         return {
           success: true,
-          sentCount: synced,
+          sentCount: await queuedRecipients(sendRes, synced),
           broadcastId,
         }
       }
@@ -1258,8 +1268,9 @@ export async function sendChangelogPublishedBroadcast(changelog: {
       )
 
       if (sendRes.ok) {
-        console.log(`Changelog broadcast sent to audience ${audienceId} (${synced} contacts).`)
-        return { success: true, sentCount: synced, broadcastId }
+        const queued = await queuedRecipients(sendRes, synced)
+        console.log(`Changelog broadcast queued for ${queued} recipients (${synced} contacts synced).`)
+        return { success: true, sentCount: queued, broadcastId }
       }
 
       lastError = await sendRes.text()
@@ -1385,8 +1396,9 @@ export async function sendSiteLiveBroadcast(): Promise<{ success: boolean; sentC
       return { success: false, sentCount: 0, broadcastId }
     }
 
-    console.log(`Site-live broadcast sent to audience ${audienceId} (${synced} contacts).`)
-    return { success: true, sentCount: synced, broadcastId }
+    const queued = await queuedRecipients(sendRes, synced)
+    console.log(`Site-live broadcast queued for ${queued} recipients (${synced} contacts synced).`)
+    return { success: true, sentCount: queued, broadcastId }
   } catch (err) {
     console.error('Error dispatching site-live broadcast:', err)
     return { success: false, sentCount: 0 }

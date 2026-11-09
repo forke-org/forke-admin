@@ -605,10 +605,7 @@ export async function approveBroadcastAction(id: string): Promise<{
       console.error('Fatal background broadcast runner error:', err)
     })
 
-    return {
-      success: true,
-      sentCount: 352,
-    }
+    return { success: true }
   } catch (err) {
     console.error('Failed to approve broadcast:', err)
     return {
