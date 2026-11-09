@@ -89,7 +89,10 @@ export async function ensureBroadcastApprovalsTable() {
  * 1. It is not the latest item of its type (newer items exist in the database)
  * 2. It was already published in the past (historical publication, e.g. published > 5 minutes ago)
  */
-async function isContentOld(type: 'blog' | 'changelog', contentId: string): Promise<boolean> {
+async function isContentOld(type: 'blog' | 'changelog', contentId: string, referenceTime: Date = new Date()): Promise<boolean> {
+  // "Old" is judged relative to when the approval was requested, not to now,
+  // so a pending approval does not silently expire 5 minutes after publishing.
+  const ref = referenceTime.getTime()
   try {
     if (type === 'blog') {
       const [latestBlog] = await db
@@ -113,7 +116,7 @@ async function isContentOld(type: 'blog' | 'changelog', contentId: string): Prom
 
       // If currentBlog was already published in the past (publishedAt is older than 5 minutes)
       if (currentBlog.publishedAt) {
-        const elapsed = Date.now() - new Date(currentBlog.publishedAt).getTime()
+        const elapsed = ref - new Date(currentBlog.publishedAt).getTime()
         if (elapsed > 5 * 60 * 1000) {
           return true
         }
@@ -140,7 +143,7 @@ async function isContentOld(type: 'blog' | 'changelog', contentId: string): Prom
       if (!currentChangelog) return true
 
       // If created more than 5 minutes ago, it's an existing/historical changelog being toggled
-      const elapsed = Date.now() - new Date(currentChangelog.createdAt).getTime()
+      const elapsed = ref - new Date(currentChangelog.createdAt).getTime()
       if (elapsed > 5 * 60 * 1000) {
         return true
       }
@@ -181,7 +184,7 @@ export async function getPendingBroadcastApprovalsAction(): Promise<{
     // Filter out any approval item for old content or content that is no longer valid
     const validApprovals: BroadcastApprovalItem[] = []
     for (const item of approvalRows) {
-      const isOld = await isContentOld(item.type as any, item.contentId)
+      const isOld = await isContentOld(item.type as any, item.contentId, item.createdAt)
       if (isOld) {
         // Silently dismiss stale approval for old content so it leaves the queue
         await db
