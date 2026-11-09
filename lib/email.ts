@@ -538,7 +538,7 @@ export function buildSiteLiveEmail(opts?: { unsubscribe?: boolean; maxWidth?: nu
   const footerExtra = opts?.unsubscribe
     ? `<p style="font-family:${BRAND.sans};font-size:11px;line-height:1.6;color:${BRAND.textFaint};margin:14px 0 0 0;">
          You're receiving this because you joined the Forke waitlist.
-         <a href="{{{RESEND_UNSUBSCRIBE_URL}}}" style="color:${BRAND.textMuted};text-decoration:underline;">Unsubscribe</a>.
+         <a href="{{unsubscribe_url}}" style="color:${BRAND.textMuted};text-decoration:underline;">Unsubscribe</a>.
        </p>`
     : ''
   return emailShell({
@@ -585,7 +585,7 @@ export interface BlogEmailData {
   maxWidth?: number
   /**
    * When true, append an unsubscribe footer. Forke Mail's Broadcasts API REQUIRES an
-   * unsubscribe link and substitutes the {{{RESEND_UNSUBSCRIBE_URL}}} token at
+   * unsubscribe link and substitutes the {{unsubscribe_url}} token at
    * send time. Off for the preview page / any 1:1 use.
    */
   unsubscribe?: boolean
@@ -704,7 +704,7 @@ export function buildBlogEmail(data: BlogEmailData): string {
   const footerExtra = data.unsubscribe
     ? `<p style="font-family:${BRAND.sans};font-size:11px;line-height:1.6;color:${BRAND.textFaint};margin:14px 0 0 0;">
          You're receiving this because you subscribed to Forke updates.
-         <a href="{{{RESEND_UNSUBSCRIBE_URL}}}" style="color:${BRAND.textMuted};text-decoration:underline;">Unsubscribe</a>.
+         <a href="{{unsubscribe_url}}" style="color:${BRAND.textMuted};text-decoration:underline;">Unsubscribe</a>.
        </p>`
     : ''
 
@@ -805,7 +805,7 @@ export function buildChangelogEmail(data: ChangelogEmailData): string {
   const footerExtra = data.unsubscribe
     ? `<p style="font-family:${BRAND.sans};font-size:11px;line-height:1.6;color:${BRAND.textFaint};margin:14px 0 0 0;">
          You're receiving this because you subscribed to Forke release updates.
-         <a href="{{{RESEND_UNSUBSCRIBE_URL}}}" style="color:${BRAND.textMuted};text-decoration:underline;">Unsubscribe</a>.
+         <a href="{{unsubscribe_url}}" style="color:${BRAND.textMuted};text-decoration:underline;">Unsubscribe</a>.
        </p>`
     : ''
 
@@ -879,8 +879,8 @@ export function buildChangelogEmail(data: ChangelogEmailData): string {
 // the DB emails into a Forke Mail audience as contacts.
 // ----------------------------------------------------------------------------
 
-// All email goes through Forke Mail's Resend-compatible API.
-const MAIL_API = (process.env.EMAIL_API_URL || 'https://mail.forke.space/api/resend').replace(/\/+$/, '')
+// All email goes through the Forke Mail API.
+const MAIL_API = (process.env.EMAIL_API_URL || 'https://mail.forke.space/api/forke-mail').replace(/\/+$/, '')
 
 /**
  * Subscribers who should receive a broadcast on `topic`: status active, not
