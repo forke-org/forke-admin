@@ -9,6 +9,7 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server'
+import { isAuthorizedCron } from '@/lib/cron-auth'
 import { db } from '@/lib/db'
 import { sql } from 'drizzle-orm'
 import { logAudit } from '@/lib/actions/audit-actions'
@@ -16,16 +17,7 @@ import { logAudit } from '@/lib/actions/audit-actions'
 export const dynamic = 'force-dynamic'
 
 export async function GET(request: NextRequest) {
-  const authHeader = request.headers.get('authorization')
-  const searchParams = request.nextUrl.searchParams
-  const secretParam = searchParams.get('secret')
-  const cronSecret = process.env.CRON_SECRET
-
-  const token = authHeader ? authHeader.replace('Bearer ', '').trim() : secretParam
-  const isForkeCron = request.headers.get('x-forke-cron') === 'true'
-  const isLocalhost = request.nextUrl.hostname === '127.0.0.1' || request.nextUrl.hostname === 'localhost'
-
-  if (cronSecret && token !== cronSecret && !isForkeCron && !isLocalhost) {
+  if (!isAuthorizedCron(request)) {
     return NextResponse.json({ success: false, error: 'Unauthorized' }, { status: 401 })
   }
 

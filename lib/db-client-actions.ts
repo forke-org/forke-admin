@@ -691,6 +691,7 @@ export async function getDatabaseOverview() {
     let ociTelemetry: any = null
     try {
       const resp = await fetch(`${backendUrl}/api/v1/system/telemetry`, {
+        headers: { Authorization: `Bearer ${process.env.INTERNAL_API_TOKEN || ''}` },
         signal: AbortSignal.timeout(2000),
         cache: 'no-store',
       })

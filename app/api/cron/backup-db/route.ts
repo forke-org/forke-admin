@@ -9,25 +9,14 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server'
+import { isAuthorizedCron } from '@/lib/cron-auth'
 import { generateDatabaseBackupAction } from '@/lib/db-client-actions'
 
 export const dynamic = 'force-dynamic'
 
 export async function GET(request: NextRequest) {
   // Check CRON_SECRET for security
-  const authHeader = request.headers.get('authorization')
-  const searchParams = request.nextUrl.searchParams
-  const secretParam = searchParams.get('secret')
-  const cronSecret = process.env.CRON_SECRET
-
-  // Allow authorization header (e.g. "Bearer <secret>") or query parameter "?secret=<secret>"
-  const token = authHeader ? authHeader.replace('Bearer ', '').trim() : secretParam
-
-  // Validate request: Authorization header ("Bearer <secret>"), query parameter ("?secret=<secret>"), or internal cron header
-  const isForkeCron = request.headers.get('x-forke-cron') === 'true'
-  const isLocalhost = request.nextUrl.hostname === '127.0.0.1' || request.nextUrl.hostname === 'localhost'
-  
-  if (cronSecret && token !== cronSecret && !isForkeCron && !isLocalhost) {
+  if (!isAuthorizedCron(request)) {
     return NextResponse.json({ success: false, error: 'Unauthorized' }, { status: 401 })
   }
 

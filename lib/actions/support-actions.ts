@@ -11,6 +11,7 @@
  */
 
 import { db } from '@/lib/db'
+import { isAdminAuthenticated } from '@/lib/admin-actions'
 import { supportEnquiries } from '@/lib/db/schema'
 import { desc } from 'drizzle-orm'
 import { logAudit } from './audit-actions'
@@ -49,6 +50,7 @@ export async function submitEnquiry(formData: any) {
 }
 
 export async function getEnquiries() {
+  if (!(await isAdminAuthenticated())) throw new Error('Unauthorized')
   try {
     const data = await db.query.supportEnquiries.findMany({
       orderBy: [desc(supportEnquiries.createdAt)],

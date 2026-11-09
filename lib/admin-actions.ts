@@ -11,6 +11,7 @@
  */
 
 import { cookies } from 'next/headers'
+import { adminFromSessionCookie, createAdminSession, deleteAdminSession } from './admin-sessions'
 import bcrypt from 'bcryptjs'
 import { db } from '@/lib/db'
 import { admins } from '@/lib/db/schema'
@@ -41,46 +42,6 @@ export async function adminLogin(formData: FormData) {
     .limit(1)
     .then((rows) => rows[0])
 
-  // Self-healing fallback: Auto-create the admin if they do not exist
-  if (!admin && input === 'admin' && password === 'admin123') {
-    try {
-      console.log('Self-healing fallback: Auto-creating demo admin in DB...')
-      const hash = await bcrypt.hash(password, 10)
-      const inserted = await db
-        .insert(admins)
-        .values({
-          name: 'Demo Admin',
-          email: 'admin@forke.space',
-          username: 'admin',
-          passwordHash: hash,
-          role: 'super_admin',
-        })
-        .returning()
-      admin = inserted[0]
-    } catch (e) {
-      console.error('Failed to auto-create demo admin:', e)
-    }
-  }
-
-  // Self-healing fallback: Auto-reset password/disabled status if credentials are admin / admin123
-  if (admin && admin.username === 'admin' && password === 'admin123') {
-    const matches = admin.passwordHash ? await bcrypt.compare(password, admin.passwordHash) : false
-    if (!matches || admin.isDisabled) {
-      try {
-        console.log('Self-healing fallback: Resetting demo admin to default active state...')
-        const hash = await bcrypt.hash(password, 10)
-        await db
-          .update(admins)
-          .set({ passwordHash: hash, isDisabled: false })
-          .where(eq(admins.id, admin.id))
-        admin.passwordHash = hash
-        admin.isDisabled = false
-      } catch (e) {
-        console.error('Failed to reset demo admin:', e)
-      }
-    }
-  }
-
   // Verify account is not disabled
   if (admin && admin.isDisabled) {
     return { success: false, error: 'This administrative account has been disabled.' }
@@ -95,7 +56,7 @@ export async function adminLogin(formData: FormData) {
 
     try {
       const cookieStore = await cookies()
-      cookieStore.set('admin_token', `forke_admin_session:${admin.id}`, {
+      cookieStore.set('admin_token', `forke_admin_session:${await createAdminSession(admin.id)}`, {
         httpOnly: true,
         secure: process.env.NODE_ENV === 'production',
         sameSite: 'lax',
@@ -138,6 +99,7 @@ export async function adminLogout() {
     console.error('Failed to log admin logout:', err)
   }
   const cookieStore = await cookies()
+  await deleteAdminSession(cookieStore.get('admin_token')?.value)
   const isProd = process.env.NODE_ENV === 'production'
   
   if (isProd) {
@@ -159,21 +121,7 @@ export async function adminLogout() {
 export async function getCurrentAdmin() {
   try {
     const cookieStore = await cookies()
-    const token = cookieStore.get('admin_token')?.value
-    if (!token || !token.startsWith('forke_admin_session:')) {
-      return null
-    }
-    const id = token.split(':')[1]
-    if (!id) return null
-
-    const admin = await db
-      .select()
-      .from(admins)
-      .where(eq(admins.id, id))
-      .limit(1)
-      .then((rows) => rows[0])
-
-    return admin || null
+    return await adminFromSessionCookie(cookieStore.get('admin_token')?.value)
   } catch (error) {
     console.error('Error in getCurrentAdmin:', error)
     return null

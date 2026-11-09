@@ -456,6 +456,7 @@ export async function setBroadcastApprovalPublishStateAction(params: {
  * Remove any broadcast approval associated with a deleted item.
  */
 export async function deleteBroadcastApprovalByContentIdAction(contentId: string): Promise<void> {
+  await ensureAdmin()
   try {
     await db.delete(broadcastApprovals).where(eq(broadcastApprovals.contentId, contentId))
   } catch (err) {

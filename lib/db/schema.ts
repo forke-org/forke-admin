@@ -228,6 +228,15 @@ export const subscribers = pgTable('subscribers', {
   topicsOptedOut: text('topics_opted_out').array().notNull().default(sql`'{}'::text[]`),
 })
 
+// Admin login sessions (only the SHA-256 of the cookie token is stored).
+export const adminSessions = pgTable('admin_sessions', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  adminId: uuid('admin_id').notNull(),
+  tokenHash: text('token_hash').notNull().unique(),
+  createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
+  expiresAt: timestamp('expires_at', { withTimezone: true }).notNull(),
+})
+
 // Forke Mail webhook delivery ids already applied (replay protection).
 export const forkeMailWebhookDeliveries = pgTable('forke_mail_webhook_deliveries', {
   deliveryId: text('delivery_id').primaryKey(),
