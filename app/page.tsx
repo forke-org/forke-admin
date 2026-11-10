@@ -43,6 +43,7 @@ import { Select } from '@/components/ui/Select'
 import { Skeleton, TableLoadingRows } from '@/components/ui/Skeleton'
 import { AsciiReveal } from 'ascii-reveal'
 import { AdminSidebar } from '@/components/admin/AdminSidebar'
+import { markAppReady } from '@/lib/app-ready'
 import { ForkyLoader } from '@/components/ui/ForkyLoader'
 import ToastContainer, { toast } from '@/components/shared/Toast'
 import ConfirmModal, { type ConfirmOptions } from '@/components/shared/ConfirmModal'
@@ -223,6 +224,10 @@ export default function AdminDashboard() {
   }, [])
 
   // Switch tab and close the mobile drawer
+  useEffect(() => {
+    if (activeTab !== null) markAppReady()
+  }, [activeTab])
+
   function selectTab(tab: Exclude<typeof activeTab, null>) {
     setActiveTab(tab)
     setCurrentPage(1)
