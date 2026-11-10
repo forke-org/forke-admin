@@ -74,7 +74,7 @@ export default function Template({ children }: { children: React.ReactNode }) {
           ref={loaderRef}
           className="fixed inset-0 z-[9999] bg-[#151414]"
         >
-          <Loader fullScreen text="LOADING FORKE..." />
+          <Loader fullScreen text="Loading" />
         </div>
       )}
 

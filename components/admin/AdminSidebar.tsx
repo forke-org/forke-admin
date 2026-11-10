@@ -2,7 +2,7 @@
 
 import React, { useEffect, useRef, useState } from 'react'
 import {
-  Archive, Briefcase, ChevronLeft, ChevronRight, ChevronsUpDown, Code, HardDrive, History, KeyRound, LayoutDashboard,
+  Archive, Briefcase, ChevronsUpDown, Code, HardDrive, History, KeyRound, LayoutDashboard,
   LineChart, LogOut, Mail, MessageSquare, PenSquare, Server, Shield, Table, Terminal, User, X, type LucideIcon,
 } from 'lucide-react'
 import { cn } from '@/lib/utils/cn'
@@ -63,50 +63,41 @@ function Badge({ children, tone = 'accent' }: { children: React.ReactNode; tone?
   )
 }
 
-function NavItem({ item, active, collapsed, onSelect }: { item: Item; active: boolean; collapsed: boolean; onSelect: (tab: AdminTab) => void }) {
+function NavItem({ item, active, onSelect }: { item: Item; active: boolean; onSelect: (tab: AdminTab) => void }) {
   const Icon = item.icon
   return (
     <button
       type="button"
       onClick={() => onSelect(item.tab)}
       aria-current={active ? 'page' : undefined}
-      title={collapsed ? item.label : undefined}
       className={cn(
         'group relative flex h-8 w-full cursor-pointer items-center gap-2.5 rounded-[6px] px-2.5 text-left text-[13.5px] transition-colors',
-        collapsed && 'lg:justify-center lg:px-0',
         active ? 'bg-[#262423] font-medium text-white' : 'text-[#c9c7c5] hover:bg-[var(--color-surface)] hover:text-white'
       )}
     >
       {active ? <span className="absolute -left-3 top-2 bottom-2 w-[2px] rounded-r-[2px] bg-accent" /> : null}
       <Icon className={cn('h-4 w-4 shrink-0', active ? 'text-accent' : 'text-[var(--color-text-muted)] group-hover:text-[#c9c7c5]')} />
-      <span className={cn('min-w-0 flex-1 truncate', collapsed && 'lg:hidden')}>{item.label}</span>
+      <span className="min-w-0 flex-1 truncate">{item.label}</span>
       {item.status ? (
-        <span className={cn('flex items-center gap-1.5 font-mono text-[10.5px]', item.status.on ? 'text-emerald-400' : 'text-[#5f5c5a]', collapsed && 'lg:hidden')}>
+        <span className={cn('flex items-center gap-1.5 font-mono text-[10.5px]', item.status.on ? 'text-emerald-400' : 'text-[#5f5c5a]')}>
           <span className={cn('h-1.5 w-1.5 rounded-[1.5px]', item.status.on ? 'bg-emerald-400' : 'bg-white/20')} />
           {item.status.label}
         </span>
       ) : item.alert ? (
         <span className={cn(
           'rounded-[4px] px-1.5 font-mono text-[10.5px] leading-5',
-          item.alertTone === 'red' ? 'bg-red-400/10 text-red-400' : 'bg-accent/[0.12] text-[#FFA347]',
-          collapsed && 'lg:hidden'
+          item.alertTone === 'red' ? 'bg-red-400/10 text-red-400' : 'bg-accent/[0.12] text-[#FFA347]'
         )}>
           {item.alert}
         </span>
       ) : item.count !== undefined ? (
-        <span className={cn('font-mono text-[10.5px] text-[#5f5c5a] tabular-nums', collapsed && 'lg:hidden')}>{item.count}</span>
-      ) : null}
-      {collapsed && (item.alert || item.status) ? (
-        <span className={cn(
-          'absolute right-1.5 top-1.5 hidden h-1.5 w-1.5 rounded-[1.5px] lg:block',
-          item.status ? (item.status.on ? 'bg-emerald-400' : 'bg-white/20') : item.alertTone === 'red' ? 'bg-red-400' : 'bg-accent'
-        )} />
+        <span className="font-mono text-[10.5px] text-[#5f5c5a] tabular-nums">{item.count}</span>
       ) : null}
     </button>
   )
 }
 
-function AccountMenu({ admin, collapsed, onProfile, onPassword }: { admin: Admin; collapsed: boolean; onProfile: () => void; onPassword: () => void }) {
+function AccountMenu({ admin, onProfile, onPassword }: { admin: Admin; onProfile: () => void; onPassword: () => void }) {
   const [open, setOpen] = useState(false)
   const ref = useRef<HTMLDivElement>(null)
   const name = admin?.name || 'Admin'
@@ -131,8 +122,7 @@ function AccountMenu({ admin, collapsed, onProfile, onPassword }: { admin: Admin
     <div className="relative" ref={ref}>
       {open ? (
         <div className={cn(
-          'absolute bottom-full left-0 z-50 mb-2 overflow-hidden rounded-[8px] border border-[var(--color-border-strong)] bg-[var(--color-surface)] shadow-[0_24px_64px_-16px_rgba(0,0,0,0.7)] animate-in fade-in slide-in-from-bottom-1 duration-150',
-          collapsed ? 'w-[232px]' : 'right-0'
+          'absolute bottom-full left-0 right-0 z-50 mb-2 overflow-hidden rounded-[8px] border border-[var(--color-border-strong)] bg-[var(--color-surface)] shadow-[0_24px_64px_-16px_rgba(0,0,0,0.7)] animate-in fade-in slide-in-from-bottom-1 duration-150'
         )}>
           <div className="flex items-center gap-3 border-b border-[var(--color-border)] bg-[#1e1d1c] px-3 py-3">
             <Avatar name={name} className="h-9 w-9 text-xs" />
@@ -164,32 +154,28 @@ function AccountMenu({ admin, collapsed, onProfile, onPassword }: { admin: Admin
         type="button"
         aria-expanded={open}
         onClick={() => setOpen((o) => !o)}
-        title={collapsed ? name : undefined}
         className={cn(
           'flex w-full cursor-pointer items-center gap-2.5 rounded-[6px] p-1.5 text-left transition-colors hover:bg-[#262423]',
-          open && 'bg-[#262423]',
-          collapsed && 'lg:justify-center'
+          open && 'bg-[#262423]'
         )}
       >
         <Avatar name={name} className="h-8 w-8 text-[11px]" />
-        <span className={cn('min-w-0 flex-1', collapsed && 'lg:hidden')}>
+        <span className="min-w-0 flex-1">
           <span className="block truncate text-[13px] font-medium text-white">{name}</span>
           <span className="block truncate text-[11.5px] text-[var(--color-text-muted)]">Forke · {role}</span>
         </span>
-        <ChevronsUpDown className={cn('h-3.5 w-3.5 shrink-0 text-[var(--color-text-muted)]', collapsed && 'lg:hidden')} />
+        <ChevronsUpDown className="h-3.5 w-3.5 shrink-0 text-[var(--color-text-muted)]" />
       </button>
     </div>
   )
 }
 
 export function AdminSidebar({
-  activeTab, onSelect, collapsed, onToggleCollapsed, mobileOpen, onCloseMobile, counts, approvals, approvalsFailed,
+  activeTab, onSelect, mobileOpen, onCloseMobile, counts, approvals, approvalsFailed,
   activityLive, admin, onProfile, onPassword,
 }: {
   activeTab: AdminTab | null
   onSelect: (tab: AdminTab) => void
-  collapsed: boolean
-  onToggleCollapsed: () => void
   mobileOpen: boolean
   onCloseMobile: () => void
   counts: Counts
@@ -238,14 +224,14 @@ export function AdminSidebar({
     <aside
       className={cn(
         'fixed left-0 top-0 z-50 flex h-screen shrink-0 select-none flex-col bg-[var(--color-bg)] transition-[width,transform] duration-300 lg:sticky',
-        collapsed ? 'lg:w-16' : 'lg:w-[240px]',
+        'lg:w-[240px]',
         mobileOpen ? 'w-[min(280px,85vw)] translate-x-0' : 'w-[min(280px,85vw)] -translate-x-full lg:translate-x-0'
       )}
     >
       <span aria-hidden className="rail-y pointer-events-none absolute inset-y-0 right-0 w-px" />
-      <div className={cn('relative flex h-14 shrink-0 items-center gap-2 px-5', collapsed && 'lg:justify-center lg:px-0')}>
-        <img src="/forke-assets/forke_logo.png" alt="" className={cn('h-6 w-6 scale-[2] object-contain', collapsed && 'lg:hidden')} />
-        <span className={cn('flex items-baseline gap-1.5 whitespace-nowrap text-[18px] tracking-[-0.04em]', collapsed && 'lg:hidden')}>
+      <div className="relative flex h-14 shrink-0 items-center gap-2 px-5">
+        <img src="/forke-assets/forke_logo.png" alt="" className="h-6 w-6 scale-[2] object-contain" />
+        <span className="flex items-baseline gap-1.5 whitespace-nowrap text-[18px] tracking-[-0.04em]">
           <span className="font-semibold text-white">forke<span className="text-accent">*</span></span>
           <span className="font-normal text-[var(--color-text-muted)]">admin</span>
         </span>
@@ -257,14 +243,6 @@ export function AdminSidebar({
         >
           <X className="h-4 w-4" />
         </button>
-        <button
-          type="button"
-          onClick={onToggleCollapsed}
-          aria-label={collapsed ? 'Expand sidebar' : 'Collapse sidebar'}
-          className={cn('hidden h-8 w-8 cursor-pointer place-items-center rounded-[6px] text-[var(--color-text-muted)] hover:bg-[#262423] hover:text-white lg:grid', !collapsed && 'ml-auto')}
-        >
-          {collapsed ? <ChevronRight className="h-4 w-4" /> : <ChevronLeft className="h-4 w-4" />}
-        </button>
         <span aria-hidden className="rail-x pointer-events-none absolute inset-x-0 bottom-0 h-px" />
       </div>
 
@@ -273,13 +251,12 @@ export function AdminSidebar({
           <div key={group.label || 'root'} className="mb-4 last:mb-0">
             {group.label ? (
               <>
-                <div className={cn('px-2.5 pb-1.5 font-mono text-[10.5px] uppercase tracking-[0.08em] text-[#5f5c5a]', collapsed && 'lg:hidden')}>{group.label}</div>
-                {collapsed ? <span aria-hidden className="rail-x mx-auto mb-2 hidden h-px w-6 lg:block" /> : null}
+                <div className="px-2.5 pb-1.5 font-mono text-[10.5px] uppercase tracking-[0.08em] text-[#5f5c5a]">{group.label}</div>
               </>
             ) : null}
             <div className="flex flex-col gap-px">
               {group.items.map((item) => (
-                <NavItem key={item.tab} item={item} active={activeTab === item.tab} collapsed={collapsed} onSelect={onSelect} />
+                <NavItem key={item.tab} item={item} active={activeTab === item.tab} onSelect={onSelect} />
               ))}
             </div>
           </div>
@@ -288,7 +265,7 @@ export function AdminSidebar({
 
       <div className="relative px-3 pb-3 pt-3">
         <span aria-hidden className="rail-x pointer-events-none absolute inset-x-0 top-0 h-px" />
-        <AccountMenu admin={admin} collapsed={collapsed} onProfile={onProfile} onPassword={onPassword} />
+        <AccountMenu admin={admin} onProfile={onProfile} onPassword={onPassword} />
       </div>
     </aside>
   )

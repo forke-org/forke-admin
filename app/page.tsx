@@ -40,9 +40,10 @@ import { getEnquiries } from '@/lib/actions/support-actions'
 import { adminLogout } from '@/lib/admin-actions'
 import { Button } from '@/components/ui/Button'
 import { Select } from '@/components/ui/Select'
-import { Skeleton, PanelSkeleton, TableLoadingRows } from '@/components/ui/Skeleton'
+import { Skeleton, TableLoadingRows } from '@/components/ui/Skeleton'
 import { AsciiReveal } from 'ascii-reveal'
 import { AdminSidebar } from '@/components/admin/AdminSidebar'
+import { ForkyLoader } from '@/components/ui/ForkyLoader'
 import ToastContainer, { toast } from '@/components/shared/Toast'
 import ConfirmModal, { type ConfirmOptions } from '@/components/shared/ConfirmModal'
 import { cn } from '@/lib/utils/cn'
@@ -175,26 +176,6 @@ export default function AdminDashboard() {
   >(null)
   const [mobileNavOpen, setMobileNavOpen] = useState(false)
   const [activityLive, setActivityLive] = useState(true)
-  const [sidebarCollapsed, setSidebarCollapsed] = useState(false)
-
-  // Sync collapsed state with localStorage to persist preferences across transitions
-  useEffect(() => {
-    if (typeof window !== 'undefined') {
-      const stored = localStorage.getItem('admin_sidebar_collapsed')
-      if (stored === 'true') {
-        setSidebarCollapsed(true)
-      }
-    }
-  }, [])
-
-  const toggleSidebar = () => {
-    setSidebarCollapsed((prev) => {
-      const next = !prev
-      localStorage.setItem('admin_sidebar_collapsed', String(next))
-      return next
-    })
-  }
-
   // Sidebar counts – fetched once on mount
   const [sidebarCounts, setSidebarCounts] = useState({
     owners: 0, pendingOwners: 0, developers: 0, subscribers: 0,
@@ -1143,24 +1124,7 @@ export default function AdminDashboard() {
   }
 
   if (activeTab === null) {
-    return (
-      <div className="min-h-screen bg-[#151414] text-white flex">
-        {/* Sidebar skeleton */}
-        <div className="hidden lg:flex w-[240px] flex-col p-4 gap-2 shrink-0 bg-[var(--color-bg)] [background:linear-gradient(var(--color-rail)_50%,transparent_50%)_right/1px_32px_repeat-y]">
-          <div className="flex items-center gap-3 px-2 py-2 mb-3">
-            <Skeleton className="h-8 w-8 rounded-lg" />
-            <Skeleton className="h-4 w-28 rounded" />
-          </div>
-          {[...Array(9)].map((_, i) => (
-            <Skeleton key={i} className="h-9 w-full rounded-lg" />
-          ))}
-        </div>
-        {/* Main content skeleton */}
-        <div className="flex-grow p-4 md:p-6 flex flex-col min-h-0 h-screen overflow-hidden">
-          <PanelSkeleton />
-        </div>
-      </div>
-    )
+    return <ForkyLoader fullScreen />
   }
 
   return (
@@ -1177,8 +1141,6 @@ export default function AdminDashboard() {
       <AdminSidebar
         activeTab={activeTab}
         onSelect={selectTab}
-        collapsed={sidebarCollapsed}
-        onToggleCollapsed={toggleSidebar}
         mobileOpen={mobileNavOpen}
         onCloseMobile={() => setMobileNavOpen(false)}
         counts={sidebarCounts}
