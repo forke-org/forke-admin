@@ -13,9 +13,9 @@
 import React, { useState } from 'react'
 import { Button } from '@/components/ui/Button'
 import { adminLogin } from '@/lib/admin-actions'
+import { AsciiUser } from '@/components/admin/AsciiUser'
 import { useRouter } from 'next/navigation'
 import { User, ShieldAlert, KeyRound, Eye, EyeOff } from 'lucide-react'
-import Image from 'next/image'
 
 export default function AdminLoginPage() {
   const router = useRouter()
@@ -52,7 +52,6 @@ export default function AdminLoginPage() {
     <div className="grid min-h-screen bg-[var(--color-bg)] lg:grid-cols-[minmax(0,1fr)_minmax(0,1.1fr)]">
       <div className="relative flex flex-col px-6 py-6 sm:px-10">
         <div className="flex items-center gap-2">
-          <Image src="/forke-assets/forke_logo.png" alt="" width={24} height={24} className="h-6 w-6 scale-[2] object-contain" draggable={false} />
           <span className="flex items-baseline gap-1.5 text-[18px] tracking-[-0.04em]">
             <span className="font-semibold text-white">forke<span className="text-accent">*</span></span>
             <span className="font-normal text-[var(--color-text-muted)]">admin</span>
@@ -108,25 +107,9 @@ export default function AdminLoginPage() {
         </form>
         <p className="text-xs text-[#5f5c5a]">Access is restricted to Forke administrators.</p>
       </div>
-      <div className="relative hidden overflow-hidden bg-[#0b0604] lg:block">
+      <div className="relative hidden overflow-hidden bg-[radial-gradient(70%_60%_at_50%_48%,#1d1310_0%,#120c0a_55%,#0d0908_100%)] lg:block">
+        <AsciiUser />
         <span aria-hidden className="rail-y pointer-events-none absolute inset-y-0 left-0 w-px" />
-        <div className="absolute inset-0 [background-image:radial-gradient(rgba(240,227,222,0.07)_1px,transparent_1px)] [background-size:14px_14px] [mask-image:linear-gradient(180deg,#000,transparent_75%)]" />
-        <div className="absolute inset-x-[-20%] bottom-[-55%] h-[110%] rounded-[50%] bg-[radial-gradient(closest-side,rgba(255,177,92,0.9),rgba(255,122,0,0.65)_35%,rgba(107,38,4,0.45)_65%,transparent)] blur-2xl" />
-        <div className="absolute inset-x-0 bottom-0 h-[45%] bg-[repeating-linear-gradient(0deg,rgba(11,6,4,0.35)_0_2px,transparent_2px_6px)]" />
-        <div className="relative flex h-full flex-col justify-between p-12 xl:p-16">
-          <div className="inline-flex w-fit items-center gap-2 rounded-[5px] border border-white/10 bg-white/5 px-2.5 py-1 font-mono text-[11px] uppercase tracking-[0.06em] text-white/70 backdrop-blur">
-            <span className="h-1.5 w-1.5 animate-pulse rounded-[1.5px] bg-[#4ade80]" />Operations console
-          </div>
-          <div>
-            <h2 className="max-w-md text-[44px] font-medium leading-[1.04] tracking-[-0.04em] text-white">
-              Run Forke from one place<span className="text-accent">*</span>
-            </h2>
-            <p className="mt-4 max-w-md text-[15px] leading-relaxed text-white/60">
-              Approvals, users, broadcasts, content and infrastructure, all in one console.
-            </p>
-          </div>
-          <div className="font-mono text-[11px] uppercase tracking-[0.06em] text-white/50">Users · Broadcasts · Database · Infra</div>
-        </div>
       </div>
     </div>
   )

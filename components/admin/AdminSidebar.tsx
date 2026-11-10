@@ -230,7 +230,6 @@ export function AdminSidebar({
     >
       <span aria-hidden className="rail-y pointer-events-none absolute inset-y-0 right-0 w-px" />
       <div className="relative flex h-14 shrink-0 items-center gap-2 px-5">
-        <img src="/forke-assets/forke_logo.png" alt="" className="h-6 w-6 scale-[2] object-contain" />
         <span className="flex items-baseline gap-1.5 whitespace-nowrap text-[18px] tracking-[-0.04em]">
           <span className="font-semibold text-white">forke<span className="text-accent">*</span></span>
           <span className="font-normal text-[var(--color-text-muted)]">admin</span>
