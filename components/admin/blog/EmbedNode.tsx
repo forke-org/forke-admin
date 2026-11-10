@@ -199,7 +199,7 @@ function EmbedView({ node, updateAttributes, selected, editor, getPos }: NodeVie
         )}
 
         {embedType === 'iframe' && (
-          <div className="relative w-full overflow-hidden rounded-xl border border-[var(--color-border)] bg-[#0e0e12]" style={{ aspectRatio: '16 / 10' }}>
+          <div className="relative w-full overflow-hidden rounded-xl border border-[var(--color-border)] bg-[#1a1919]" style={{ aspectRatio: '16 / 10' }}>
             <iframe
               src={embedSrc}
               className="absolute inset-0 h-full w-full"
@@ -210,7 +210,7 @@ function EmbedView({ node, updateAttributes, selected, editor, getPos }: NodeVie
         )}
 
         {embedType === 'tweet' && (
-          <div className="overflow-hidden rounded-xl border border-[var(--color-border)] bg-[#0e0e12] p-2">
+          <div className="overflow-hidden rounded-xl border border-[var(--color-border)] bg-[#1a1919] p-2">
             <blockquote className="twitter-tweet" data-theme="dark" data-dnt="true">
               <a href={embedSrc}>{embedSrc}</a>
             </blockquote>
@@ -223,7 +223,7 @@ function EmbedView({ node, updateAttributes, selected, editor, getPos }: NodeVie
             target="_blank"
             rel="noopener noreferrer"
             onClick={(e) => editable && e.preventDefault()}
-            className="flex overflow-hidden rounded-xl border border-[var(--color-border)] bg-white/[0.018] transition-colors hover:border-white/20"
+            className="flex overflow-hidden rounded-xl border border-[var(--color-border)] bg-[var(--color-surface)] transition-colors hover:border-white/20"
           >
             {attrs.image && (
               // eslint-disable-next-line @next/next/no-img-element
@@ -287,7 +287,7 @@ function EmbedView({ node, updateAttributes, selected, editor, getPos }: NodeVie
 
             {/* Toolbar: alignment + iframe/card toggle for generic links */}
             {selected && (
-              <div className="absolute -top-10 left-1/2 z-10 flex -translate-x-1/2 items-center gap-0.5 rounded-lg border border-[var(--color-border)] bg-[#0b0b0e] p-1 shadow-xl shadow-black/40">
+              <div className="absolute -top-10 left-1/2 z-10 flex -translate-x-1/2 items-center gap-0.5 rounded-lg border border-[var(--color-border)] bg-[#1a1919] p-1 shadow-xl shadow-black/40">
                 {([['left', AlignLeft], ['center', AlignCenter], ['right', AlignRight]] as const).map(
                   ([value, Icon]) => (
                     <button

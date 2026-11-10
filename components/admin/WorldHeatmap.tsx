@@ -174,7 +174,7 @@ export default function WorldHeatmap({ data }: { data: CountryDatum[] }) {
 
           {/* Selected-country detail box */}
           {selectedRow && (
-            <div className="absolute top-3 left-3 z-20 w-[190px] sm:w-[210px] rounded-xl border border-white/15 bg-[#0e0e12]/95 backdrop-blur-md p-3 sm:p-3.5 shadow-2xl space-y-2">
+            <div className="absolute top-3 left-3 z-20 w-[190px] sm:w-[210px] rounded-xl border border-[var(--color-border-strong)] bg-[#1a1919]/95 backdrop-blur-md p-3 sm:p-3.5 shadow-2xl space-y-2">
               <div className="flex items-center justify-between gap-2">
                 <div className="flex items-center gap-2 min-w-0">
                   <Flag iso={selectedRow.iso} />
@@ -192,7 +192,7 @@ export default function WorldHeatmap({ data }: { data: CountryDatum[] }) {
                   className={`rounded-lg p-1.5 sm:p-2 ${
                     sortBy === 'subscribers'
                       ? 'bg-accent/15 border border-accent/30'
-                      : 'bg-white/[0.03] border border-white/[0.06]'
+                      : 'bg-white/[0.03] border border-[var(--color-border)]'
                   }`}
                 >
                   <p className="text-[9px] uppercase font-mono tracking-wider text-white/40">Subscribers</p>
@@ -204,7 +204,7 @@ export default function WorldHeatmap({ data }: { data: CountryDatum[] }) {
                   className={`rounded-lg p-1.5 sm:p-2 ${
                     sortBy === 'clicks'
                       ? 'bg-accent/15 border border-accent/30'
-                      : 'bg-white/[0.03] border border-white/[0.06]'
+                      : 'bg-white/[0.03] border border-[var(--color-border)]'
                   }`}
                 >
                   <p className="text-[9px] uppercase font-mono tracking-wider text-white/40">Clicks</p>
@@ -213,7 +213,7 @@ export default function WorldHeatmap({ data }: { data: CountryDatum[] }) {
                   </p>
                 </div>
               </div>
-              <div className="pt-1 text-[10px] font-mono text-white/45 flex items-center justify-between border-t border-white/[0.06]">
+              <div className="pt-1 text-[10px] font-mono text-white/45 flex items-center justify-between border-t border-[var(--color-border)]">
                 <span>
                   {selectedRow.clicks > 0
                     ? (Math.round((selectedRow.conversions / selectedRow.clicks) * 1000) / 10).toFixed(1)
@@ -227,7 +227,7 @@ export default function WorldHeatmap({ data }: { data: CountryDatum[] }) {
 
           {/* Hover label (only when nothing is pinned) */}
           {hover && !selectedRow && (
-            <div className="pointer-events-none absolute top-3 left-3 z-10 rounded-lg border border-white/15 bg-[#111]/95 backdrop-blur px-2.5 py-1.5 shadow-xl">
+            <div className="pointer-events-none absolute top-3 left-3 z-10 rounded-lg border border-[var(--color-border-strong)] bg-[#1a1919]/95 backdrop-blur px-2.5 py-1.5 shadow-xl">
               <div className="flex items-center gap-1.5 text-xs font-mono text-white/90">{hover.name}</div>
               <div className="text-sm font-mono text-white mt-0.5">
                 {hover.value.toLocaleString()}{' '}
@@ -238,7 +238,7 @@ export default function WorldHeatmap({ data }: { data: CountryDatum[] }) {
 
           {/* Floating Globe Legend */}
           <div className="absolute bottom-2.5 left-0 right-0 flex items-center justify-center pointer-events-none">
-            <div className="px-3 py-1 rounded-full bg-[#0d0d10]/90 backdrop-blur border border-white/10 flex items-center gap-2.5 text-[10px] font-mono text-white/50 shadow-lg">
+            <div className="px-3 py-1 rounded-[5px] bg-[#1a1919]/90 backdrop-blur border border-[var(--color-border-strong)] flex items-center gap-2.5 text-[10px] font-mono text-white/50 shadow-lg">
               <span className="text-white/70 capitalize font-medium">{sortBy}:</span>
               <span className="flex items-center gap-1">
                 <span className="w-2 h-2 rounded-full" style={{ background: 'rgba(255,122,0,0.95)' }} />

@@ -70,7 +70,7 @@ function getCategoryBadge(category?: string | null) {
       return {
         label: category || 'Bot',
         icon: Bot,
-        style: 'bg-white/5 text-[var(--color-text-muted)] border-white/10',
+        style: 'bg-white/5 text-[var(--color-text-muted)] border-[var(--color-border-strong)]',
       }
   }
 }
@@ -101,7 +101,7 @@ function Card({
   badge?: React.ReactNode
 }) {
   return (
-    <div className="rounded-xl bg-white/[0.018] border border-[var(--color-border)] p-4 sm:p-5">
+    <div className="rounded-xl bg-[var(--color-surface)] border border-[var(--color-border)] p-4 sm:p-5">
       <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-2 mb-4">
         <div>
           <h3 className="text-sm font-medium text-white">{title}</h3>
@@ -242,7 +242,7 @@ export default function CrawlerIntelligenceView({ days = 14 }: CrawlerIntelligen
 
       {/* Summary KPI Cards */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
-        <div className="rounded-xl bg-white/[0.018] border border-[var(--color-border)] px-4 py-3">
+        <div className="rounded-xl bg-[var(--color-surface)] border border-[var(--color-border)] px-4 py-3">
           <div className="flex items-center gap-2 text-[var(--color-text-muted)]">
             <Bot className="w-3.5 h-3.5" />
             <span className="text-[11px] uppercase tracking-wide">
@@ -257,7 +257,7 @@ export default function CrawlerIntelligenceView({ days = 14 }: CrawlerIntelligen
           </p>
         </div>
 
-        <div className="rounded-xl bg-white/[0.018] border border-[var(--color-border)] px-4 py-3">
+        <div className="rounded-xl bg-[var(--color-surface)] border border-[var(--color-border)] px-4 py-3">
           <div className="flex items-center gap-2 text-emerald-400">
             <Cpu className="w-3.5 h-3.5" />
             <span className="text-[11px] uppercase tracking-wide">
@@ -272,7 +272,7 @@ export default function CrawlerIntelligenceView({ days = 14 }: CrawlerIntelligen
           </p>
         </div>
 
-        <div className="rounded-xl bg-white/[0.018] border border-[var(--color-border)] px-4 py-3">
+        <div className="rounded-xl bg-[var(--color-surface)] border border-[var(--color-border)] px-4 py-3">
           <div className="flex items-center gap-2 text-blue-400">
             <Search className="w-3.5 h-3.5" />
             <span className="text-[11px] uppercase tracking-wide">
@@ -287,7 +287,7 @@ export default function CrawlerIntelligenceView({ days = 14 }: CrawlerIntelligen
           </p>
         </div>
 
-        <div className="rounded-xl bg-white/[0.018] border border-[var(--color-border)] px-4 py-3">
+        <div className="rounded-xl bg-[var(--color-surface)] border border-[var(--color-border)] px-4 py-3">
           <div className="flex items-center gap-2 text-rose-400">
             <ShieldAlert className="w-3.5 h-3.5" />
             <span className="text-[11px] uppercase tracking-wide">

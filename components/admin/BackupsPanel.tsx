@@ -196,7 +196,7 @@ export default function BackupsPanel() {
       {/* Stats Cards */}
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-3.5">
         <div
-          className={`rounded-xl bg-white/[0.018] border p-4 space-y-2 ${
+          className={`rounded-xl bg-[var(--color-surface)] border p-4 space-y-2 ${
             lastSuccessStale ? 'border-red-500/30' : 'border-[var(--color-border)]'
           }`}
         >
@@ -210,7 +210,7 @@ export default function BackupsPanel() {
           {lastSuccessStale && <div className="text-[9px] text-red-400 font-mono">No backup in 2+ days</div>}
         </div>
 
-        <div className="rounded-xl bg-white/[0.018] border border-[var(--color-border)] p-4 space-y-2">
+        <div className="rounded-xl bg-[var(--color-surface)] border border-[var(--color-border)] p-4 space-y-2">
           <div className="text-[10px] font-medium text-white/40 uppercase tracking-wider flex items-center justify-between">
             <span>Last Run</span>
             <Clock className="w-3.5 h-3.5 text-accent/60" />
@@ -218,7 +218,7 @@ export default function BackupsPanel() {
           <div className="text-sm font-mono font-medium text-white">{formatLocalDateTime(stats.lastRun ?? null)}</div>
         </div>
 
-        <div className="rounded-xl bg-white/[0.018] border border-[var(--color-border)] p-4 space-y-2">
+        <div className="rounded-xl bg-[var(--color-surface)] border border-[var(--color-border)] p-4 space-y-2">
           <div className="text-[10px] font-medium text-white/40 uppercase tracking-wider flex items-center justify-between">
             <span>Successful (90d)</span>
             <Archive className="w-3.5 h-3.5 text-accent/60" />
@@ -226,7 +226,7 @@ export default function BackupsPanel() {
           <div className="text-lg font-mono font-medium text-white">{stats.successCount ?? 0}</div>
         </div>
 
-        <div className="rounded-xl bg-white/[0.018] border border-[var(--color-border)] p-4 space-y-2">
+        <div className="rounded-xl bg-[var(--color-surface)] border border-[var(--color-border)] p-4 space-y-2">
           <div className="text-[10px] font-medium text-white/40 uppercase tracking-wider flex items-center justify-between">
             <span>Failed (90d)</span>
             <Shield
@@ -246,11 +246,11 @@ export default function BackupsPanel() {
       </div>
 
       {/* Table Container */}
-      <div className="flex-grow flex flex-col justify-between overflow-hidden rounded-xl border border-[var(--color-border)] bg-white/[0.018]">
+      <div className="flex-grow flex flex-col justify-between overflow-hidden rounded-xl border border-[var(--color-border)] bg-[var(--color-surface)]">
         <div className="overflow-auto flex-grow">
           <table className="w-full border-collapse text-left">
             <thead>
-              <tr className="border-b border-[var(--color-border)] text-[10px] uppercase tracking-wider text-white/35 font-medium sticky top-0 bg-[#0d0d0f] z-10">
+              <tr className="border-b border-[var(--color-border)] font-mono text-[11px] font-normal uppercase tracking-[0.06em] text-[#8e8e93] whitespace-nowrap sticky top-0 bg-[#1e1d1c] z-10">
                 <th className="px-4 py-2.5">Started (Local)</th>
                 <th className="px-4 py-2.5">Tier</th>
                 <th className="px-4 py-2.5">Status</th>
@@ -315,7 +315,7 @@ export default function BackupsPanel() {
                           </button>
                         ) : (
                           <span
-                            className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[10px] font-mono border border-white/10 text-white/35 bg-white/[0.02] select-none"
+                            className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[10px] font-mono border border-[var(--color-border-strong)] text-white/35 bg-white/[0.02] select-none"
                             title="Backup file pruned per 7-day retention policy"
                           >
                             <span>Purged</span>

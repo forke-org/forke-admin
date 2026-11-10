@@ -122,7 +122,7 @@ function ImageNodeView({ node, updateAttributes, selected, editor }: NodeViewPro
 
             {/* Alignment toolbar (only while this image is selected) */}
             {selected && (
-              <div className="absolute -top-10 left-1/2 -translate-x-1/2 flex items-center gap-0.5 rounded-lg border border-[var(--color-border)] bg-[#0b0b0e] p-1 shadow-xl shadow-black/40">
+              <div className="absolute -top-10 left-1/2 -translate-x-1/2 flex items-center gap-0.5 rounded-lg border border-[var(--color-border)] bg-[#1a1919] p-1 shadow-xl shadow-black/40">
                 {(
                   [
                     ['left', AlignLeft],

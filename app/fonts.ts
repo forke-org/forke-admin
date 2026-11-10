@@ -8,8 +8,9 @@
  * commercial license from Forke Inc. is strictly prohibited.
  */
 
-import { Instrument_Serif, JetBrains_Mono } from 'next/font/google'
+import { Instrument_Serif } from 'next/font/google'
 import { GeistSans } from 'geist/font/sans'
+import { GeistMono } from 'geist/font/mono'
 
 export const geistSans = GeistSans
 
@@ -20,8 +21,4 @@ export const instrumentSerif = Instrument_Serif({
   display: 'swap',
 })
 
-export const jetbrainsMono = JetBrains_Mono({
-  subsets: ['latin'],
-  variable: '--font-jetbrains-mono',
-  display: 'swap',
-})
+export const geistMono = GeistMono

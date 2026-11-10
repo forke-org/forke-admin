@@ -929,17 +929,17 @@ export default function DatabaseConsole({ currentAdmin, initialTab }: DatabaseCo
   }
 
   return (
-    <div className="flex h-full min-h-0 border border-white/[0.06] rounded-xl overflow-hidden bg-white/[0.005] select-none text-left">
+    <div className="flex h-full min-h-0 border border-[var(--color-border)] rounded-xl overflow-hidden bg-white/[0.005] select-none text-left">
 
       <ConfirmModal state={confirmState} onClose={() => setConfirmState(null)} />
 
       {/* --- LEFT SIDEBAR: TABLES LIST (desktop only) --- */}
       {/* --- LEFT SIDEBAR: TABLES LIST (desktop only) --- */}
       {initialTab !== 'sql' && (
-        <aside className="hidden lg:flex w-60 border-r border-white/[0.06] flex-col shrink-0 bg-[#0d0d11]">
+        <aside className="hidden lg:flex w-60 border-r border-[var(--color-border)] flex-col shrink-0 bg-[#1a1919]">
           
           {/* Sidebar Header & Search */}
-          <div className="p-3 border-b border-white/[0.06] space-y-2 shrink-0">
+          <div className="p-3 border-b border-[var(--color-border)] space-y-2 shrink-0">
             <div className="flex items-center gap-2 text-xs font-medium text-white/70">
               <Database className="w-3.5 h-3.5 text-accent" />
               <span>Tables ({tablesList.length})</span>
@@ -951,7 +951,7 @@ export default function DatabaseConsole({ currentAdmin, initialTab }: DatabaseCo
                 placeholder="Search tables..."
                 value={tableSearchQuery}
                 onChange={(e) => setTableSearchQuery(e.target.value)}
-                className="w-full h-8 bg-white/[0.02] border border-white/[0.06] rounded-md pl-8 pr-2 text-xs text-white focus:outline-none focus:border-accent/40"
+                className="w-full h-8 bg-white/[0.02] border border-[var(--color-border)] rounded-md pl-8 pr-2 text-xs text-white focus:outline-none focus:border-accent/40"
               />
             </div>
           </div>
@@ -1015,7 +1015,7 @@ export default function DatabaseConsole({ currentAdmin, initialTab }: DatabaseCo
                     {isMenuOpen && (
                       <>
                         <div className="fixed inset-0 z-30" onClick={(e) => { e.stopPropagation(); setSidebarActiveTableMenu('') }} />
-                        <div className="absolute right-2 top-7 mt-1 w-40 bg-[#0d0d11] border border-white/[0.08] rounded-xl shadow-2xl p-1 z-50 flex flex-col text-xs text-white/80 select-none font-sans">
+                        <div className="absolute right-2 top-7 mt-1 w-40 bg-[#1a1919] border border-[var(--color-border)] rounded-xl shadow-2xl p-1 z-50 flex flex-col text-xs text-white/80 select-none font-sans">
                           <button
                             onClick={(e) => {
                               e.stopPropagation()
@@ -1059,7 +1059,7 @@ export default function DatabaseConsole({ currentAdmin, initialTab }: DatabaseCo
                             <span>{t.rlsEnabled ? 'Disable RLS' : 'Enable RLS'}</span>
                           </button>
                           )}
-                          <div className="border-t border-white/[0.06] my-1" />
+                          <div className="border-t border-[var(--color-border)] my-1" />
                           {isSuperAdmin && (
                           <>
                           <button
@@ -1113,7 +1113,7 @@ export default function DatabaseConsole({ currentAdmin, initialTab }: DatabaseCo
           </div>
 
           {/* Sidebar Footer with Tools */}
-          <div className="p-3 border-t border-white/[0.06] flex items-center gap-2 shrink-0 relative bg-white/[0.01]">
+          <div className="p-3 border-t border-[var(--color-border)] flex items-center gap-2 shrink-0 relative bg-white/[0.01]">
             
             {/* Tools / Hammer Button */}
             <div className="relative">
@@ -1125,7 +1125,7 @@ export default function DatabaseConsole({ currentAdmin, initialTab }: DatabaseCo
                   "p-2 rounded-lg border flex items-center justify-center transition-colors cursor-pointer",
                   showToolsPopover
                     ? "border-accent bg-accent/15 text-accent"
-                    : "border-white/[0.06] bg-white/[0.02] text-white/60 hover:text-white hover:border-white/12"
+                    : "border-[var(--color-border)] bg-white/[0.02] text-white/60 hover:text-white hover:border-white/12"
                 )}
                 title="Schema Tools"
               >
@@ -1140,7 +1140,7 @@ export default function DatabaseConsole({ currentAdmin, initialTab }: DatabaseCo
               {showToolsPopover && (
                 <>
                   <div className="fixed inset-0 z-40" onClick={() => setShowToolsPopover(false)} />
-                  <div className="absolute left-0 bottom-10 w-52 bg-[#0d0d11] border border-white/[0.08] rounded-xl shadow-2xl p-1.5 z-50 flex flex-col">
+                  <div className="absolute left-0 bottom-10 w-52 bg-[#1a1919] border border-[var(--color-border)] rounded-xl shadow-2xl p-1.5 z-50 flex flex-col">
                     <button
                       onClick={() => {
                         const ddl = generateDDL()
@@ -1192,11 +1192,11 @@ export default function DatabaseConsole({ currentAdmin, initialTab }: DatabaseCo
       )}
 
       {/* --- RIGHT SIDEBAR: CONSOLE VIEW --- */}
-      <main className="flex-grow flex flex-col min-w-0 bg-[#070709]/20">
+      <main className="flex-grow flex flex-col min-w-0 bg-[#151414]/20">
 
         {/* Mobile table selector (replaces the desktop sidebar on small screens) */}
         {initialTab !== 'sql' && (
-          <div className="lg:hidden flex items-center gap-2 p-2 border-b border-white/[0.06] shrink-0 bg-white/[0.005]">
+          <div className="lg:hidden flex items-center gap-2 p-2 border-b border-[var(--color-border)] shrink-0 bg-white/[0.005]">
             <Database className="w-4 h-4 text-accent shrink-0" />
             <div className="flex-grow min-w-0">
               <Select
@@ -1213,13 +1213,13 @@ export default function DatabaseConsole({ currentAdmin, initialTab }: DatabaseCo
         )}
 
         {/* Neon style Top Toolbar */}
-        <div className="min-h-12 border-b border-white/[0.06] flex items-center justify-between gap-2 px-4 shrink-0 bg-[#0d0d11]">
+        <div className="min-h-12 border-b border-[var(--color-border)] flex items-center justify-between gap-2 px-4 shrink-0 bg-[#1a1919]">
 
           {/* Left side actions (DATA/STRUCTURE tabs, history nav, search/filters, sort, columns dropdown, insert button) */}
           <div className="flex items-center gap-4 min-w-0 overflow-x-auto no-scrollbar">
             
             {/* DATA / STRUCTURE Tabs */}
-            <div className="flex items-center bg-white/[0.03] border border-white/[0.06] p-0.5 rounded-lg">
+            <div className="flex items-center bg-white/[0.03] border border-[var(--color-border)] p-0.5 rounded-lg">
               {initialTab !== 'sql' ? (
                 <>
                   <button
@@ -1274,7 +1274,7 @@ export default function DatabaseConsole({ currentAdmin, initialTab }: DatabaseCo
                     "h-8 px-3 rounded-lg border text-xs font-medium flex items-center gap-1.5 transition-colors cursor-pointer whitespace-nowrap shrink-0",
                     showFilterBar || filtersList.some(f => f.value.trim() !== '' || f.operator.includes('null'))
                       ? "border-accent/30 bg-accent/10 text-accent"
-                      : "border-white/[0.06] bg-white/[0.02] text-white/70 hover:text-white hover:bg-white/[0.04]"
+                      : "border-[var(--color-border)] bg-white/[0.02] text-white/70 hover:text-white hover:bg-white/[0.04]"
                   )}
                 >
                   <Search className="w-3.5 h-3.5" />
@@ -1299,7 +1299,7 @@ export default function DatabaseConsole({ currentAdmin, initialTab }: DatabaseCo
                       "h-8 px-3 rounded-lg border text-xs font-medium flex items-center gap-1.5 transition-colors cursor-pointer whitespace-nowrap shrink-0",
                       sortBy
                         ? "border-accent/30 bg-accent/10 text-accent"
-                        : "border-white/[0.06] bg-white/[0.02] text-white/70 hover:text-white hover:bg-white/[0.04]"
+                        : "border-[var(--color-border)] bg-white/[0.02] text-white/70 hover:text-white hover:bg-white/[0.04]"
                     )}
                   >
                     <ArrowUpDown className="w-3.5 h-3.5" />
@@ -1308,7 +1308,7 @@ export default function DatabaseConsole({ currentAdmin, initialTab }: DatabaseCo
                   </button>
 
                   <PortalDropdown triggerRef={sortBtnRef} open={showSortDropdown} onClose={() => setShowSortDropdown(false)}>
-                    <div className="w-56 bg-[#0d0d11] border border-white/[0.08] rounded-xl shadow-2xl p-3 flex flex-col gap-2">
+                    <div className="w-56 bg-[#1a1919] border border-[var(--color-border)] rounded-xl shadow-2xl p-3 flex flex-col gap-2">
                       <div className="flex items-center justify-between text-[10px] uppercase font-medium text-white/40 mb-1">
                         <span>Sort By</span>
                         <div className="flex items-center gap-1.5 lowercase">
@@ -1335,7 +1335,7 @@ export default function DatabaseConsole({ currentAdmin, initialTab }: DatabaseCo
                         placeholder="Search column..."
                         value={sortSearchQuery}
                         onChange={(e) => setSortSearchQuery(e.target.value)}
-                        className="bg-white/[0.02] border border-white/[0.06] rounded-lg px-2 py-1 focus:outline-none focus:border-accent text-xs text-white w-full mb-1"
+                        className="bg-white/[0.02] border border-[var(--color-border)] rounded-lg px-2 py-1 focus:outline-none focus:border-accent text-xs text-white w-full mb-1"
                       />
                       <div className="max-h-48 overflow-y-auto space-y-0.5">
                         {columns
@@ -1369,7 +1369,7 @@ export default function DatabaseConsole({ currentAdmin, initialTab }: DatabaseCo
                       setShowSortDropdown(false)
                       setShowActionsDropdown(false)
                     }}
-                    className="h-8 px-3 rounded-lg border border-white/[0.06] bg-white/[0.02] text-xs font-medium text-white/70 hover:text-white hover:bg-white/[0.04] flex items-center gap-1.5 transition-colors cursor-pointer whitespace-nowrap shrink-0"
+                    className="h-8 px-3 rounded-lg border border-[var(--color-border)] bg-white/[0.02] text-xs font-medium text-white/70 hover:text-white hover:bg-white/[0.04] flex items-center gap-1.5 transition-colors cursor-pointer whitespace-nowrap shrink-0"
                   >
                     <Layers className="w-3.5 h-3.5" />
                     <span>Columns</span>
@@ -1377,7 +1377,7 @@ export default function DatabaseConsole({ currentAdmin, initialTab }: DatabaseCo
                   </button>
 
                   <PortalDropdown triggerRef={columnsBtnRef} open={showColumnsDropdown} onClose={() => setShowColumnsDropdown(false)}>
-                    <div className="w-64 bg-[#0d0d11] border border-white/[0.08] rounded-xl shadow-2xl p-3 flex flex-col gap-2">
+                    <div className="w-64 bg-[#1a1919] border border-[var(--color-border)] rounded-xl shadow-2xl p-3 flex flex-col gap-2">
                       <div className="flex items-center justify-between text-[10px] uppercase font-medium text-white/40 mb-1">
                         <span>Manage columns</span>
                         <button
@@ -1401,7 +1401,7 @@ export default function DatabaseConsole({ currentAdmin, initialTab }: DatabaseCo
                         placeholder="Search..."
                         value={columnSearchQuery}
                         onChange={(e) => setColumnSearchQuery(e.target.value)}
-                        className="bg-white/[0.02] border border-white/[0.06] rounded-lg px-2 py-1 focus:outline-none focus:border-accent text-xs text-white w-full mb-1"
+                        className="bg-white/[0.02] border border-[var(--color-border)] rounded-lg px-2 py-1 focus:outline-none focus:border-accent text-xs text-white w-full mb-1"
                       />
                       <div className="max-h-48 overflow-y-auto space-y-0.5">
                         {columns
@@ -1476,7 +1476,7 @@ export default function DatabaseConsole({ currentAdmin, initialTab }: DatabaseCo
                 <button
                   onClick={fetchTableMetadataAndData}
                   disabled={isLoadingData}
-                  className="w-8 h-8 rounded-lg border border-white/[0.06] bg-white/[0.02] flex items-center justify-center text-white/60 hover:text-white hover:border-white/12 transition-colors disabled:opacity-30 cursor-pointer"
+                  className="w-8 h-8 rounded-lg border border-[var(--color-border)] bg-white/[0.02] flex items-center justify-center text-white/60 hover:text-white hover:border-white/12 transition-colors disabled:opacity-30 cursor-pointer"
                   title="Refresh table data"
                 >
                   <RefreshCw className={cn("w-3.5 h-3.5", isLoadingData ? "animate-spin" : "")} />
@@ -1491,7 +1491,7 @@ export default function DatabaseConsole({ currentAdmin, initialTab }: DatabaseCo
                       setShowSortDropdown(false)
                       setShowColumnsDropdown(false)
                     }}
-                    className="h-8 px-2.5 rounded-lg border border-white/[0.06] bg-white/[0.02] flex items-center gap-1.5 text-white/60 hover:text-white hover:border-white/12 transition-colors cursor-pointer"
+                    className="h-8 px-2.5 rounded-lg border border-[var(--color-border)] bg-white/[0.02] flex items-center gap-1.5 text-white/60 hover:text-white hover:border-white/12 transition-colors cursor-pointer"
                     title="More actions"
                   >
                     <MoreHorizontal className="w-3.5 h-3.5" />
@@ -1499,7 +1499,7 @@ export default function DatabaseConsole({ currentAdmin, initialTab }: DatabaseCo
                   </button>
 
                   <PortalDropdown triggerRef={actionsBtnRef} open={showActionsDropdown} onClose={() => setShowActionsDropdown(false)} align="right">
-                    <div className="w-52 bg-[#0d0d11] border border-white/[0.08] rounded-xl shadow-2xl p-1.5 flex flex-col">
+                    <div className="w-52 bg-[#1a1919] border border-[var(--color-border)] rounded-xl shadow-2xl p-1.5 flex flex-col">
                       <button
                         onClick={() => {
                           fetchTableMetadataAndData()
@@ -1522,7 +1522,7 @@ export default function DatabaseConsole({ currentAdmin, initialTab }: DatabaseCo
                         <span>Refresh schema</span>
                       </button>
 
-                      <div className="border-t border-white/[0.06] my-1" />
+                      <div className="border-t border-[var(--color-border)] my-1" />
 
                       <button
                         onClick={() => {
@@ -1557,7 +1557,7 @@ export default function DatabaseConsole({ currentAdmin, initialTab }: DatabaseCo
 
                       {selectedRowKeys.length > 0 && (
                         <>
-                          <div className="border-t border-white/[0.06] my-1" />
+                          <div className="border-t border-[var(--color-border)] my-1" />
                           <button
                             onClick={() => {
                               const selectedRows = rows.filter(r => selectedRowKeys.includes(r[primaryKeyCol]))
@@ -1603,7 +1603,7 @@ export default function DatabaseConsole({ currentAdmin, initialTab }: DatabaseCo
 
         {/* --- INLINE MULTIPLE FILTERS ROW PANEL --- */}
         {selectedTable && activeSubTab === 'data' && showFilterBar && (
-          <div className="px-4 py-3 bg-[#0a0a0c] border-b border-white/[0.06] flex flex-col gap-2 transition-all select-none">
+          <div className="px-4 py-3 bg-[#1a1919] border-b border-[var(--color-border)] flex flex-col gap-2 transition-all select-none">
             {filtersList.map((filter, fIdx) => (
               <div key={filter.id} className="flex items-center gap-2 flex-wrap">
                 
@@ -1623,7 +1623,7 @@ export default function DatabaseConsole({ currentAdmin, initialTab }: DatabaseCo
                 </button>
 
                 {/* Condition label: where or and */}
-                <span className="px-2 py-0.5 rounded bg-white/[0.04] border border-white/[0.06] text-[10px] font-medium text-white/40 font-mono">
+                <span className="px-2 py-0.5 rounded bg-white/[0.04] border border-[var(--color-border)] text-[10px] font-medium text-white/40 font-mono">
                   {fIdx === 0 ? 'where' : 'and'}
                 </span>
 
@@ -1670,14 +1670,14 @@ export default function DatabaseConsole({ currentAdmin, initialTab }: DatabaseCo
                       if (e.key === 'Enter') fetchTableMetadataAndData()
                     }}
                     placeholder="value..."
-                    className="bg-[#0d0d11] border border-white/[0.08] text-xs text-white rounded px-2.5 py-1 focus:outline-none focus:border-accent min-w-[120px] max-w-[200px]"
+                    className="bg-[#1a1919] border border-[var(--color-border)] text-xs text-white rounded px-2.5 py-1 focus:outline-none focus:border-accent min-w-[120px] max-w-[200px]"
                   />
                 )}
               </div>
             ))}
 
             {/* Controls at the bottom of filters bar */}
-            <div className="flex items-center gap-3 mt-1 pl-7 border-t border-white/[0.04] pt-2">
+            <div className="flex items-center gap-3 mt-1 pl-7 border-t border-[var(--color-border)] pt-2">
               <button
                 onClick={() => {
                   setFiltersList(prev => [
@@ -1702,7 +1702,7 @@ export default function DatabaseConsole({ currentAdmin, initialTab }: DatabaseCo
 
               <button
                 onClick={fetchTableMetadataAndData}
-                className="ml-auto px-3 py-1 bg-accent text-[#0a0a0a] text-xs font-semibold rounded hover:bg-accent/80 transition-colors cursor-pointer"
+                className="ml-auto inline-flex h-7 items-center px-3 bg-accent text-[#1a0a00] text-xs font-semibold rounded-[5px] hover:bg-accent/80 transition-colors cursor-pointer"
               >
                 Apply filters
               </button>
@@ -1718,7 +1718,7 @@ export default function DatabaseConsole({ currentAdmin, initialTab }: DatabaseCo
               
               {/* Inner Tabs: Console vs. Requests Log */}
               {isSuperAdmin && (
-                <div className="flex items-center gap-2 border-b border-white/[0.06] pb-2 shrink-0">
+                <div className="flex items-center gap-2 border-b border-[var(--color-border)] pb-2 shrink-0">
                   <button
                     onClick={() => setSqlEditorMode('console')}
                     className={cn(
@@ -1744,7 +1744,7 @@ export default function DatabaseConsole({ currentAdmin, initialTab }: DatabaseCo
                   >
                     <span>Requests Log</span>
                     {pendingRequestsCount > 0 && (
-                      <span className="bg-red-500 text-white text-[9px] px-1.5 py-0.5 rounded-full font-bold leading-none animate-pulse">
+                      <span className="bg-red-500 text-white text-[9px] px-1.5 py-0.5 rounded-[5px] font-bold leading-none animate-pulse">
                         {pendingRequestsCount}
                       </span>
                     )}
@@ -1755,7 +1755,7 @@ export default function DatabaseConsole({ currentAdmin, initialTab }: DatabaseCo
               {sqlEditorMode === 'console' || !isSuperAdmin ? (
                 <>
                   {/* SQL Query Editor Box */}
-                  <div className="border border-white/[0.06] rounded-xl bg-[#0d0d11] p-4 flex flex-col shrink-0 space-y-3">
+                  <div className="border border-[var(--color-border)] rounded-xl bg-[#1a1919] p-4 flex flex-col shrink-0 space-y-3">
                     <div className="flex items-center justify-between">
                       <div className="flex items-center gap-2 text-xs font-medium text-white/70">
                         <Terminal className="w-3.5 h-3.5 text-accent" />
@@ -1774,7 +1774,7 @@ export default function DatabaseConsole({ currentAdmin, initialTab }: DatabaseCo
                           <button
                             key={t.label}
                             onClick={() => setSqlQuery(t.query)}
-                            className="text-[10px] px-2 py-0.5 rounded bg-white/[0.03] border border-white/[0.06] hover:bg-white/[0.08] hover:border-white/12 text-white/60 hover:text-white transition-colors cursor-pointer whitespace-nowrap font-mono"
+                            className="text-[10px] px-2 py-0.5 rounded bg-white/[0.03] border border-[var(--color-border)] hover:bg-white/[0.08] hover:border-white/12 text-white/60 hover:text-white transition-colors cursor-pointer whitespace-nowrap font-mono"
                           >
                             {t.label}
                           </button>
@@ -1787,7 +1787,7 @@ export default function DatabaseConsole({ currentAdmin, initialTab }: DatabaseCo
                         value={sqlQuery}
                         onChange={(e) => setSqlQuery(e.target.value)}
                         placeholder="-- Type your PostgreSQL query here...&#10;SELECT * FROM subscribers LIMIT 10;"
-                        className="w-full h-36 bg-[#070709] border border-white/[0.06] rounded-lg p-3 text-xs font-mono text-white/80 focus:outline-none focus:border-accent/40 resize-y leading-relaxed"
+                        className="w-full h-36 bg-[#151414] border border-[var(--color-border)] rounded-lg p-3 text-xs font-mono text-white/80 focus:outline-none focus:border-accent/40 resize-y leading-relaxed"
                         spellCheck={false}
                       />
                     </div>
@@ -1800,7 +1800,7 @@ export default function DatabaseConsole({ currentAdmin, initialTab }: DatabaseCo
                           "rounded-lg p-3 border text-xs font-sans space-y-1 transition-all duration-300",
                           explanation.isWarning 
                             ? "bg-red-500/5 border-red-500/20 text-red-400/90 shadow-[0_0_15px_rgba(239,68,68,0.03)]" 
-                            : "bg-white/[0.02] border-white/[0.06] text-white/70"
+                            : "bg-white/[0.02] border-[var(--color-border)] text-white/70"
                         )}>
                           <div className="flex items-center gap-1.5 font-medium text-white/90">
                             <AlertCircle className={cn("w-3.5 h-3.5", explanation.isWarning ? "text-red-400" : "text-accent")} />
@@ -1816,7 +1816,7 @@ export default function DatabaseConsole({ currentAdmin, initialTab }: DatabaseCo
                       );
                     })()}
 
-                    <div className="flex items-center justify-between border-t border-white/[0.04] pt-3">
+                    <div className="flex items-center justify-between border-t border-[var(--color-border)] pt-3">
                       <div className="text-[10px] text-white/30 font-mono">
                         {isSuperAdmin ? 'Press Run Query to execute against database.' : 'Writes will prompt for Super Admin approval.'}
                       </div>
@@ -1826,7 +1826,7 @@ export default function DatabaseConsole({ currentAdmin, initialTab }: DatabaseCo
                             setSqlQuery('')
                             setSqlResult(null)
                           }}
-                          className="h-8 px-3 rounded-lg border border-white/[0.06] bg-white/[0.02] text-white/70 hover:text-white hover:bg-white/[0.04] text-xs font-medium cursor-pointer transition-colors"
+                          className="h-8 px-3 rounded-lg border border-[var(--color-border)] bg-white/[0.02] text-white/70 hover:text-white hover:bg-white/[0.04] text-xs font-medium cursor-pointer transition-colors"
                         >
                           Clear
                         </button>
@@ -1852,9 +1852,9 @@ export default function DatabaseConsole({ currentAdmin, initialTab }: DatabaseCo
                   </div>
 
                   {/* SQL Results View */}
-                  <div className="border border-white/[0.06] rounded-xl bg-[#0d0d11] flex-grow min-h-0 flex flex-col relative overflow-hidden">
+                  <div className="border border-[var(--color-border)] rounded-xl bg-[#1a1919] flex-grow min-h-0 flex flex-col relative overflow-hidden">
                     {isExecutingSql ? (
-                      <div className="absolute inset-0 flex flex-col items-center justify-center text-white/30 space-y-2 bg-[#060608]/40 z-10">
+                      <div className="absolute inset-0 flex flex-col items-center justify-center text-white/30 space-y-2 bg-[#151414]/40 z-10">
                         <RefreshCw className="w-6 h-6 animate-spin text-accent" />
                         <p className="text-xs font-medium">Running SQL query...</p>
                       </div>
@@ -1877,7 +1877,7 @@ export default function DatabaseConsole({ currentAdmin, initialTab }: DatabaseCo
                       </div>
                     ) : (
                       <div className="flex flex-col h-full min-h-0">
-                        <div className="px-4 py-2 border-b border-white/[0.06] bg-white/[0.01] flex items-center justify-between text-[11px] text-white/45">
+                        <div className="px-4 py-2 border-b border-[var(--color-border)] bg-white/[0.01] flex items-center justify-between text-[11px] text-white/45">
                           <div className="flex items-center gap-4">
                             <span>Query completed in <strong className="text-white/70 font-mono">{sqlResult.duration} ms</strong></span>
                             <span className="text-white/10">|</span>
@@ -1895,7 +1895,7 @@ export default function DatabaseConsole({ currentAdmin, initialTab }: DatabaseCo
                           ) : (
                             <table className="w-full text-left border-collapse text-xs">
                               <thead>
-                                <tr className="bg-white/[0.02] border-b border-white/[0.06] text-white/50 select-none font-mono">
+                                <tr className="bg-white/[0.02] border-b border-[var(--color-border)] text-white/50 select-none font-mono">
                                   <th className="px-4 py-2 text-center w-10 text-[10px] text-white/25">#</th>
                                   {sqlResult.headers.map((h: string) => (
                                     <th key={h} className="px-4 py-2 font-semibold tracking-tight whitespace-nowrap">
@@ -1935,8 +1935,8 @@ export default function DatabaseConsole({ currentAdmin, initialTab }: DatabaseCo
                 </>
               ) : (
                 /* Requests Log Panel */
-                <div className="flex-grow border border-white/[0.06] rounded-xl bg-[#0d0d11] p-4 flex flex-col min-h-0 relative overflow-hidden">
-                  <div className="flex items-center justify-between pb-3 border-b border-white/[0.06] shrink-0">
+                <div className="flex-grow border border-[var(--color-border)] rounded-xl bg-[#1a1919] p-4 flex flex-col min-h-0 relative overflow-hidden">
+                  <div className="flex items-center justify-between pb-3 border-b border-[var(--color-border)] shrink-0">
                     <h4 className="text-xs font-medium text-white/85">SQL Changes Queue & Request Logs</h4>
                     <button
                       onClick={fetchRequests}
@@ -1951,7 +1951,7 @@ export default function DatabaseConsole({ currentAdmin, initialTab }: DatabaseCo
                     {isLoadingRequests && requestsList.length === 0 ? (
                       <div className="space-y-3 py-2">
                         {[...Array(5)].map((_, i) => (
-                          <div key={i} className="rounded-lg border border-white/[0.06] bg-white/[0.01] p-3 space-y-2">
+                          <div key={i} className="rounded-lg border border-[var(--color-border)] bg-white/[0.01] p-3 space-y-2">
                             <div className="flex justify-between">
                               <Skeleton className="h-3.5 w-28" />
                               <Skeleton className="h-3.5 w-14" />
@@ -1976,21 +1976,21 @@ export default function DatabaseConsole({ currentAdmin, initialTab }: DatabaseCo
                         const resultsData = req.executionResults ? (typeof req.executionResults === 'string' ? JSON.parse(req.executionResults) : req.executionResults) : null
 
                         return (
-                          <div key={req.id} className="p-4 rounded-xl border border-white/[0.05] bg-[#070709] flex flex-col gap-3">
+                          <div key={req.id} className="p-4 rounded-xl border border-[var(--color-border)] bg-[#151414] flex flex-col gap-3">
                             <div className="flex items-center justify-between flex-wrap gap-2 text-xs">
                               <div className="flex items-center gap-2 text-white/60 font-semibold">
                                 <span className="text-white/85 font-mono">{req.requesterName}</span>
                                 <span>requested at</span>
                                 <span className="text-[11px] font-sans font-normal text-white/40">{new Date(req.createdAt).toLocaleString()}</span>
                               </div>
-                              <span className={cn("px-2.5 py-0.5 rounded-full border text-[10px] font-semibold uppercase tracking-wider", statusColors)}>
+                              <span className={cn("px-2.5 py-0.5 rounded-[5px] border text-[10px] font-semibold uppercase tracking-wider", statusColors)}>
                                 {req.status}
                               </span>
                             </div>
 
                             {/* Query text panel */}
                             <div className="relative">
-                              <pre className="bg-black/50 border border-white/[0.04] p-3 rounded-lg text-[11px] font-mono text-[#a78bfa] overflow-x-auto whitespace-pre-wrap select-text leading-relaxed">
+                              <pre className="bg-black/50 border border-[var(--color-border)] p-3 rounded-lg text-[11px] font-mono text-[#a78bfa] overflow-x-auto whitespace-pre-wrap select-text leading-relaxed">
                                 {req.queryText}
                               </pre>
                             </div>
@@ -2004,7 +2004,7 @@ export default function DatabaseConsole({ currentAdmin, initialTab }: DatabaseCo
                                   "rounded-lg p-2.5 border text-[11px] font-sans space-y-0.5 transition-all duration-300",
                                   explanation.isWarning 
                                     ? "bg-red-500/5 border-red-500/15 text-red-400/90 shadow-[0_0_15px_rgba(239,68,68,0.02)]" 
-                                    : "bg-white/[0.015] border-white/[0.05] text-white/60"
+                                    : "bg-white/[0.015] border-[var(--color-border)] text-white/60"
                                 )}>
                                   <div className="flex items-center gap-1.5 font-medium text-white/85">
                                     <AlertCircle className={cn("w-3 h-3", explanation.isWarning ? "text-red-400" : "text-accent")} />
@@ -2028,7 +2028,7 @@ export default function DatabaseConsole({ currentAdmin, initialTab }: DatabaseCo
                             )}
 
                             {req.status === 'approved' && (
-                              <div className="text-xs text-white/40 flex flex-wrap gap-x-4 gap-y-1 font-mono py-1 border-t border-white/[0.03]">
+                              <div className="text-xs text-white/40 flex flex-wrap gap-x-4 gap-y-1 font-mono py-1 border-t border-[var(--color-border)]">
                                 <span>Reviewed By: <strong className="text-white/75">{req.reviewerName || 'Super Admin'}</strong></span>
                                 <span>Duration: <strong className="text-white/75">{req.executionDurationMs} ms</strong></span>
                                 {resultsData && (
@@ -2052,10 +2052,10 @@ export default function DatabaseConsole({ currentAdmin, initialTab }: DatabaseCo
                                 </button>
 
                                 {expandedRequestResultsId === req.id && (
-                                  <div className="mt-2.5 max-h-48 overflow-auto border border-white/[0.06] rounded-lg bg-black/30">
+                                  <div className="mt-2.5 max-h-48 overflow-auto border border-[var(--color-border)] rounded-lg bg-black/30">
                                     <table className="w-full text-left border-collapse text-[11px] font-mono">
                                       <thead>
-                                        <tr className="bg-white/[0.02] border-b border-white/[0.06] text-white/45">
+                                        <tr className="bg-white/[0.02] border-b border-[var(--color-border)] text-white/45">
                                           <th className="px-3 py-1.5 text-center w-8 text-white/20">#</th>
                                           {resultsData.headers.map((h: string) => (
                                             <th key={h} className="px-3 py-1.5 font-semibold whitespace-nowrap">{h}</th>
@@ -2094,7 +2094,7 @@ export default function DatabaseConsole({ currentAdmin, initialTab }: DatabaseCo
 
                             {/* Approval actions for super admin */}
                             {isSuperAdmin && req.status === 'pending' && (
-                              <div className="flex items-center justify-end gap-2 border-t border-white/[0.04] pt-3 mt-1 font-sans">
+                              <div className="flex items-center justify-end gap-2 border-t border-[var(--color-border)] pt-3 mt-1 font-sans">
                                 <button
                                   disabled={isReviewingRequest !== null}
                                   onClick={() => setShowRejectionModal(req.id)}
@@ -2135,7 +2135,7 @@ export default function DatabaseConsole({ currentAdmin, initialTab }: DatabaseCo
               <p className="text-sm">Select a table in the sidebar to begin</p>
             </div>
           ) : isLoadingData && rows.length === 0 ? (
-            <div className="absolute inset-0 bg-[#060608]/40 p-4 space-y-2 overflow-hidden">
+            <div className="absolute inset-0 bg-[#151414]/40 p-4 space-y-2 overflow-hidden">
               {/* header row */}
               <div className="flex gap-3 pb-2">
                 {[...Array(5)].map((_, i) => (
@@ -2157,14 +2157,14 @@ export default function DatabaseConsole({ currentAdmin, initialTab }: DatabaseCo
             <div className="flex flex-col gap-6 text-left max-w-4xl pb-10">
               
               {/* Structure Header Controls */}
-              <div className="flex flex-wrap items-center gap-4 p-4 rounded-xl border border-white/[0.06] bg-[#0d0d11] shrink-0 text-xs">
+              <div className="flex flex-wrap items-center gap-4 p-4 rounded-xl border border-[var(--color-border)] bg-[#1a1919] shrink-0 text-xs">
                 <div className="flex flex-col gap-1">
                   <span className="text-[10px] text-white/30 uppercase font-semibold">Table name</span>
                   <input
                     type="text"
                     value={selectedTable}
                     disabled
-                    className="bg-[#121217] border border-white/10 rounded px-2.5 py-1 text-white/80 font-mono text-xs w-44 cursor-not-allowed"
+                    className="bg-[#1a1919] border border-[var(--color-border-strong)] rounded px-2.5 py-1 text-white/80 font-mono text-xs w-44 cursor-not-allowed"
                   />
                 </div>
 
@@ -2181,7 +2181,7 @@ export default function DatabaseConsole({ currentAdmin, initialTab }: DatabaseCo
                 </div>
 
                 {/* RLS Toggle switch */}
-                <div className="flex items-center gap-3 border-l border-white/10 pl-4 ml-auto">
+                <div className="flex items-center gap-3 border-l border-[var(--color-border-strong)] pl-4 ml-auto">
                   <div className="flex flex-col gap-0.5">
                     <span className="font-medium text-white/80 whitespace-nowrap">Row Level Security</span>
                     <span className="text-[10px] text-white/40 whitespace-nowrap">Isolate queries by user policies</span>
@@ -2207,8 +2207,8 @@ export default function DatabaseConsole({ currentAdmin, initialTab }: DatabaseCo
               </div>
 
               {/* COLUMNS code layout */}
-              <div className="border border-white/[0.06] rounded-xl overflow-hidden bg-[#0d0d11] p-5 space-y-4">
-                <div className="flex items-center justify-between border-b border-white/[0.06] pb-2">
+              <div className="border border-[var(--color-border)] rounded-xl overflow-hidden bg-[#1a1919] p-5 space-y-4">
+                <div className="flex items-center justify-between border-b border-[var(--color-border)] pb-2">
                   <h4 className="text-xs uppercase font-bold text-white/45 tracking-wider">Columns</h4>
                   {isSuperAdmin && (
                   <button
@@ -2220,7 +2220,7 @@ export default function DatabaseConsole({ currentAdmin, initialTab }: DatabaseCo
                   </button>
                   )}
                 </div>
-                <div className="bg-[#070709]/50 border border-white/[0.04] rounded-lg p-4 font-mono select-text">
+                <div className="bg-[#151414]/50 border border-[var(--color-border)] rounded-lg p-4 font-mono select-text">
                   {columns.map((col) => {
                     let parts = [`${col.name}`, `${col.type.toUpperCase()}`]
                     if (col.isPrimaryKey) parts.push('PRIMARY KEY')
@@ -2240,8 +2240,8 @@ export default function DatabaseConsole({ currentAdmin, initialTab }: DatabaseCo
               </div>
 
               {/* CONSTRAINTS */}
-              <div className="border border-white/[0.06] rounded-xl overflow-hidden bg-[#0d0d11] p-5 space-y-4">
-                <div className="flex items-center justify-between border-b border-white/[0.06] pb-2">
+              <div className="border border-[var(--color-border)] rounded-xl overflow-hidden bg-[#1a1919] p-5 space-y-4">
+                <div className="flex items-center justify-between border-b border-[var(--color-border)] pb-2">
                   <h4 className="text-xs uppercase font-bold text-white/45 tracking-wider">Constraints</h4>
                   {isSuperAdmin && (
                   <button
@@ -2253,7 +2253,7 @@ export default function DatabaseConsole({ currentAdmin, initialTab }: DatabaseCo
                   </button>
                   )}
                 </div>
-                <div className="bg-[#070709]/50 border border-white/[0.04] rounded-lg p-4 font-mono select-text space-y-3">
+                <div className="bg-[#151414]/50 border border-[var(--color-border)] rounded-lg p-4 font-mono select-text space-y-3">
                   {dynamicConstraints.length === 0 ? (
                     <span className="text-white/20 text-xs italic">No constraints configured.</span>
                   ) : (
@@ -2262,13 +2262,13 @@ export default function DatabaseConsole({ currentAdmin, initialTab }: DatabaseCo
                       return (
                         <div key={idx} className="border-b border-white/5 last:border-b-0 pb-3 last:pb-0">
                           {isExpanded ? (
-                            <div className="p-4 bg-[#0a0a0c] border border-white/10 rounded-lg flex flex-col gap-3">
+                            <div className="p-4 bg-[#1a1919] border border-[var(--color-border-strong)] rounded-lg flex flex-col gap-3">
                               <div className="flex flex-col gap-1">
                                 <span className="text-[10px] text-white/40 uppercase font-semibold">Constraint name</span>
                                 <input
                                   type="text"
                                   defaultValue={constraint.split(' ')[1]}
-                                  className="bg-[#121217] border border-white/10 rounded px-2.5 py-1.5 text-white/80 font-mono text-xs w-full max-w-sm focus:outline-none focus:border-accent"
+                                  className="bg-[#1a1919] border border-[var(--color-border-strong)] rounded px-2.5 py-1.5 text-white/80 font-mono text-xs w-full max-w-sm focus:outline-none focus:border-accent"
                                 />
                               </div>
                               <div className="flex flex-col gap-1 text-xs font-sans">
@@ -2277,7 +2277,7 @@ export default function DatabaseConsole({ currentAdmin, initialTab }: DatabaseCo
                                   {constraint.match(/\(([^)]+)\)/)?.[1] || 'id'}
                                 </div>
                               </div>
-                              <div className="flex justify-end gap-2 border-t border-white/[0.04] pt-3 mt-1 font-sans">
+                              <div className="flex justify-end gap-2 border-t border-[var(--color-border)] pt-3 mt-1 font-sans">
                                 <button
                                   onClick={() => setActiveConstraintEdit('')}
                                   className="px-2.5 py-1 hover:bg-white/5 rounded text-white/50 text-[11px] cursor-pointer"
@@ -2312,8 +2312,8 @@ export default function DatabaseConsole({ currentAdmin, initialTab }: DatabaseCo
               </div>
 
               {/* INDEXES */}
-              <div className="border border-white/[0.06] rounded-xl overflow-hidden bg-[#0d0d11] p-5 space-y-4">
-                <div className="flex items-center justify-between border-b border-white/[0.06] pb-2">
+              <div className="border border-[var(--color-border)] rounded-xl overflow-hidden bg-[#1a1919] p-5 space-y-4">
+                <div className="flex items-center justify-between border-b border-[var(--color-border)] pb-2">
                   <h4 className="text-xs uppercase font-bold text-white/45 tracking-wider">Indexes</h4>
                   {isSuperAdmin && (
                   <button
@@ -2325,7 +2325,7 @@ export default function DatabaseConsole({ currentAdmin, initialTab }: DatabaseCo
                   </button>
                   )}
                 </div>
-                <div className="bg-[#070709]/50 border border-white/[0.04] rounded-lg p-4 font-mono select-text space-y-1">
+                <div className="bg-[#151414]/50 border border-[var(--color-border)] rounded-lg p-4 font-mono select-text space-y-1">
                   {dynamicIndexes.length === 0 ? (
                     <span className="text-white/20 text-xs italic">No indexes configured.</span>
                   ) : (
@@ -2337,8 +2337,8 @@ export default function DatabaseConsole({ currentAdmin, initialTab }: DatabaseCo
               </div>
 
               {/* POLICIES */}
-              <div className="border border-white/[0.06] rounded-xl overflow-hidden bg-[#0d0d11] p-5 space-y-4">
-                <div className="flex items-center justify-between border-b border-white/[0.06] pb-2">
+              <div className="border border-[var(--color-border)] rounded-xl overflow-hidden bg-[#1a1919] p-5 space-y-4">
+                <div className="flex items-center justify-between border-b border-[var(--color-border)] pb-2">
                   <h4 className="text-xs uppercase font-bold text-white/45 tracking-wider">Policies</h4>
                   {isSuperAdmin && (
                   <button
@@ -2350,7 +2350,7 @@ export default function DatabaseConsole({ currentAdmin, initialTab }: DatabaseCo
                   </button>
                   )}
                 </div>
-                <div className="bg-[#070709]/50 border border-white/[0.04] rounded-lg p-4 font-mono select-text">
+                <div className="bg-[#151414]/50 border border-[var(--color-border)] rounded-lg p-4 font-mono select-text">
                   <span className="text-white/20 text-xs italic">No policies created. Toggle Row Level Security to define read/write policies.</span>
                 </div>
               </div>
@@ -2362,10 +2362,10 @@ export default function DatabaseConsole({ currentAdmin, initialTab }: DatabaseCo
             <div className="flex flex-col gap-4 h-full min-h-0">
               
               {/* Grid block */}
-              <div className="border border-white/[0.06] rounded-xl bg-[#0d0d11] flex-grow min-h-0 overflow-auto">
+              <div className="border border-[var(--color-border)] rounded-xl bg-[#1a1919] flex-grow min-h-0 overflow-auto">
                 <table className="w-full text-left border-collapse text-xs">
                   <thead>
-                    <tr className="bg-white/[0.02] border-b border-white/[0.06] text-white/50 select-none">
+                    <tr className="bg-white/[0.02] border-b border-[var(--color-border)] text-white/50 select-none">
                       
                       {/* Checkbox select-all */}
                       {isSuperAdmin && (
@@ -2450,7 +2450,7 @@ export default function DatabaseConsole({ currentAdmin, initialTab }: DatabaseCo
                           <tr 
                             key={pkVal || rIdx} 
                             className={cn(
-                              "group hover:bg-white/[0.005] transition-colors border-b border-white/[0.04] last:border-b-0",
+                              "group hover:bg-white/[0.005] transition-colors border-b border-[var(--color-border)] last:border-b-0",
                               isRowSelected ? "bg-accent/[0.01] hover:bg-accent/[0.015]" : "",
                               isRowEditing ? "relative z-40" : ""
                             )}
@@ -2523,7 +2523,7 @@ export default function DatabaseConsole({ currentAdmin, initialTab }: DatabaseCo
 
                                   {isEditing ? (
                                     <div className={cn(
-                                      "absolute z-50 bg-[#0d0d11] border border-white/10 rounded-lg shadow-2xl p-3 min-w-[320px] flex flex-col gap-2 text-left",
+                                      "absolute z-50 bg-[#1a1919] border border-[var(--color-border-strong)] rounded-lg shadow-2xl p-3 min-w-[320px] flex flex-col gap-2 text-left",
                                       (rows.length === pageSize && rows.length - rIdx <= 2) ? "bottom-0" : "top-0",
                                       isRightHalf ? "right-0" : "left-0"
                                     )}>
@@ -2535,7 +2535,7 @@ export default function DatabaseConsole({ currentAdmin, initialTab }: DatabaseCo
                                         value={editingValue}
                                         onChange={(e) => setEditingValue(e.target.value)}
                                         style={{ fontSize: `${editorFontSize}px` }}
-                                        className="w-full h-24 bg-[#121217] border border-white/10 rounded p-2 font-mono text-white focus:outline-none focus:border-accent resize-y"
+                                        className="w-full h-24 bg-[#1a1919] border border-[var(--color-border-strong)] rounded p-2 font-mono text-white focus:outline-none focus:border-accent resize-y"
                                         autoFocus
                                         disabled={updatingCellProgress}
                                         onKeyDown={(e) => {
@@ -2553,7 +2553,7 @@ export default function DatabaseConsole({ currentAdmin, initialTab }: DatabaseCo
                                           type="button"
                                           onClick={() => handleSaveCellEdit(row, col.name, rIdx, true)}
                                           disabled={updatingCellProgress}
-                                          className="px-2.5 py-1 bg-white/[0.02] border border-white/10 hover:bg-white/[0.05] rounded text-white/70 hover:text-white transition-colors cursor-pointer"
+                                          className="px-2.5 py-1 bg-white/[0.02] border border-[var(--color-border-strong)] hover:bg-white/[0.05] rounded text-white/70 hover:text-white transition-colors cursor-pointer"
                                         >
                                           Set NULL
                                         </button>
@@ -2572,7 +2572,7 @@ export default function DatabaseConsole({ currentAdmin, initialTab }: DatabaseCo
                                             disabled={updatingCellProgress}
                                             className="px-2.5 py-1 bg-accent text-[#0a0a0a] font-semibold hover:bg-accent/80 rounded transition-colors flex items-center gap-1 cursor-pointer"
                                           >
-                                            Save <span className="bg-[#0a0a0a]/10 px-1 rounded text-[8px]">↵</span>
+                                            Save <span className="bg-[#151414]/10 px-1 rounded text-[8px]">↵</span>
                                           </button>
                                         </div>
                                       </div>
@@ -2592,7 +2592,7 @@ export default function DatabaseConsole({ currentAdmin, initialTab }: DatabaseCo
               </div>
 
               {/* Pagination footer bar */}
-              <div className="flex flex-wrap items-center justify-between gap-3 px-3 sm:px-4 py-3 border-t border-white/[0.06] bg-white/[0.005] rounded-xl shrink-0">
+              <div className="flex flex-wrap items-center justify-between gap-3 px-3 sm:px-4 py-3 border-t border-[var(--color-border)] bg-white/[0.005] rounded-xl shrink-0">
                 <p className="text-[11px] text-[var(--color-text-muted)] font-medium font-mono">
                   {tableRowsCountEnabled ? (
                     <>Showing <span className="text-white">{rows.length > 0 ? (currentPage - 1) * pageSize + 1 : 0}</span> – <span className="text-white">{Math.min(currentPage * pageSize, totalRecords)}</span> of <span className="text-white">{totalRecords}</span></>
@@ -2625,7 +2625,7 @@ export default function DatabaseConsole({ currentAdmin, initialTab }: DatabaseCo
                     <button
                       onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
                       disabled={currentPage === 1 || isLoadingData}
-                      className="w-7 h-7 flex items-center justify-center rounded-md bg-white/[0.02] border border-white/[0.06] text-white/50 hover:text-white disabled:opacity-30 disabled:pointer-events-none transition-colors cursor-pointer"
+                      className="w-7 h-7 flex items-center justify-center rounded-md bg-white/[0.02] border border-[var(--color-border)] text-white/50 hover:text-white disabled:opacity-30 disabled:pointer-events-none transition-colors cursor-pointer"
                     >
                       <ChevronLeft className="w-4 h-4" />
                     </button>
@@ -2635,7 +2635,7 @@ export default function DatabaseConsole({ currentAdmin, initialTab }: DatabaseCo
                     <button
                       onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
                       disabled={currentPage === totalPages || isLoadingData}
-                      className="w-7 h-7 flex items-center justify-center rounded-md bg-white/[0.02] border border-white/[0.06] text-white/50 hover:text-white disabled:opacity-30 disabled:pointer-events-none transition-colors cursor-pointer"
+                      className="w-7 h-7 flex items-center justify-center rounded-md bg-white/[0.02] border border-[var(--color-border)] text-white/50 hover:text-white disabled:opacity-30 disabled:pointer-events-none transition-colors cursor-pointer"
                     >
                       <ChevronRight className="w-4 h-4" />
                     </button>
@@ -2650,9 +2650,9 @@ export default function DatabaseConsole({ currentAdmin, initialTab }: DatabaseCo
       {/* ==================== INSERT RECORD MODAL ==================== */}
       {isAddModalOpen && (
         <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-50 p-4 backdrop-blur-sm">
-          <div className="bg-[#0a0a0c] border border-white/[0.06] rounded-xl max-w-lg w-full max-h-[80vh] flex flex-col overflow-hidden text-left shadow-2xl animate-in zoom-in-95 duration-200">
+          <div className="bg-[#1a1919] border border-[var(--color-border)] rounded-xl max-w-lg w-full max-h-[80vh] flex flex-col overflow-hidden text-left shadow-2xl animate-in zoom-in-95 duration-200">
             {/* Modal Header */}
-            <div className="px-6 py-4 border-b border-white/[0.06] flex items-center justify-between shrink-0 bg-white/[0.005]">
+            <div className="px-6 py-4 border-b border-[var(--color-border)] flex items-center justify-between shrink-0 bg-white/[0.005]">
               <h3 className="text-sm font-medium text-white">Add new row in "{selectedTable}"</h3>
               <button
                 onClick={() => setIsAddModalOpen(false)}
@@ -2681,7 +2681,7 @@ export default function DatabaseConsole({ currentAdmin, initialTab }: DatabaseCo
                         placeholder={col.type}
                         value={newRecordData[col.name] || ''}
                         onChange={(e) => setNewRecordData(prev => ({ ...prev, [col.name]: e.target.value }))}
-                        className="w-full h-9 bg-white/[0.02] border border-white/[0.06] rounded-lg px-3 text-xs text-white focus:outline-none focus:border-accent transition-colors"
+                        className="w-full h-9 bg-white/[0.02] border border-[var(--color-border)] rounded-lg px-3 text-xs text-white focus:outline-none focus:border-accent transition-colors"
                         required={!col.nullable && !hasDefault}
                         disabled={isPk}
                       />
@@ -2691,11 +2691,11 @@ export default function DatabaseConsole({ currentAdmin, initialTab }: DatabaseCo
               </div>
 
               {/* Form Footer Buttons */}
-              <div className="pt-4 flex justify-end gap-2 border-t border-white/[0.04] mt-6">
+              <div className="pt-4 flex justify-end gap-2 border-t border-[var(--color-border)] mt-6">
                 <button
                   type="button"
                   onClick={() => setIsAddModalOpen(false)}
-                  className="h-9 px-4 rounded-lg border border-white/[0.06] bg-white/[0.02] hover:bg-white/[0.05] transition-colors text-white/60 hover:text-white text-xs font-semibold cursor-pointer"
+                  className="h-9 px-4 rounded-lg border border-[var(--color-border)] bg-white/[0.02] hover:bg-white/[0.05] transition-colors text-white/60 hover:text-white text-xs font-semibold cursor-pointer"
                 >
                   Cancel
                 </button>
@@ -2711,9 +2711,9 @@ export default function DatabaseConsole({ currentAdmin, initialTab }: DatabaseCo
       {/* --- WRITE QUERY APPROVAL REQUEST CONFIRM MODAL --- */}
       {showRequestConfirmModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/75 backdrop-blur-sm animate-in fade-in duration-300 font-sans">
-          <div className="w-full max-w-md bg-[#0c0c0e] border border-white/[0.08] rounded-xl p-5 shadow-2xl relative text-left">
+          <div className="w-full max-w-md bg-[#1a1919] border border-[var(--color-border)] rounded-xl p-5 shadow-2xl relative text-left">
             <div className="space-y-4">
-              <div className="border-b border-white/[0.06] pb-3">
+              <div className="border-b border-[var(--color-border)] pb-3">
                 <h3 className="text-sm font-medium text-white flex items-center gap-2">
                   <AlertCircle className="w-4 h-4 text-amber-500" />
                   <span>Write Permissions Required</span>
@@ -2723,7 +2723,7 @@ export default function DatabaseConsole({ currentAdmin, initialTab }: DatabaseCo
                 </p>
               </div>
 
-              <div className="p-3 bg-black/40 border border-white/[0.04] rounded-lg max-h-36 overflow-y-auto font-mono text-[11px] text-[#a78bfa] whitespace-pre-wrap select-text">
+              <div className="p-3 bg-black/40 border border-[var(--color-border)] rounded-lg max-h-36 overflow-y-auto font-mono text-[11px] text-[#a78bfa] whitespace-pre-wrap select-text">
                 {lastExecutedQueryForRequest}
               </div>
 
@@ -2739,7 +2739,7 @@ export default function DatabaseConsole({ currentAdmin, initialTab }: DatabaseCo
                     setShowRequestConfirmModal(false)
                     setLastExecutedQueryForRequest('')
                   }}
-                  className="h-8 px-3.5 rounded-lg border border-white/[0.06] bg-white/[0.02] hover:bg-white/[0.05] transition-colors text-white/60 hover:text-white text-xs font-semibold cursor-pointer"
+                  className="h-8 px-3.5 rounded-lg border border-[var(--color-border)] bg-white/[0.02] hover:bg-white/[0.05] transition-colors text-white/60 hover:text-white text-xs font-semibold cursor-pointer"
                 >
                   Cancel
                 </button>
@@ -2760,9 +2760,9 @@ export default function DatabaseConsole({ currentAdmin, initialTab }: DatabaseCo
       {/* --- SUPER ADMIN REJECTION REASON MODAL --- */}
       {showRejectionModal !== null && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/75 backdrop-blur-sm animate-in fade-in duration-300 font-sans">
-          <div className="w-full max-w-md bg-[#0c0c0e] border border-white/[0.08] rounded-xl p-5 shadow-2xl relative text-left">
+          <div className="w-full max-w-md bg-[#1a1919] border border-[var(--color-border)] rounded-xl p-5 shadow-2xl relative text-left">
             <div className="space-y-4">
-              <div className="border-b border-white/[0.06] pb-3">
+              <div className="border-b border-[var(--color-border)] pb-3">
                 <h3 className="text-sm font-medium text-white">Reject Query Request</h3>
                 <p className="text-xs text-white/40 mt-0.5">
                   Provide a reason for rejecting this database change request.
@@ -2775,7 +2775,7 @@ export default function DatabaseConsole({ currentAdmin, initialTab }: DatabaseCo
                   value={rejectionReason}
                   onChange={(e) => setRejectionReason(e.target.value)}
                   placeholder="Explain why this change is rejected (e.g. incorrect table index, syntax, etc.)"
-                  className="w-full h-20 bg-white/[0.02] border border-white/[0.06] rounded-lg p-2.5 text-xs text-white focus:outline-none focus:border-red-500/50 resize-none leading-relaxed"
+                  className="w-full h-20 bg-white/[0.02] border border-[var(--color-border)] rounded-lg p-2.5 text-xs text-white focus:outline-none focus:border-red-500/50 resize-none leading-relaxed"
                   spellCheck={false}
                 />
               </div>
@@ -2788,7 +2788,7 @@ export default function DatabaseConsole({ currentAdmin, initialTab }: DatabaseCo
                     setShowRejectionModal(null)
                     setRejectionReason('')
                   }}
-                  className="h-8 px-3.5 rounded-lg border border-white/[0.06] bg-white/[0.02] hover:bg-white/[0.05] transition-colors text-white/60 hover:text-white text-xs font-semibold cursor-pointer"
+                  className="h-8 px-3.5 rounded-lg border border-[var(--color-border)] bg-white/[0.02] hover:bg-white/[0.05] transition-colors text-white/60 hover:text-white text-xs font-semibold cursor-pointer"
                 >
                   Cancel
                 </button>

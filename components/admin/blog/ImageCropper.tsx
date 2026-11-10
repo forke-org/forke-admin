@@ -221,7 +221,7 @@ export default function ImageCropper({
 
   return (
     <div className="fixed inset-0 z-[80] flex items-center justify-center bg-black/70 p-4 backdrop-blur-sm">
-      <div className="flex w-full max-w-3xl flex-col rounded-xl border border-[var(--color-border)] bg-[#0b0b0e] shadow-2xl shadow-black/60">
+      <div className="flex w-full max-w-3xl flex-col rounded-xl border border-[var(--color-border)] bg-[#1a1919] shadow-2xl shadow-black/60">
         {/* Header */}
         <div className="flex items-center justify-between border-b border-[var(--color-border)] px-5 py-3.5">
           <div className="flex items-center gap-2">
@@ -303,7 +303,7 @@ export default function ImageCropper({
                       key={c}
                       onPointerDown={handle(c)}
                       className={cn(
-                        'absolute h-3.5 w-3.5 rounded-sm border-2 border-accent bg-[#0b0b0e]',
+                        'absolute h-3.5 w-3.5 rounded-sm border-2 border-accent bg-[#1a1919]',
                         c === 'nw' && '-left-1.5 -top-1.5 cursor-nwse-resize',
                         c === 'ne' && '-right-1.5 -top-1.5 cursor-nesw-resize',
                         c === 'sw' && '-bottom-1.5 -left-1.5 cursor-nesw-resize',
@@ -322,7 +322,7 @@ export default function ImageCropper({
           <button
             onClick={useOriginal}
             disabled={working}
-            className="inline-flex items-center gap-1.5 rounded-lg border border-[var(--color-border)] px-3 py-2 text-xs font-medium text-[var(--color-text-muted)] transition-colors hover:text-white disabled:opacity-50"
+            className="inline-flex h-8 items-center gap-1.5 rounded-lg border border-[var(--color-border)] px-3 text-xs font-medium text-[var(--color-text-muted)] transition-colors hover:text-white disabled:opacity-50"
           >
             <ImageIcon className="h-3.5 w-3.5" /> Use original
           </button>
@@ -330,14 +330,14 @@ export default function ImageCropper({
             <button
               onClick={onCancel}
               disabled={working}
-              className="rounded-lg border border-[var(--color-border)] px-3 py-2 text-xs font-medium text-[var(--color-text-muted)] transition-colors hover:text-white disabled:opacity-50"
+              className="inline-flex h-8 items-center justify-center rounded-lg border border-[var(--color-border)] px-3 text-xs font-medium text-[var(--color-text-muted)] transition-colors hover:text-white disabled:opacity-50"
             >
               Cancel
             </button>
             <button
               onClick={exportCrop}
               disabled={working}
-              className="inline-flex items-center gap-1.5 rounded-lg bg-accent px-4 py-2 text-xs font-medium text-white transition-colors hover:bg-accent-hover disabled:opacity-50"
+              className="inline-flex h-8 items-center gap-1.5 rounded-lg bg-accent px-4 text-xs font-medium text-[#1a0a00] transition-colors hover:bg-accent-hover disabled:opacity-50"
             >
               <Check className="h-3.5 w-3.5" /> {working ? 'Processing…' : 'Crop & insert'}
             </button>

@@ -41,6 +41,7 @@ import { adminLogout } from '@/lib/admin-actions'
 import { Button } from '@/components/ui/Button'
 import { Select } from '@/components/ui/Select'
 import { Skeleton, PanelSkeleton, TableLoadingRows } from '@/components/ui/Skeleton'
+import { AsciiReveal } from 'ascii-reveal'
 import ToastContainer, { toast } from '@/components/shared/Toast'
 import ConfirmModal, { type ConfirmOptions } from '@/components/shared/ConfirmModal'
 import { cn } from '@/lib/utils/cn'
@@ -1119,7 +1120,7 @@ export default function AdminDashboard() {
             <button
               onClick={() => changePage(Math.max(currentPage - 1, 1))}
               disabled={currentPage === 1}
-              className="w-7 h-7 flex items-center justify-center rounded-md bg-white/[0.02] border border-[var(--color-border)] text-[var(--color-text-muted)] hover:text-white hover:border-white/15 disabled:opacity-30 disabled:pointer-events-none transition-colors cursor-pointer"
+              className="w-7 h-7 flex items-center justify-center rounded-md bg-white/[0.02] border border-[var(--color-border)] text-[var(--color-text-muted)] hover:text-white hover:border-[var(--color-border-strong)] disabled:opacity-30 disabled:pointer-events-none transition-colors cursor-pointer"
               title="Previous Page"
             >
               <ChevronLeft className="w-3.5 h-3.5" />
@@ -1130,7 +1131,7 @@ export default function AdminDashboard() {
             <button
               onClick={() => changePage(Math.min(currentPage + 1, totalPages))}
               disabled={currentPage === totalPages}
-              className="w-7 h-7 flex items-center justify-center rounded-md bg-white/[0.02] border border-[var(--color-border)] text-[var(--color-text-muted)] hover:text-white hover:border-white/15 disabled:opacity-30 disabled:pointer-events-none transition-colors cursor-pointer"
+              className="w-7 h-7 flex items-center justify-center rounded-md bg-white/[0.02] border border-[var(--color-border)] text-[var(--color-text-muted)] hover:text-white hover:border-[var(--color-border-strong)] disabled:opacity-30 disabled:pointer-events-none transition-colors cursor-pointer"
               title="Next Page"
             >
               <ChevronRight className="w-3.5 h-3.5" />
@@ -1143,9 +1144,9 @@ export default function AdminDashboard() {
 
   if (activeTab === null) {
     return (
-      <div className="min-h-screen bg-[#070709] text-white flex">
+      <div className="min-h-screen bg-[#151414] text-white flex">
         {/* Sidebar skeleton */}
-        <div className="hidden lg:flex w-60 border-r border-[var(--color-border)] flex-col p-4 gap-2 shrink-0 bg-[#070709]">
+        <div className="hidden lg:flex w-60 border-r border-[var(--color-border)] flex-col p-4 gap-2 shrink-0 bg-[#151414]">
           <div className="flex items-center gap-3 px-2 py-2 mb-3">
             <Skeleton className="h-8 w-8 rounded-lg" />
             <Skeleton className="h-4 w-28 rounded" />
@@ -1163,7 +1164,7 @@ export default function AdminDashboard() {
   }
 
   return (
-    <div className="min-h-screen bg-[#070709] text-white flex">
+    <div className="min-h-screen bg-[#151414] text-white flex">
 
       {/* --- MOBILE NAV BACKDROP --- */}
       {mobileNavOpen && (
@@ -1175,15 +1176,16 @@ export default function AdminDashboard() {
 
       {/* --- SIDEBAR --- */}
       <aside className={cn(
-        "border-r border-[var(--color-border)] bg-[#070709] shrink-0 flex flex-col justify-between h-screen fixed lg:sticky top-0 left-0 z-50 transition-all duration-300 select-none",
+        "bg-[var(--color-bg)] shrink-0 flex flex-col justify-between h-screen fixed lg:sticky top-0 left-0 z-50 transition-all duration-300 select-none",
         sidebarCollapsed ? "lg:w-16" : "lg:w-64",
         mobileNavOpen ? "translate-x-0 w-64" : "-translate-x-full lg:translate-x-0"
       )}>
-        <div className="flex-grow flex flex-col overflow-y-auto pt-4 min-h-0">
+        <span aria-hidden className="rail-y pointer-events-none absolute inset-y-0 right-0 w-px" />
+        <div className="flex-grow flex flex-col overflow-y-auto min-h-0">
           
           {/* Logo & Header */}
           <div className={cn(
-            "h-14 flex items-center border-b border-[var(--color-border)] mb-4 shrink-0 px-5 gap-2.5 transition-all duration-300",
+            "relative h-14 flex items-center mb-3 shrink-0 px-5 gap-2 transition-all duration-300 [background:linear-gradient(90deg,var(--color-rail)_50%,transparent_50%)_bottom/32px_1px_repeat-x]",
             sidebarCollapsed && "lg:px-0 lg:justify-center"
           )}>
             {sidebarCollapsed ? (
@@ -1203,8 +1205,9 @@ export default function AdminDashboard() {
                     className="absolute -left-3 -top-3 w-12 h-12 max-w-none object-contain"
                   />
                 </div>
-                <span className="font-bold text-xs uppercase tracking-[0.2em] text-white whitespace-nowrap animate-in fade-in duration-200">
-                  ADMIN PANEL
+                <span className="flex items-baseline gap-1.5 text-[18px] tracking-[-0.04em] whitespace-nowrap animate-in fade-in duration-200">
+                  <span className="font-semibold text-white">forke<span className="text-accent">*</span></span>
+                  <span className="font-normal text-[var(--color-text-muted)]">admin</span>
                 </span>
                 <button
                   onClick={() => setMobileNavOpen(false)}
@@ -1234,7 +1237,7 @@ export default function AdminDashboard() {
                 "relative w-full flex items-center gap-2.5 px-2.5 py-2 rounded-lg transition-colors text-[13px] font-medium text-left",
                 sidebarCollapsed && "lg:justify-center lg:px-0",
                 activeTab === 'dashboard'
-                  ? 'bg-white/[0.05] text-white'
+                  ? 'bg-white/[0.07] text-white shadow-[inset_2px_0_0_var(--color-accent)]'
                   : 'text-[var(--color-text-muted)] hover:bg-white/[0.03] hover:text-white'
               )}
               title={sidebarCollapsed ? (broadcastApprovals.length > 0 ? `Overview (${broadcastApprovals.length} pending)` : "Overview") : undefined}
@@ -1256,7 +1259,7 @@ export default function AdminDashboard() {
                   <span>Overview</span>
                   {broadcastApprovals.length > 0 && (
                     <span className={cn(
-                      "px-1.5 py-0.2 rounded-full border text-[10px] font-mono font-bold",
+                      "px-1.5 py-0.2 rounded-[5px] border text-[10px] font-mono font-bold",
                       broadcastApprovals.some((a) => a.status === 'failed')
                         ? "bg-red-500/20 border-red-500/40 text-red-400"
                         : "bg-accent/20 border-accent/40 text-accent"
@@ -1298,7 +1301,7 @@ export default function AdminDashboard() {
                     >
                       <span>Owners</span>
                       {sidebarCounts.pendingOwners > 0 ? (
-                        <span className="px-1.5 py-0.5 text-[10px] font-medium rounded-full bg-accent/15 border border-accent/25 text-accent leading-none">
+                        <span className="px-1.5 py-0.5 text-[10px] font-medium rounded-[5px] bg-accent/15 border border-accent/25 text-accent leading-none">
                           {sidebarCounts.pendingOwners}
                         </span>
                       ) : (
@@ -1332,7 +1335,7 @@ export default function AdminDashboard() {
                   className={cn(
                     "w-full flex items-center justify-center py-2 rounded-lg transition-colors text-[13px] font-medium relative",
                     activeTab === 'owner-approval'
-                      ? 'bg-white/[0.05] text-white'
+                      ? 'bg-white/[0.07] text-white shadow-[inset_2px_0_0_var(--color-accent)]'
                       : 'text-[var(--color-text-muted)] hover:bg-white/[0.03] hover:text-white'
                   )}
                   title="Owners"
@@ -1352,7 +1355,7 @@ export default function AdminDashboard() {
                   className={cn(
                     "w-full flex items-center justify-center py-2 rounded-lg transition-colors text-[13px] font-medium",
                     activeTab === 'developer-ban'
-                      ? 'bg-white/[0.05] text-white'
+                      ? 'bg-white/[0.07] text-white shadow-[inset_2px_0_0_var(--color-accent)]'
                       : 'text-[var(--color-text-muted)] hover:bg-white/[0.03] hover:text-white'
                   )}
                   title="Developers"
@@ -1372,7 +1375,7 @@ export default function AdminDashboard() {
                 "w-full flex items-center justify-between px-2.5 py-2 rounded-lg transition-colors text-[13px] font-medium text-left relative",
                 sidebarCollapsed && "lg:justify-center lg:px-0",
                 activeTab === 'enquiries'
-                  ? 'bg-white/[0.05] text-white'
+                  ? 'bg-white/[0.07] text-white shadow-[inset_2px_0_0_var(--color-accent)]'
                   : 'text-[var(--color-text-muted)] hover:bg-white/[0.03] hover:text-white'
               )}
               title={sidebarCollapsed ? "Enquiries" : undefined}
@@ -1386,7 +1389,7 @@ export default function AdminDashboard() {
               </div>
               {!sidebarCollapsed && (
                 sidebarCounts.enquiries > 0 ? (
-                  <span className="px-1.5 py-0.5 text-[10px] font-medium rounded-full bg-accent/15 border border-accent/25 text-accent leading-none">
+                  <span className="px-1.5 py-0.5 text-[10px] font-medium rounded-[5px] bg-accent/15 border border-accent/25 text-accent leading-none">
                     {sidebarCounts.enquiries}
                   </span>
                 ) : (
@@ -1405,7 +1408,7 @@ export default function AdminDashboard() {
                 "w-full flex items-center justify-between px-2.5 py-2 rounded-lg transition-colors text-[13px] font-medium text-left relative",
                 sidebarCollapsed && "lg:justify-center lg:px-0",
                 activeTab === 'subscribers'
-                  ? 'bg-white/[0.05] text-white'
+                  ? 'bg-white/[0.07] text-white shadow-[inset_2px_0_0_var(--color-accent)]'
                   : 'text-[var(--color-text-muted)] hover:bg-white/[0.03] hover:text-white'
               )}
               title={sidebarCollapsed ? "Subscribers" : undefined}
@@ -1431,7 +1434,7 @@ export default function AdminDashboard() {
                 "w-full flex items-center justify-between px-2.5 py-2 rounded-lg transition-colors text-[13px] font-medium text-left relative",
                 sidebarCollapsed && "lg:justify-center lg:px-0",
                 activeTab === 'tracker'
-                  ? 'bg-white/[0.05] text-white'
+                  ? 'bg-white/[0.07] text-white shadow-[inset_2px_0_0_var(--color-accent)]'
                   : 'text-[var(--color-text-muted)] hover:bg-white/[0.03] hover:text-white'
               )}
               title={sidebarCollapsed ? "Tracker" : undefined}
@@ -1452,7 +1455,7 @@ export default function AdminDashboard() {
                 "w-full flex items-center justify-between px-2.5 py-2 rounded-lg transition-colors text-[13px] font-medium text-left relative",
                 sidebarCollapsed && "lg:justify-center lg:px-0",
                 activeTab === 'blogs'
-                  ? 'bg-white/[0.05] text-white'
+                  ? 'bg-white/[0.07] text-white shadow-[inset_2px_0_0_var(--color-accent)]'
                   : 'text-[var(--color-text-muted)] hover:bg-white/[0.03] hover:text-white'
               )}
               title={sidebarCollapsed ? "Blog" : undefined}
@@ -1478,7 +1481,7 @@ export default function AdminDashboard() {
                 "w-full flex items-center justify-between px-2.5 py-2 rounded-lg transition-colors text-[13px] font-medium text-left relative",
                 sidebarCollapsed && "lg:justify-center lg:px-0",
                 activeTab === 'changelog'
-                  ? 'bg-white/[0.05] text-white'
+                  ? 'bg-white/[0.07] text-white shadow-[inset_2px_0_0_var(--color-accent)]'
                   : 'text-[var(--color-text-muted)] hover:bg-white/[0.03] hover:text-white'
               )}
               title={sidebarCollapsed ? "Changelog" : undefined}
@@ -1504,7 +1507,7 @@ export default function AdminDashboard() {
                 "w-full flex items-center gap-2.5 px-2.5 py-2 rounded-lg transition-colors text-[13px] font-medium text-left relative",
                 sidebarCollapsed && "lg:justify-center lg:px-0",
                 activeTab === 'activity'
-                  ? 'bg-white/[0.05] text-white'
+                  ? 'bg-white/[0.07] text-white shadow-[inset_2px_0_0_var(--color-accent)]'
                   : 'text-[var(--color-text-muted)] hover:bg-white/[0.03] hover:text-white'
               )}
               title={sidebarCollapsed ? "Activity" : undefined}
@@ -1518,7 +1521,7 @@ export default function AdminDashboard() {
                 <span className={`ml-auto px-1.5 py-0.5 text-[9px] font-mono rounded border leading-none ${
                   activityLive
                     ? 'bg-emerald-500/15 border-emerald-500/25 text-emerald-400'
-                    : 'bg-white/[0.04] border-white/15 text-white/40'
+                    : 'bg-white/[0.04] border-[var(--color-border-strong)] text-white/40'
                 }`}>
                   {activityLive ? 'Live' : 'Paused'}
                 </span>
@@ -1534,7 +1537,7 @@ export default function AdminDashboard() {
             {/* Database Section */}
             {!sidebarCollapsed ? (
               <div className="pt-3 pb-1.5 px-2.5">
-                <span className="text-[10px] font-bold uppercase tracking-wider text-white/35">
+                <span className="font-mono text-[10.5px] font-normal uppercase tracking-[0.08em] text-[#5f5c5a]">
                   Database Console
                 </span>
               </div>
@@ -1549,7 +1552,7 @@ export default function AdminDashboard() {
                 "w-full flex items-center gap-2.5 px-2.5 py-2 rounded-lg transition-colors text-[13px] font-medium text-left relative",
                 sidebarCollapsed && "lg:justify-center lg:px-0",
                 activeTab === 'vm-overview'
-                  ? 'bg-white/[0.05] text-white'
+                  ? 'bg-white/[0.07] text-white shadow-[inset_2px_0_0_var(--color-accent)]'
                   : 'text-[var(--color-text-muted)] hover:bg-white/[0.03] hover:text-white'
               )}
               title={sidebarCollapsed ? "VM Overview" : undefined}
@@ -1569,7 +1572,7 @@ export default function AdminDashboard() {
                 "w-full flex items-center justify-between px-2.5 py-2 rounded-lg transition-colors text-[13px] font-medium text-left relative",
                 sidebarCollapsed && "lg:justify-center lg:px-0",
                 activeTab === 'database'
-                  ? 'bg-white/[0.05] text-white'
+                  ? 'bg-white/[0.07] text-white shadow-[inset_2px_0_0_var(--color-accent)]'
                   : 'text-[var(--color-text-muted)] hover:bg-white/[0.03] hover:text-white'
               )}
               title={sidebarCollapsed ? "Tables" : undefined}
@@ -1595,7 +1598,7 @@ export default function AdminDashboard() {
                 "w-full flex items-center justify-between px-2.5 py-2 rounded-lg transition-colors text-[13px] font-medium text-left relative",
                 sidebarCollapsed && "lg:justify-center lg:px-0",
                 activeTab === 'buckets'
-                  ? 'bg-white/[0.05] text-white'
+                  ? 'bg-white/[0.07] text-white shadow-[inset_2px_0_0_var(--color-accent)]'
                   : 'text-[var(--color-text-muted)] hover:bg-white/[0.03] hover:text-white'
               )}
               title={sidebarCollapsed ? "Buckets" : undefined}
@@ -1616,7 +1619,7 @@ export default function AdminDashboard() {
                 "w-full flex items-center justify-between px-2.5 py-2 rounded-lg transition-colors text-[13px] font-medium text-left relative",
                 sidebarCollapsed && "lg:justify-center lg:px-0",
                 activeTab === 'backups'
-                  ? 'bg-white/[0.05] text-white'
+                  ? 'bg-white/[0.07] text-white shadow-[inset_2px_0_0_var(--color-accent)]'
                   : 'text-[var(--color-text-muted)] hover:bg-white/[0.03] hover:text-white'
               )}
               title={sidebarCollapsed ? "Backups" : undefined}
@@ -1638,7 +1641,7 @@ export default function AdminDashboard() {
                   "w-full flex items-center justify-between px-2.5 py-2 rounded-lg transition-colors text-[13px] font-medium text-left relative",
                   sidebarCollapsed && "lg:justify-center lg:px-0",
                   activeTab === 'sql-editor'
-                    ? 'bg-white/[0.05] text-white'
+                    ? 'bg-white/[0.07] text-white shadow-[inset_2px_0_0_var(--color-accent)]'
                     : 'text-[var(--color-text-muted)] hover:bg-white/[0.03] hover:text-white'
                 )}
                 title={sidebarCollapsed ? "SQL Editor" : undefined}
@@ -1651,7 +1654,7 @@ export default function AdminDashboard() {
                   {!sidebarCollapsed && <span className="animate-in fade-in duration-200">SQL Editor</span>}
                 </div>
                 {!sidebarCollapsed && currentAdmin?.role === 'super_admin' && sidebarCounts.pendingSqlRequests > 0 && (
-                  <span className="px-1.5 py-0.5 text-[10px] font-medium rounded-full bg-accent/15 border border-accent/25 text-accent leading-none">
+                  <span className="px-1.5 py-0.5 text-[10px] font-medium rounded-[5px] bg-accent/15 border border-accent/25 text-accent leading-none">
                     {sidebarCounts.pendingSqlRequests}
                   </span>
                 )}
@@ -1669,7 +1672,7 @@ export default function AdminDashboard() {
                   "w-full flex items-center justify-between px-2.5 py-2 rounded-lg transition-colors text-[13px] font-medium text-left relative",
                   sidebarCollapsed && "lg:justify-center lg:px-0",
                   activeTab === 'admins'
-                    ? 'bg-white/[0.05] text-white'
+                    ? 'bg-white/[0.07] text-white shadow-[inset_2px_0_0_var(--color-accent)]'
                     : 'text-[var(--color-text-muted)] hover:bg-white/[0.03] hover:text-white'
                 )}
                 title={sidebarCollapsed ? "Admins" : undefined}
@@ -1722,14 +1725,14 @@ export default function AdminDashboard() {
 
         {/* User Card & Logout at bottom */}
         <div className={cn(
-          "p-3 border-t border-[var(--color-border)] flex flex-col gap-2 shrink-0 transition-all duration-300",
+          "relative p-3 flex flex-col gap-2 shrink-0 transition-all duration-300 [background:linear-gradient(90deg,var(--color-rail)_50%,transparent_50%)_top/32px_1px_repeat-x]",
           sidebarCollapsed && "lg:items-center lg:px-0"
         )}>
           <div className={cn(
             "flex items-center gap-3 p-2 rounded-lg bg-white/[0.02] w-full transition-all duration-300",
             sidebarCollapsed && "lg:p-0 lg:bg-transparent lg:justify-center"
           )}>
-            <div className="w-8 h-8 rounded-full bg-accent/20 border border-accent/30 flex items-center justify-center font-bold text-accent text-xs shrink-0">
+            <div className="w-8 h-8 rounded-[6px] bg-gradient-to-br from-[#ffb25c] to-accent flex items-center justify-center font-semibold text-[#1a0a00] text-[11px] shrink-0">
               {currentAdmin?.name
                 ? currentAdmin.name.split(' ').map((n: string) => n[0]).join('').toUpperCase().slice(0, 2)
                 : 'SA'}
@@ -1765,10 +1768,10 @@ export default function AdminDashboard() {
       </aside>
 
       {/* --- MAIN PAGE CONTENT --- */}
-      <main className="flex-grow h-screen overflow-hidden bg-[#0b0b0e] flex flex-col text-left">
+      <main className="flex-grow h-screen overflow-hidden bg-[var(--color-bg)] flex flex-col text-left">
         
         {/* --- HEADER (mobile only — desktop uses sidebar for context) --- */}
-        <header className="lg:hidden h-14 px-4 sm:px-6 border-b border-[var(--color-border)] flex items-center justify-between shrink-0">
+        <header className="lg:hidden h-14 px-4 sm:px-6 flex items-center justify-between shrink-0 [background:linear-gradient(90deg,var(--color-rail)_50%,transparent_50%)_bottom/32px_1px_repeat-x]">
           <div className="flex items-center gap-2 sm:gap-3 min-w-0">
             <button
               onClick={() => setMobileNavOpen(true)}
@@ -1788,14 +1791,14 @@ export default function AdminDashboard() {
         </header>
 
         {/* --- DYNAMIC BODY VIEWS --- */}
-        <div className="flex-grow min-h-0 w-full flex flex-col p-4 sm:p-6 lg:p-8">
+        <AsciiReveal key={activeTab} lazy={false} className="flex-grow min-h-0 w-full flex flex-col p-4 sm:p-6 lg:p-8">
 
           {/* ==================== DASHBOARD PANEL ==================== */}
           {activeTab === 'dashboard' && (
             <div className="space-y-6 overflow-y-auto flex-grow min-h-0 pr-1">
               
               {/* Waitlist Control Card */}
-              <div className="p-6 rounded-xl bg-white/[0.018] border border-[var(--color-border)]">
+              <div className="p-6 rounded-xl bg-[var(--color-surface)] border border-[var(--color-border)]">
                 <div className="flex flex-row items-center justify-between gap-4 border-b border-[var(--color-border)] pb-3">
                   <div className="min-w-0 pr-2">
                     <h3 className="text-sm font-medium text-white truncate">Waitlist Access Control</h3>
@@ -1829,7 +1832,7 @@ export default function AdminDashboard() {
                               }, 2000)
                             }
                           }}
-                          className="p-1.5 rounded-lg bg-white/[0.02] border border-[var(--color-border)] hover:bg-white/[0.06] hover:border-white/10 transition-colors text-white/40 hover:text-white inline-flex items-center justify-center cursor-pointer"
+                          className="p-1.5 rounded-lg bg-white/[0.02] border border-[var(--color-border)] hover:bg-white/[0.06] hover:border-[var(--color-border-strong)] transition-colors text-white/40 hover:text-white inline-flex items-center justify-center cursor-pointer"
                           title="Copy Bypass Key"
                         >
                           <Copy className="w-3.5 h-3.5" />
@@ -1872,7 +1875,7 @@ export default function AdminDashboard() {
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
                 
                 {/* Total Owners */}
-                <div className="p-4 rounded-xl border border-[var(--color-border)] bg-white/[0.018] flex flex-col justify-between min-h-[100px]">
+                <div className="p-4 rounded-xl border border-[var(--color-border)] bg-[var(--color-surface)] flex flex-col justify-between min-h-[100px]">
                   <div className="flex items-center justify-between text-xs text-[var(--color-text-muted)] font-medium">
                     <span>Total Clients</span>
                     <Briefcase className="w-4 h-4 text-[var(--color-text-muted)]" />
@@ -1890,7 +1893,7 @@ export default function AdminDashboard() {
                 </div>
 
                 {/* Total Devs */}
-                <div className="p-4 rounded-xl border border-[var(--color-border)] bg-white/[0.018] flex flex-col justify-between min-h-[100px]">
+                <div className="p-4 rounded-xl border border-[var(--color-border)] bg-[var(--color-surface)] flex flex-col justify-between min-h-[100px]">
                   <div className="flex items-center justify-between text-xs text-[var(--color-text-muted)] font-medium">
                     <span>Total Developers</span>
                     <Users className="w-4 h-4 text-[var(--color-text-muted)]" />
@@ -1904,7 +1907,7 @@ export default function AdminDashboard() {
                 </div>
 
                 {/* Total Enquiries */}
-                <div className="p-4 rounded-xl border border-[var(--color-border)] bg-white/[0.018] flex flex-col justify-between min-h-[100px]">
+                <div className="p-4 rounded-xl border border-[var(--color-border)] bg-[var(--color-surface)] flex flex-col justify-between min-h-[100px]">
                   <div className="flex items-center justify-between text-xs text-[var(--color-text-muted)] font-medium">
                     <span>Pending Support</span>
                     <MessageSquare className="w-4 h-4 text-[var(--color-text-muted)]" />
@@ -1918,7 +1921,7 @@ export default function AdminDashboard() {
                 </div>
 
                 {/* Total Subscribers */}
-                <div className="p-4 rounded-xl border border-[var(--color-border)] bg-white/[0.018] flex flex-col justify-between min-h-[100px]">
+                <div className="p-4 rounded-xl border border-[var(--color-border)] bg-[var(--color-surface)] flex flex-col justify-between min-h-[100px]">
                   <div className="flex items-center justify-between text-xs text-[var(--color-text-muted)] font-medium">
                     <span>Total Subscribers</span>
                     <Mail className="w-4 h-4 text-[var(--color-text-muted)]" />
@@ -1961,7 +1964,7 @@ export default function AdminDashboard() {
                               </span>
                             )}
                             {pendingCount > 0 && (
-                              <span className="rounded px-2 py-0.5 font-mono text-[10px] bg-white/[0.04] border border-white/10 text-white/80 shrink-0">
+                              <span className="rounded px-2 py-0.5 font-mono text-[10px] bg-white/[0.04] border border-[var(--color-border-strong)] text-white/80 shrink-0">
                                 {pendingCount} pending
                               </span>
                             )}
@@ -1979,7 +1982,7 @@ export default function AdminDashboard() {
                 </div>
 
                 {broadcastApprovals.length === 0 ? (
-                  <div className="py-3.5 px-4 rounded-lg bg-white/[0.01] border border-white/[0.04] flex items-center justify-between text-xs text-white/40 font-mono">
+                  <div className="py-3.5 px-4 rounded-lg bg-white/[0.01] border border-[var(--color-border)] flex items-center justify-between text-xs text-white/40 font-mono">
                     <span className="flex items-center gap-2">
                       <Check className="h-3.5 w-3.5 text-white/30 shrink-0" />
                       No pending approvals. Broadcast announcements will appear here upon publishing.
@@ -2001,12 +2004,12 @@ export default function AdminDashboard() {
                             "rounded-lg border p-3 sm:p-4 transition-colors flex flex-col lg:flex-row lg:items-center justify-between gap-3.5",
                             isFailed
                               ? "border-red-500/25 bg-red-500/[0.02] hover:border-red-500/40"
-                              : "border-white/[0.06] bg-white/[0.01] hover:border-white/10"
+                              : "border-[var(--color-border)] bg-white/[0.01] hover:border-[var(--color-border-strong)]"
                           )}
                         >
                           <div className="space-y-1.5 min-w-0 flex-1">
                             <div className="flex flex-wrap items-center gap-2">
-                              <span className="rounded border border-white/10 bg-white/[0.03] px-2 py-0.5 font-mono text-[10px] text-white/70 uppercase tracking-wider">
+                              <span className="rounded border border-[var(--color-border-strong)] bg-white/[0.03] px-2 py-0.5 font-mono text-[10px] text-white/70 uppercase tracking-wider">
                                 {approval.type}
                               </span>
                               {isFailed && (
@@ -2016,7 +2019,7 @@ export default function AdminDashboard() {
                                 </span>
                               )}
                               {approval.tag && (
-                                <span className="rounded border border-white/10 px-1.5 py-0.5 font-mono text-[10px] text-white/50">
+                                <span className="rounded border border-[var(--color-border-strong)] px-1.5 py-0.5 font-mono text-[10px] text-white/50">
                                   {approval.tag}
                                 </span>
                               )}
@@ -2049,7 +2052,7 @@ export default function AdminDashboard() {
                             <button
                               type="button"
                               onClick={() => handlePreviewBroadcast(approval)}
-                              className="h-8 min-h-[32px] max-h-[32px] px-3.5 sm:min-w-[92px] rounded-lg border border-white/10 bg-white/[0.02] text-xs font-medium text-white/70 hover:text-white hover:bg-white/[0.06] hover:border-white/20 transition-colors flex items-center gap-1.5 cursor-pointer flex-1 sm:flex-none justify-center shrink-0 box-border leading-none"
+                              className="h-8 min-h-[32px] max-h-[32px] px-3.5 sm:min-w-[92px] rounded-lg border border-[var(--color-border-strong)] bg-white/[0.02] text-xs font-medium text-white/70 hover:text-white hover:bg-white/[0.06] hover:border-white/20 transition-colors flex items-center gap-1.5 cursor-pointer flex-1 sm:flex-none justify-center shrink-0 box-border leading-none"
                               title="Preview how this email looks"
                             >
                               <Eye className="h-3.5 w-3.5 text-white/60 shrink-0" />
@@ -2172,7 +2175,7 @@ export default function AdminDashboard() {
                   <div>
                     <div className="flex items-center gap-2">
                       <h2 className="text-base font-medium text-white">Clients &amp; Company Owners</h2>
-                      <span className="bg-white/[0.04] border border-white/[0.08] text-white/70 px-2 py-0.5 rounded font-mono text-[10px]">
+                      <span className="bg-white/[0.04] border border-[var(--color-border)] text-white/70 px-2 py-0.5 rounded font-mono text-[10px]">
                         {ownersList.length} TOTAL
                       </span>
                     </div>
@@ -2189,7 +2192,7 @@ export default function AdminDashboard() {
                   </button>
                 </div>
 
-                <div className="rounded-xl bg-white/[0.018] border border-[var(--color-border)] overflow-hidden flex flex-col min-h-0 flex-grow">
+                <div className="rounded-xl bg-[var(--color-surface)] border border-[var(--color-border)] overflow-hidden flex flex-col min-h-0 flex-grow">
 
                   {/* Sub-tab switcher + search */}
                   <div className="p-4 border-b border-[var(--color-border)] flex flex-col sm:flex-row sm:items-center gap-3 bg-white/[0.005]">
@@ -2217,7 +2220,7 @@ export default function AdminDashboard() {
                       >
                         Requests
                         {totalRequests > 0 ? (
-                          <span className="px-1.5 py-0.5 text-[10px] font-medium rounded-full bg-orange-500/15 border border-orange-500/25 text-orange-400 leading-none">
+                          <span className="px-1.5 py-0.5 text-[10px] font-medium rounded-[5px] bg-orange-500/15 border border-orange-500/25 text-orange-400 leading-none">
                             {totalRequests}
                           </span>
                         ) : (
@@ -2234,7 +2237,7 @@ export default function AdminDashboard() {
                       >
                         Banned
                         {totalBanned > 0 ? (
-                          <span className="px-1.5 py-0.5 text-[10px] font-medium rounded-full bg-red-500/15 border border-red-500/25 text-red-400 leading-none">
+                          <span className="px-1.5 py-0.5 text-[10px] font-medium rounded-[5px] bg-red-500/15 border border-red-500/25 text-red-400 leading-none">
                             {totalBanned}
                           </span>
                         ) : (
@@ -2259,7 +2262,7 @@ export default function AdminDashboard() {
                   <div className="overflow-auto flex-grow min-h-0">
                     <table className="w-full text-left border-collapse">
                       <thead>
-                        <tr className="border-b border-[var(--color-border)] text-[10px] uppercase tracking-wider text-white/35 font-medium">
+                        <tr className="border-b border-[var(--color-border)] bg-[#1e1d1c] font-mono text-[11px] font-normal uppercase tracking-[0.06em] text-[#8e8e93] whitespace-nowrap">
                           <th className="px-4 py-2.5">User Details</th>
                           <th className="px-4 py-2.5">Company / Designation</th>
                           {ownersSubTab !== 'requests' && (
@@ -2394,7 +2397,7 @@ export default function AdminDashboard() {
                       <button
                         onClick={() => changePage(Math.max(currentPage - 1, 1))}
                         disabled={currentPage === 1}
-                        className="w-7 h-7 flex items-center justify-center rounded-md bg-white/[0.02] border border-[var(--color-border)] text-[var(--color-text-muted)] hover:text-white hover:border-white/15 disabled:opacity-30 disabled:pointer-events-none transition-colors cursor-pointer"
+                        className="w-7 h-7 flex items-center justify-center rounded-md bg-white/[0.02] border border-[var(--color-border)] text-[var(--color-text-muted)] hover:text-white hover:border-[var(--color-border-strong)] disabled:opacity-30 disabled:pointer-events-none transition-colors cursor-pointer"
                       >
                         <ChevronLeft className="w-3.5 h-3.5" />
                       </button>
@@ -2404,7 +2407,7 @@ export default function AdminDashboard() {
                       <button
                         onClick={() => changePage(Math.min(currentPage + 1, Math.ceil(activeOwners.length / pageSize)))}
                         disabled={currentPage === Math.ceil(activeOwners.length / pageSize)}
-                        className="w-7 h-7 flex items-center justify-center rounded-md bg-white/[0.02] border border-[var(--color-border)] text-[var(--color-text-muted)] hover:text-white hover:border-white/15 disabled:opacity-30 disabled:pointer-events-none transition-colors cursor-pointer"
+                        className="w-7 h-7 flex items-center justify-center rounded-md bg-white/[0.02] border border-[var(--color-border)] text-[var(--color-text-muted)] hover:text-white hover:border-[var(--color-border-strong)] disabled:opacity-30 disabled:pointer-events-none transition-colors cursor-pointer"
                       >
                         <ChevronRight className="w-3.5 h-3.5" />
                       </button>
@@ -2426,7 +2429,7 @@ export default function AdminDashboard() {
                 <div>
                   <div className="flex items-center gap-2">
                     <h2 className="text-base font-medium text-white">Developer Accounts</h2>
-                    <span className="bg-white/[0.04] border border-white/[0.08] text-white/70 px-2 py-0.5 rounded font-mono text-[10px]">
+                    <span className="bg-white/[0.04] border border-[var(--color-border)] text-white/70 px-2 py-0.5 rounded font-mono text-[10px]">
                       {developersList.length} TOTAL
                     </span>
                   </div>
@@ -2443,7 +2446,7 @@ export default function AdminDashboard() {
                 </button>
               </div>
 
-              <div className="rounded-xl bg-white/[0.018] border border-[var(--color-border)] overflow-hidden flex flex-col min-h-0 flex-grow">
+              <div className="rounded-xl bg-[var(--color-surface)] border border-[var(--color-border)] overflow-hidden flex flex-col min-h-0 flex-grow">
                 
                 {/* Search */}
                 <div className="p-4 border-b border-[var(--color-border)] bg-white/[0.005]">
@@ -2463,7 +2466,7 @@ export default function AdminDashboard() {
                 <div className="overflow-auto flex-grow min-h-0">
                   <table className="w-full text-left border-collapse">
                     <thead>
-                      <tr className="border-b border-[var(--color-border)] text-[10px] uppercase tracking-wider text-white/35 font-medium">
+                      <tr className="border-b border-[var(--color-border)] bg-[#1e1d1c] font-mono text-[11px] font-normal uppercase tracking-[0.06em] text-[#8e8e93] whitespace-nowrap">
                         <th className="px-4 py-2.5">Developer</th>
                         <th className="px-4 py-2.5">GitHub ID</th>
                         <th className="px-4 py-2.5">Access Token</th>
@@ -2593,7 +2596,7 @@ export default function AdminDashboard() {
                 <div>
                   <div className="flex items-center gap-2">
                     <h2 className="text-base font-medium text-white">Support Enquiries</h2>
-                    <span className="bg-white/[0.04] border border-white/[0.08] text-white/70 px-2 py-0.5 rounded font-mono text-[10px]">
+                    <span className="bg-white/[0.04] border border-[var(--color-border)] text-white/70 px-2 py-0.5 rounded font-mono text-[10px]">
                       {enquiriesList.length} SUBMISSIONS
                     </span>
                   </div>
@@ -2610,7 +2613,7 @@ export default function AdminDashboard() {
                 </button>
               </div>
 
-              <div className="rounded-xl bg-white/[0.018] border border-[var(--color-border)] overflow-hidden flex flex-col min-h-0 flex-grow">
+              <div className="rounded-xl bg-[var(--color-surface)] border border-[var(--color-border)] overflow-hidden flex flex-col min-h-0 flex-grow">
                 
                 {/* Search */}
                 <div className="p-4 border-b border-[var(--color-border)] bg-white/[0.005]">
@@ -2630,7 +2633,7 @@ export default function AdminDashboard() {
                 <div className="overflow-auto flex-grow min-h-0">
                   <table className="w-full text-left border-collapse">
                     <thead>
-                      <tr className="border-b border-[var(--color-border)] text-[10px] uppercase tracking-wider text-white/35 font-medium">
+                      <tr className="border-b border-[var(--color-border)] bg-[#1e1d1c] font-mono text-[11px] font-normal uppercase tracking-[0.06em] text-[#8e8e93] whitespace-nowrap">
                         <th className="px-4 py-2.5">Contact Info</th>
                         <th className="px-4 py-2.5">Message Details</th>
                         <th className="px-4 py-2.5">Category</th>
@@ -2700,7 +2703,7 @@ export default function AdminDashboard() {
                 <div>
                   <div className="flex items-center gap-2">
                     <h2 className="text-base font-medium text-white">Newsletter Subscribers</h2>
-                    <span className="bg-white/[0.04] border border-white/[0.08] text-white/70 px-2 py-0.5 rounded font-mono text-[10px]">
+                    <span className="bg-white/[0.04] border border-[var(--color-border)] text-white/70 px-2 py-0.5 rounded font-mono text-[10px]">
                       {subscribersList.length} SUBSCRIBERS
                     </span>
                     <span className="bg-emerald-500/10 border border-emerald-500/20 text-emerald-300 px-2 py-0.5 rounded font-mono text-[10px]">
@@ -2728,7 +2731,7 @@ export default function AdminDashboard() {
                 </div>
               </div>
 
-              <div className="rounded-xl bg-white/[0.018] border border-[var(--color-border)] overflow-hidden flex flex-col min-h-0 flex-grow">
+              <div className="rounded-xl bg-[var(--color-surface)] border border-[var(--color-border)] overflow-hidden flex flex-col min-h-0 flex-grow">
 
                 {/* Search + status filter */}
                 <div className="p-4 border-b border-[var(--color-border)] bg-white/[0.005] flex flex-col gap-3 lg:flex-row lg:items-center">
@@ -2768,7 +2771,7 @@ export default function AdminDashboard() {
                 <div className="overflow-auto flex-grow min-h-0">
                   <table className="w-full text-left border-collapse">
                     <thead>
-                      <tr className="border-b border-[var(--color-border)] text-[10px] uppercase tracking-wider text-white/35 font-medium">
+                      <tr className="border-b border-[var(--color-border)] bg-[#1e1d1c] font-mono text-[11px] font-normal uppercase tracking-[0.06em] text-[#8e8e93] whitespace-nowrap">
                         <th className="px-4 py-2.5 whitespace-nowrap">Subscriber ID</th>
                         <th className="px-4 py-2.5 whitespace-nowrap">Email Address</th>
                         <th className="px-4 py-2.5 whitespace-nowrap">Status</th>
@@ -2875,7 +2878,7 @@ export default function AdminDashboard() {
                 <div>
                   <div className="flex items-center gap-2">
                     <h2 className="text-base font-medium text-white">Administrators</h2>
-                    <span className="bg-white/[0.04] border border-white/[0.08] text-white/70 px-2 py-0.5 rounded font-mono text-[10px]">
+                    <span className="bg-white/[0.04] border border-[var(--color-border)] text-white/70 px-2 py-0.5 rounded font-mono text-[10px]">
                       {adminsList.length} ADMINS
                     </span>
                   </div>
@@ -2902,7 +2905,7 @@ export default function AdminDashboard() {
                 </div>
               </div>
 
-              <div className="rounded-xl bg-white/[0.018] border border-[var(--color-border)] overflow-hidden flex flex-col min-h-0 flex-grow">
+              <div className="rounded-xl bg-[var(--color-surface)] border border-[var(--color-border)] overflow-hidden flex flex-col min-h-0 flex-grow">
                 
                 {/* Search */}
                 <div className="p-4 border-b border-[var(--color-border)] bg-white/[0.005]">
@@ -2922,7 +2925,7 @@ export default function AdminDashboard() {
                 <div className="overflow-auto flex-grow min-h-0">
                   <table className="w-full text-left border-collapse">
                     <thead>
-                      <tr className="border-b border-[var(--color-border)] text-[10px] uppercase tracking-wider text-white/35 font-medium">
+                      <tr className="border-b border-[var(--color-border)] bg-[#1e1d1c] font-mono text-[11px] font-normal uppercase tracking-[0.06em] text-[#8e8e93] whitespace-nowrap">
                         <th className="px-4 py-2.5 whitespace-nowrap">Admin Profile</th>
                         <th className="px-4 py-2.5 whitespace-nowrap">Email / Handle</th>
                         <th className="px-4 py-2.5 whitespace-nowrap">Role</th>
@@ -3134,14 +3137,14 @@ export default function AdminDashboard() {
             </div>
           )}
 
-        </div>
+        </AsciiReveal>
 
       </main>
 
       {/* --- INVITE ADMIN GLASS MODAL --- */}
       {isInviteModalOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-sm animate-in fade-in duration-300">
-          <div className="w-full max-w-lg bg-[#0c0c0e] border border-[var(--color-border)] rounded-xl p-6 shadow-2xl relative animate-in zoom-in-95 duration-200">
+          <div className="w-full max-w-lg bg-[#1a1919] border border-[var(--color-border)] rounded-xl p-6 shadow-2xl relative animate-in zoom-in-95 duration-200">
             <div className="space-y-4 text-left">
               <div className="border-b border-[var(--color-border)] pb-3">
                 <h3 className="text-base font-medium text-white">Invite Administrator</h3>
@@ -3245,7 +3248,7 @@ export default function AdminDashboard() {
       {/* --- RESET PASSWORD GLASS MODAL --- */}
       {isResetModalOpen && resetTargetAdmin && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-sm animate-in fade-in duration-300">
-          <div className="w-full max-w-md bg-[#0c0c0e] border border-[var(--color-border)] rounded-xl p-6 shadow-2xl relative animate-in zoom-in-95 duration-200">
+          <div className="w-full max-w-md bg-[#1a1919] border border-[var(--color-border)] rounded-xl p-6 shadow-2xl relative animate-in zoom-in-95 duration-200">
             <div className="space-y-4 text-left">
               <div className="border-b border-[var(--color-border)] pb-3">
                 <h3 className="text-base font-medium text-white">Reset Password</h3>
@@ -3313,7 +3316,7 @@ export default function AdminDashboard() {
       {/* --- EDIT ROLE GLASS MODAL --- */}
       {isEditRoleModalOpen && editRoleTargetAdmin && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-sm animate-in fade-in duration-300">
-          <div className="w-full max-w-md bg-[#0c0c0e] border border-[var(--color-border)] rounded-xl p-6 shadow-2xl relative animate-in zoom-in-95 duration-200">
+          <div className="w-full max-w-md bg-[#1a1919] border border-[var(--color-border)] rounded-xl p-6 shadow-2xl relative animate-in zoom-in-95 duration-200">
             <div className="space-y-4 text-left">
               <div className="border-b border-[var(--color-border)] pb-3">
                 <h3 className="text-base font-medium text-white">Edit Access Role</h3>
@@ -3380,7 +3383,7 @@ export default function AdminDashboard() {
       {/* --- DECLINE OWNER GLASS MODAL --- */}
       {isDeclineModalOpen && declineTargetOwner && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-sm animate-in fade-in duration-300">
-          <div className="w-full max-w-md bg-[#0c0c0e] border border-[var(--color-border)] rounded-xl p-6 shadow-2xl relative animate-in zoom-in-95 duration-200">
+          <div className="w-full max-w-md bg-[#1a1919] border border-[var(--color-border)] rounded-xl p-6 shadow-2xl relative animate-in zoom-in-95 duration-200">
             <div className="space-y-4 text-left">
               <div className="border-b border-[var(--color-border)] pb-3">
                 <h3 className="text-base font-medium text-white">Decline Application</h3>
@@ -3439,7 +3442,7 @@ export default function AdminDashboard() {
       {/* --- WAITLIST BYPASS PASSWORD GLASS MODAL --- */}
       {isWaitlistModalOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-sm animate-in fade-in duration-300">
-          <div className="w-full max-w-md bg-[#0c0c0e] border border-[var(--color-border)] rounded-xl p-6 shadow-2xl relative animate-in zoom-in-95 duration-200">
+          <div className="w-full max-w-md bg-[#1a1919] border border-[var(--color-border)] rounded-xl p-6 shadow-2xl relative animate-in zoom-in-95 duration-200">
             <div className="space-y-4 text-left">
               <div className="border-b border-[var(--color-border)] pb-3">
                 <h3 className="text-base font-medium text-white">
@@ -3498,7 +3501,7 @@ export default function AdminDashboard() {
       {/* --- EDIT PROFILE GLASS MODAL --- */}
       {isProfileModalOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-sm animate-in fade-in duration-300">
-          <div className="w-full max-w-lg bg-[#0c0c0e] border border-[var(--color-border)] rounded-xl p-6 shadow-2xl relative animate-in zoom-in-95 duration-200">
+          <div className="w-full max-w-lg bg-[#1a1919] border border-[var(--color-border)] rounded-xl p-6 shadow-2xl relative animate-in zoom-in-95 duration-200">
             <div className="space-y-4 text-left">
               <div className="border-b border-[var(--color-border)] pb-3">
                 <h3 className="text-base font-medium text-white">Edit Profile</h3>
@@ -3596,7 +3599,7 @@ export default function AdminDashboard() {
       {/* --- CHANGE PASSWORD GLASS MODAL --- */}
       {isChangePasswordModalOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-sm animate-in fade-in duration-300">
-          <div className="w-full max-w-md bg-[#0c0c0e] border border-[var(--color-border)] rounded-xl p-6 shadow-2xl relative animate-in zoom-in-95 duration-200">
+          <div className="w-full max-w-md bg-[#1a1919] border border-[var(--color-border)] rounded-xl p-6 shadow-2xl relative animate-in zoom-in-95 duration-200">
             <div className="space-y-4 text-left">
               <div className="border-b border-[var(--color-border)] pb-3">
                 <h3 className="text-base font-medium text-white">Change Password</h3>

@@ -94,7 +94,7 @@ function toLocalInputString(iso: string | null | undefined): string {
 
 function StatusBadge({ isPublished }: { isPublished: boolean }) {
   return (
-    <span className="inline-flex items-center rounded-lg border border-white/[0.08] bg-white/[0.03] px-2.5 py-1 font-mono text-[11px] lowercase leading-none text-white/60">
+    <span className="inline-flex items-center rounded-lg border border-[var(--color-border)] bg-white/[0.03] px-2.5 py-1 font-mono text-[11px] lowercase leading-none text-white/60">
       {isPublished ? 'published' : 'draft'}
     </span>
   )
@@ -490,7 +490,7 @@ function ChangelogListView({
           <button
             disabled={bulkBusy}
             onClick={runBulkDelete}
-            className="inline-flex items-center gap-1.5 rounded-md border border-red-500/30 bg-red-500/10 px-2.5 py-1 text-[11px] font-medium text-red-400 transition-colors hover:bg-red-500/20 disabled:opacity-50 cursor-pointer"
+            className="inline-flex items-center gap-1.5 h-7 rounded-md border border-red-500/30 bg-red-500/10 px-2.5 text-[11px] font-medium text-red-400 transition-colors hover:bg-red-500/20 disabled:opacity-50 cursor-pointer"
           >
             <Trash2 className="h-3.5 w-3.5" /> Delete
           </button>
@@ -504,10 +504,10 @@ function ChangelogListView({
       )}
 
       {/* Table */}
-      <div className="flex-grow overflow-auto rounded-xl border border-[var(--color-border)] bg-white/[0.018]">
+      <div className="flex-grow overflow-auto rounded-xl border border-[var(--color-border)] bg-[var(--color-surface)]">
         <table className="w-full border-collapse text-left">
           <thead>
-            <tr className="border-b border-[var(--color-border)] text-[10px] uppercase tracking-wider text-white/35">
+            <tr className="border-b border-[var(--color-border)] bg-[#1e1d1c] font-mono text-[11px] font-normal uppercase tracking-[0.06em] text-[#8e8e93] whitespace-nowrap">
               <th className="w-10 px-3 py-2.5">
                 <Checkbox checked={allFilteredSelected} onChange={toggleAllFiltered} aria-label="Select all" />
               </th>
@@ -567,10 +567,10 @@ function ChangelogListView({
                           <span className="inline-flex items-center gap-1 font-mono text-[10px] text-[var(--color-text-muted)]">
                             <Clock className="h-2.5 w-2.5" /> {formatLocalDateTime(row.publishedAt)}
                           </span>
-                          <span className="inline-flex lg:hidden items-center rounded border border-white/10 bg-white/[0.03] px-1.5 py-0.2 font-mono text-[9px] text-white/70 uppercase">
+                          <span className="inline-flex lg:hidden items-center rounded border border-[var(--color-border-strong)] bg-white/[0.03] px-1.5 py-0.2 font-mono text-[9px] text-white/70 uppercase">
                             {row.tag || 'CORE'}
                           </span>
-                          <span className="inline-flex md:hidden items-center rounded border border-white/10 bg-white/[0.03] px-1.5 py-0.2 font-mono text-[9px] text-white/50 lowercase">
+                          <span className="inline-flex md:hidden items-center rounded border border-[var(--color-border-strong)] bg-white/[0.03] px-1.5 py-0.2 font-mono text-[9px] text-white/50 lowercase">
                             {row.isPublished ? 'published' : 'draft'}
                           </span>
                         </div>
@@ -969,7 +969,7 @@ function ChangelogEditorView({ id, onBack, onSaved }: EditorProps) {
           <button
             type="button"
             onClick={handleOpenEmailPreview}
-            className="h-9 px-3 rounded-xl border border-white/10 bg-white/[0.03] text-white/70 hover:text-white hover:bg-white/[0.06] text-xs font-medium transition-colors flex items-center justify-center gap-1.5 cursor-pointer"
+            className="h-9 px-3 rounded-xl border border-[var(--color-border-strong)] bg-white/[0.03] text-white/70 hover:text-white hover:bg-white/[0.06] text-xs font-medium transition-colors flex items-center justify-center gap-1.5 cursor-pointer"
             title="Preview how the email will look"
           >
             <Eye className="h-3.5 w-3.5" />
@@ -979,7 +979,7 @@ function ChangelogEditorView({ id, onBack, onSaved }: EditorProps) {
             type="button"
             disabled={saving}
             onClick={() => handleSave(false)}
-            className="h-9 px-4 rounded-xl border border-white/10 bg-white/[0.03] text-white text-xs font-medium hover:bg-white/[0.06] transition-colors disabled:opacity-40 flex items-center justify-center min-w-[95px]"
+            className="h-9 px-4 rounded-xl border border-[var(--color-border-strong)] bg-white/[0.03] text-white text-xs font-medium hover:bg-white/[0.06] transition-colors disabled:opacity-40 flex items-center justify-center min-w-[95px]"
           >
             Save draft
           </button>
@@ -1237,7 +1237,7 @@ function ChangelogEditorView({ id, onBack, onSaved }: EditorProps) {
                 )
               ) : (
                 <div className="flex flex-col items-center justify-center text-center p-4 select-none">
-                  <div className="h-9 w-9 rounded-full bg-white/[0.03] border border-white/[0.06] flex items-center justify-center text-white/25 mb-1.5">
+                  <div className="h-9 w-9 rounded-full bg-white/[0.03] border border-[var(--color-border)] flex items-center justify-center text-white/25 mb-1.5">
                     <ImageIcon className="h-4 w-4" />
                   </div>
                   <span className="text-xs font-medium text-white/40">16:9 Mockup Frame</span>
@@ -1335,11 +1335,11 @@ function ChangelogEditorView({ id, onBack, onSaved }: EditorProps) {
             <span className="block text-[11px] uppercase tracking-wider text-white/50 border-b border-[var(--color-border)] pb-2">
               Release Metrics
             </span>
-            <div className="flex items-center justify-between py-1 border-b border-white/[0.04] text-white/60">
+            <div className="flex items-center justify-between py-1 border-b border-[var(--color-border)] text-white/60">
               <span>Est. Read Time</span>
               <span className="text-white font-medium">~1 min</span>
             </div>
-            <div className="flex items-center justify-between py-1 border-b border-white/[0.04] text-white/60">
+            <div className="flex items-center justify-between py-1 border-b border-[var(--color-border)] text-white/60">
               <span>Word Count</span>
               <span className="text-white font-medium">
                 {description.split(/\s+/).filter(Boolean).length}
@@ -1389,14 +1389,14 @@ function ChangelogEditorView({ id, onBack, onSaved }: EditorProps) {
                 src={mediaUrl}
                 controls
                 autoPlay
-                className="w-auto h-auto max-w-full max-h-[85vh] object-contain rounded-xl border border-white/15 shadow-[0_25px_70px_rgba(0,0,0,0.9)] block"
+                className="w-auto h-auto max-w-full max-h-[85vh] object-contain rounded-xl border border-[var(--color-border-strong)] shadow-[0_25px_70px_rgba(0,0,0,0.9)] block"
               />
             ) : (
               /* eslint-disable-next-line @next/next/no-img-element */
               <img
                 src={mediaUrl}
                 alt="Enlarged Media"
-                className="w-auto h-auto max-w-full max-h-[85vh] object-contain rounded-xl border border-white/15 shadow-[0_25px_70px_rgba(0,0,0,0.9)] block"
+                className="w-auto h-auto max-w-full max-h-[85vh] object-contain rounded-xl border border-[var(--color-border-strong)] shadow-[0_25px_70px_rgba(0,0,0,0.9)] block"
               />
             )}
           </div>

@@ -31,8 +31,8 @@ export default function NotFound() {
   }, [count, router])
 
   return (
-    <div className="h-screen w-full bg-[#0A0A0A] text-white selection:bg-accent selection:text-white flex flex-col overflow-hidden fixed inset-0">
-      <header className="w-full px-6 py-4 flex items-center justify-between border-b border-white/[0.06] relative z-20">
+    <div className="h-screen w-full bg-[#151414] text-[#1a0a00] selection:bg-accent selection:text-white flex flex-col overflow-hidden fixed inset-0">
+      <header className="w-full px-6 py-4 flex items-center justify-between border-b border-[var(--color-border)] relative z-20">
         <Link href="/" className="flex items-center gap-2">
           <span className="font-bold text-base tracking-tight">Forke</span>
           <span className="text-[10px] uppercase font-mono px-1.5 py-0.5 rounded bg-white/[0.08] text-white/60">Admin</span>

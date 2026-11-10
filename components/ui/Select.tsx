@@ -10,7 +10,8 @@
  * commercial license from Forke Inc. is strictly prohibited.
  */
 
-import React, { useState, useRef, useEffect } from 'react'
+import React, { useCallback, useEffect, useId, useRef, useState } from 'react'
+import { createPortal } from 'react-dom'
 import { ChevronDown, Check } from 'lucide-react'
 import { cn } from '@/lib/utils/cn'
 
@@ -25,21 +26,15 @@ interface SelectProps {
   options: SelectOption[]
   placeholder?: string
   disabled?: boolean
-  /** Extra classes for the trigger button */
   className?: string
-  /** Visual density */
   size?: 'sm' | 'md'
-  /** Horizontal alignment of the dropdown menu */
   align?: 'left' | 'right'
-  /** Whether the menu opens upward (use near the bottom of a clipped container) */
   placement?: 'top' | 'bottom'
   'aria-label'?: string
 }
 
-/**
- * A styled, accessible dropdown that replaces the native <select> so menus
- * match the app's dark/glass aesthetic instead of the OS default list.
- */
+type Place = { left: number; width: number; top?: number; bottom?: number; maxHeight: number }
+
 export function Select({
   value,
   onChange,
@@ -53,86 +48,139 @@ export function Select({
   'aria-label': ariaLabel,
 }: SelectProps) {
   const [open, setOpen] = useState(false)
-  const ref = useRef<HTMLDivElement>(null)
+  const [active, setActive] = useState(0)
+  const [place, setPlace] = useState<Place | null>(null)
+  const trigger = useRef<HTMLButtonElement>(null)
+  const list = useRef<HTMLUListElement>(null)
+  const id = useId()
+  const selectedIndex = options.findIndex((o) => o.value === value)
+  const selected = options[selectedIndex]
+
+  const measure = useCallback(() => {
+    const r = trigger.current?.getBoundingClientRect()
+    if (!r) return
+    const width = Math.max(r.width, 180)
+    const below = window.innerHeight - r.bottom - 12
+    const above = r.top - 12
+    const up = placement === 'top' ? above > 120 : below < 220 && above > below
+    const left = align === 'right' ? r.right - width : r.left
+    setPlace({
+      left: Math.max(8, Math.min(left, window.innerWidth - width - 8)),
+      width,
+      ...(up ? { bottom: window.innerHeight - r.top + 4 } : { top: r.bottom + 4 }),
+      maxHeight: Math.min(288, up ? above : below),
+    })
+  }, [align, placement])
+
+  const show = () => {
+    if (disabled) return
+    measure()
+    setActive(Math.max(0, selectedIndex))
+    setOpen(true)
+  }
+
+  const choose = (opt: SelectOption) => {
+    setOpen(false)
+    trigger.current?.focus()
+    if (opt.value !== value) onChange(opt.value)
+  }
 
   useEffect(() => {
     if (!open) return
-    function onDocClick(e: MouseEvent) {
-      if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false)
+    const away = (e: MouseEvent) => {
+      if (!trigger.current?.contains(e.target as Node) && !list.current?.contains(e.target as Node)) setOpen(false)
     }
-    function onKey(e: KeyboardEvent) {
-      if (e.key === 'Escape') setOpen(false)
-    }
-    document.addEventListener('mousedown', onDocClick)
-    document.addEventListener('keydown', onKey)
+    const close = () => setOpen(false)
+    document.addEventListener('mousedown', away)
+    window.addEventListener('resize', close)
+    window.addEventListener('scroll', measure, true)
     return () => {
-      document.removeEventListener('mousedown', onDocClick)
-      document.removeEventListener('keydown', onKey)
+      document.removeEventListener('mousedown', away)
+      window.removeEventListener('resize', close)
+      window.removeEventListener('scroll', measure, true)
     }
-  }, [open])
+  }, [open, measure])
 
-  const selected = options.find((o) => o.value === value)
+  useEffect(() => {
+    if (open) list.current?.querySelector<HTMLElement>(`[data-index="${active}"]`)?.scrollIntoView({ block: 'nearest' })
+  }, [open, active])
+
+  const onKey = (e: React.KeyboardEvent<HTMLButtonElement>) => {
+    if (!open && ['ArrowDown', 'ArrowUp', 'Enter', ' '].includes(e.key)) { e.preventDefault(); show(); return }
+    if (!open) return
+    if (e.key === 'ArrowDown') { e.preventDefault(); setActive((i) => (i + 1) % options.length) }
+    else if (e.key === 'ArrowUp') { e.preventDefault(); setActive((i) => (i - 1 + options.length) % options.length) }
+    else if (e.key === 'Home') { e.preventDefault(); setActive(0) }
+    else if (e.key === 'End') { e.preventDefault(); setActive(options.length - 1) }
+    else if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); if (options[active]) choose(options[active]) }
+    else if (e.key === 'Escape' || e.key === 'Tab') setOpen(false)
+    else if (e.key.length === 1) {
+      const i = options.findIndex((o) => o.label.toLowerCase().startsWith(e.key.toLowerCase()))
+      if (i >= 0) setActive(i)
+    }
+  }
 
   return (
-    <div ref={ref} className="relative">
+    <div className="relative">
       <button
+        ref={trigger}
         type="button"
+        role="combobox"
         disabled={disabled}
         aria-label={ariaLabel}
         aria-haspopup="listbox"
         aria-expanded={open}
-        onClick={() => setOpen((o) => !o)}
+        aria-controls={open ? id : undefined}
+        aria-activedescendant={open ? `${id}-${active}` : undefined}
+        onClick={() => (open ? setOpen(false) : show())}
+        onKeyDown={onKey}
         className={cn(
-          'flex w-full items-center justify-between gap-2 rounded-xl border border-[var(--color-border)] bg-white/[0.02] text-white transition-colors hover:border-white/15 focus:border-accent/50 focus:outline-none disabled:cursor-not-allowed disabled:opacity-40',
-          size === 'sm' ? 'h-7 px-2.5 text-[11px]' : 'h-9 px-3 text-xs',
+          'flex w-full cursor-pointer items-center justify-between gap-2 rounded-[6px] border border-[var(--color-border-strong)] bg-[rgba(240,227,222,0.03)] text-white transition-[border-color,box-shadow] hover:border-[rgba(240,227,222,0.24)] focus:outline-none focus-visible:border-accent disabled:cursor-not-allowed disabled:opacity-40',
+          size === 'sm' ? 'h-8 px-2.5 text-xs' : 'h-9 px-3 text-[13px]',
+          open && 'border-accent shadow-[0_0_0_3px_rgba(255,122,0,0.15)]',
           className
         )}
       >
-        <span className={cn('truncate', !selected && 'text-white/30')}>
-          {selected ? selected.label : placeholder}
-        </span>
-        <ChevronDown
-          className={cn('w-3.5 h-3.5 shrink-0 text-white/40 transition-transform duration-200', open && 'rotate-180')}
-        />
+        <span className={cn('truncate', !selected && 'text-white/30')}>{selected ? selected.label : placeholder}</span>
+        <ChevronDown className={cn('h-4 w-4 shrink-0 text-[var(--color-text-muted)] transition-transform duration-150', open && 'rotate-180')} />
       </button>
 
-      {open && (
-        <div
-          className={cn(
-            'absolute z-50 min-w-full w-max max-w-[280px] rounded-xl border border-white/[0.08] bg-[#0c0c0e]/95 shadow-[0_16px_48px_rgba(0,0,0,0.6)] backdrop-blur-xl animate-in fade-in zoom-in-95 duration-150 overflow-hidden',
-            align === 'right' ? 'right-0' : 'left-0',
-            placement === 'top' ? 'bottom-full mb-1.5' : 'top-full mt-1.5'
-          )}
-        >
-          <div
-            role="listbox"
-            className="max-h-64 overflow-y-auto p-1"
-          >
-            {options.map((opt) => {
-              const isSel = opt.value === value
-              return (
-                <button
-                  key={opt.value}
-                  type="button"
-                  role="option"
-                  aria-selected={isSel}
-                  onClick={() => {
-                    onChange(opt.value)
-                    setOpen(false)
-                  }}
-                  className={cn(
-                    'flex w-full items-center justify-between gap-2 rounded-lg px-2.5 py-1.5 text-left text-xs transition-colors',
-                    isSel ? 'bg-accent/10 text-accent' : 'text-white/70 hover:bg-white/[0.04] hover:text-white'
-                  )}
-                >
-                  <span className="truncate">{opt.label}</span>
-                  {isSel && <Check className="w-3.5 h-3.5 shrink-0" />}
-                </button>
-              )
-            })}
-          </div>
-        </div>
-      )}
+      {open && place
+        ? createPortal(
+            <ul
+              ref={list}
+              id={id}
+              role="listbox"
+              aria-label={ariaLabel}
+              style={{ left: place.left, width: place.width, top: place.top, bottom: place.bottom, maxHeight: place.maxHeight }}
+              className="no-scrollbar fixed z-[200] overflow-y-auto rounded-[8px] border border-[var(--color-border-strong)] bg-[var(--color-surface)] p-1 shadow-[0_24px_64px_-16px_rgba(0,0,0,0.7)] animate-in fade-in zoom-in-95 duration-150"
+            >
+              {options.map((opt, i) => {
+                const isSel = opt.value === value
+                return (
+                  <li
+                    key={opt.value}
+                    id={`${id}-${i}`}
+                    data-index={i}
+                    role="option"
+                    aria-selected={isSel}
+                    onMouseEnter={() => setActive(i)}
+                    onMouseDown={(e) => e.preventDefault()}
+                    onClick={() => choose(opt)}
+                    className={cn(
+                      'flex h-8 cursor-pointer select-none items-center gap-2 rounded-[5px] px-2.5 text-[13px]',
+                      i === active ? 'bg-white/[0.07] text-white' : 'text-[#c9c7c5]'
+                    )}
+                  >
+                    <span className="min-w-0 flex-1 truncate">{opt.label}</span>
+                    {isSel && <Check className="h-3.5 w-3.5 shrink-0 text-accent" />}
+                  </li>
+                )
+              })}
+            </ul>,
+            document.body
+          )
+        : null}
     </div>
   )
 }

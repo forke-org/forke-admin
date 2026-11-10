@@ -221,7 +221,7 @@ export default function ActivityFeedPanel({ currentAdmin }: ActivityFeedPanelPro
                 'h-8 px-3 rounded-lg border text-[11px] font-bold flex items-center gap-1.5 transition-colors cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed',
                 live
                   ? 'bg-emerald-500/10 border-emerald-500/25 text-emerald-400'
-                  : 'bg-white/[0.02] border-white/[0.08] text-white/50 hover:text-white'
+                  : 'bg-white/[0.02] border-[var(--color-border)] text-white/50 hover:text-white'
               )}
               title={isSuperAdmin ? "Toggle global live/paused state" : "Only Super Admins can configure global live status"}
             >
@@ -231,7 +231,7 @@ export default function ActivityFeedPanel({ currentAdmin }: ActivityFeedPanelPro
             </button>
             <button
               onClick={() => load(true)}
-              className="h-8 w-8 rounded-lg border border-white/[0.08] bg-white/[0.02] flex items-center justify-center text-white/50 hover:text-white transition-colors cursor-pointer"
+              className="h-8 w-8 rounded-lg border border-[var(--color-border)] bg-white/[0.02] flex items-center justify-center text-white/50 hover:text-white transition-colors cursor-pointer"
               title="Refresh"
             >
               <RefreshCw className={cn('w-3.5 h-3.5', loading && 'animate-spin')} />
@@ -257,10 +257,10 @@ export default function ActivityFeedPanel({ currentAdmin }: ActivityFeedPanelPro
               key={f.value}
               onClick={() => setFilter(f.value)}
               className={cn(
-                'h-7 px-3 rounded-full text-[11px] font-semibold transition-colors cursor-pointer border',
+                'h-7 px-3 rounded-[5px] text-[11px] font-semibold transition-colors cursor-pointer border',
                 filter === f.value
                   ? 'bg-accent/15 border-accent/30 text-accent'
-                  : 'bg-white/[0.02] border-white/[0.06] text-white/45 hover:text-white hover:border-white/12'
+                  : 'bg-white/[0.02] border-[var(--color-border)] text-white/45 hover:text-white hover:border-white/12'
               )}
             >
               {f.label}
@@ -270,8 +270,8 @@ export default function ActivityFeedPanel({ currentAdmin }: ActivityFeedPanelPro
       </div>
 
       {/* Terminal log */}
-      <div className="flex-grow min-h-0 rounded-xl border border-white/[0.06] bg-[#060608] overflow-hidden flex flex-col">
-        <div className="shrink-0 h-9 px-4 flex items-center justify-between border-b border-white/[0.05] bg-white/[0.01]">
+      <div className="flex-grow min-h-0 rounded-xl border border-[var(--color-border)] bg-[#151414] overflow-hidden flex flex-col">
+        <div className="shrink-0 h-9 px-4 flex items-center justify-between border-b border-[var(--color-border)] bg-white/[0.01]">
           <div className="flex items-center gap-1.5">
             <span className="text-[10px] font-mono text-white/30 uppercase tracking-wider">forke://activity.log</span>
           </div>
@@ -314,7 +314,7 @@ export default function ActivityFeedPanel({ currentAdmin }: ActivityFeedPanelPro
                     {/* Compact Category Tag */}
                     <span
                       className={cn(
-                        'shrink-0 inline-flex items-center gap-1 px-1.5 py-0.5 rounded border border-white/[0.06] bg-white/[0.02] text-[9.5px] font-bold tracking-wider uppercase select-none',
+                        'shrink-0 inline-flex items-center gap-1 px-1.5 py-0.5 rounded border border-[var(--color-border)] bg-white/[0.02] text-[9.5px] font-bold tracking-wider uppercase select-none',
                         c.color
                       )}
                     >

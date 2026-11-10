@@ -5,6 +5,7 @@
  * @copyright (c) 2026 Forke Inc. (https://www.forke.space/)
  */
 
+import { Select } from '@/components/ui/Select'
 import React, { useState, useMemo } from 'react'
 import { Link2, Copy, Check, ExternalLink, Sparkles } from 'lucide-react'
 import { cn } from '@/lib/utils/cn'
@@ -100,7 +101,7 @@ export default function CampaignLinkBuilderCard() {
   }
 
   return (
-    <div className="rounded-xl bg-white/[0.018] border border-[var(--color-border)] p-5 relative overflow-hidden">
+    <div className="rounded-xl bg-[var(--color-surface)] border border-[var(--color-border)] p-5 relative overflow-hidden">
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-4">
         <div>
           <div className="flex items-center gap-2">
@@ -111,7 +112,7 @@ export default function CampaignLinkBuilderCard() {
             Eliminates desktop &ldquo;direct&rdquo; traffic by generating standardized, tracked campaign links.
           </p>
         </div>
-        <span className="inline-flex items-center gap-1 text-[11px] font-mono text-accent/90 bg-accent/10 border border-accent/20 px-2 py-0.5 rounded-full w-fit">
+        <span className="inline-flex items-center gap-1 text-[11px] font-mono text-accent/90 bg-accent/10 border border-accent/20 px-2 py-0.5 rounded-[5px] w-fit">
           <Sparkles className="h-3 w-3" /> Auto-Attributed
         </span>
       </div>
@@ -156,7 +157,7 @@ export default function CampaignLinkBuilderCard() {
           </div>
 
           {selectedChannel === 'custom' && (
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 mt-2 pt-2 border-t border-white/[0.06]">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 mt-2 pt-2 border-t border-[var(--color-border)]">
               <div>
                 <span className="text-[10px] font-mono text-white/50 block mb-1">Source (e.g. hackernews)</span>
                 <input
@@ -187,20 +188,12 @@ export default function CampaignLinkBuilderCard() {
             <label className="block text-[11px] font-mono text-white/60 mb-1.5 uppercase tracking-wider">
               2. Target Landing Page
             </label>
-            <select
+            <Select
               value={selectedDest}
-              onChange={(e) => setSelectedDest(e.target.value)}
-              className="w-full text-xs font-mono bg-black/40 border border-[var(--color-border)] rounded-lg px-2.5 py-2 text-white focus:outline-none focus:border-accent cursor-pointer"
-            >
-              {DESTINATION_PRESETS.map((d) => (
-                <option key={d.path} value={d.path} className="bg-neutral-900 text-white">
-                  {d.label}
-                </option>
-              ))}
-              <option value="custom" className="bg-neutral-900 text-white">
-                Custom Path / Blog Slug...
-              </option>
-            </select>
+              onChange={setSelectedDest}
+              aria-label="Target landing page"
+              options={[...DESTINATION_PRESETS.map((d) => ({ value: d.path, label: d.label })), { value: 'custom', label: 'Custom Path / Blog Slug...' }]}
+            />
 
             {selectedDest === 'custom' && (
               <input

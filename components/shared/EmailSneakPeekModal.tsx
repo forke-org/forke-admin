@@ -151,18 +151,18 @@ export default function EmailSneakPeekModal({
       onClick={onClose}
     >
       <div
-        className="relative flex flex-col w-full max-w-3xl max-h-[94vh] rounded-xl sm:rounded-2xl border border-white/10 bg-[#08080a] shadow-[0_24px_80px_rgba(0,0,0,0.8)] overflow-hidden"
+        className="relative flex flex-col w-full max-w-3xl max-h-[94vh] rounded-xl sm:rounded-2xl border border-[var(--color-border-strong)] bg-[#1a1919] shadow-[0_24px_80px_rgba(0,0,0,0.8)] overflow-hidden"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Top Window Bar: Subject + Status Badge + Actions */}
-        <div className="shrink-0 flex items-center justify-between px-3.5 sm:px-6 py-2.5 sm:py-3 border-b border-white/[0.08] bg-white/[0.02] gap-2">
+        <div className="shrink-0 flex items-center justify-between px-3.5 sm:px-6 py-2.5 sm:py-3 border-b border-[var(--color-border)] bg-white/[0.02] gap-2">
           <div className="min-w-0 flex-1 flex items-center gap-2.5">
             <h3 className="text-xs sm:text-sm font-semibold text-white truncate tracking-tight">
               {subject || 'Email Preview'}
             </h3>
             {isPublished !== undefined && (
               <span
-                className={`shrink-0 inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[10px] font-mono font-medium tracking-wide uppercase border ${
+                className={`shrink-0 inline-flex items-center gap-1.5 px-2 py-0.5 rounded-[5px] text-[10px] font-mono font-medium tracking-wide uppercase border ${
                   isPublished
                     ? 'bg-emerald-500/10 border-emerald-500/25 text-emerald-400'
                     : 'bg-amber-500/10 border-amber-500/25 text-amber-400'
@@ -191,7 +191,7 @@ export default function EmailSneakPeekModal({
                 }
                 className={`h-8 min-h-[32px] max-h-[32px] px-3.5 rounded-lg border text-xs font-medium transition-colors flex items-center gap-1.5 shadow-sm shrink-0 box-border leading-none ${
                   isPublished === false
-                    ? 'border-white/10 bg-white/5 text-white/30 cursor-not-allowed'
+                    ? 'border-[var(--color-border-strong)] bg-white/5 text-white/30 cursor-not-allowed'
                     : 'border-white bg-white text-black hover:bg-white/90 hover:border-white/90 cursor-pointer disabled:opacity-40'
                 }`}
               >
@@ -214,7 +214,7 @@ export default function EmailSneakPeekModal({
             <button
               type="button"
               onClick={onClose}
-              className="h-8 w-8 min-h-[32px] max-h-[32px] min-w-[32px] max-w-[32px] rounded-lg border border-white/10 bg-white/[0.03] text-white/50 hover:text-white hover:bg-white/[0.08] hover:border-white/20 transition-colors flex items-center justify-center cursor-pointer shrink-0 box-border leading-none p-0"
+              className="h-8 w-8 min-h-[32px] max-h-[32px] min-w-[32px] max-w-[32px] rounded-lg border border-[var(--color-border-strong)] bg-white/[0.03] text-white/50 hover:text-white hover:bg-white/[0.08] hover:border-white/20 transition-colors flex items-center justify-center cursor-pointer shrink-0 box-border leading-none p-0"
               title="Close Preview"
             >
               <X className="h-4 w-4 shrink-0" />
@@ -223,7 +223,7 @@ export default function EmailSneakPeekModal({
         </div>
 
         {/* Modal Body: exact HTML rendering with guaranteed full visibility */}
-        <div className="flex-grow min-h-0 overflow-hidden bg-[#050505] flex items-center justify-center relative p-0">
+        <div className="flex-grow min-h-0 overflow-hidden bg-[#151414] flex items-center justify-center relative p-0">
           {loading ? (
             <div className="flex flex-col items-center justify-center py-24 text-center">
               <Loader2 className="h-6 w-6 animate-spin text-accent mb-2.5" />
@@ -233,7 +233,7 @@ export default function EmailSneakPeekModal({
             <iframe
               srcDoc={responsiveHtml}
               title="Email Preview"
-              className="w-full h-[72vh] sm:h-[78vh] border-0 bg-[#050505] overflow-x-hidden"
+              className="w-full h-[72vh] sm:h-[78vh] border-0 bg-[#151414] overflow-x-hidden"
               sandbox="allow-same-origin"
             />
           )}

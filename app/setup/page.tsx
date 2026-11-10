@@ -112,7 +112,7 @@ function SetupFormContent() {
 
   if (validationError) {
     return (
-      <div className="p-6 rounded-xl bg-white/[0.018] border border-[var(--color-border)] space-y-5 text-center max-w-md w-full">
+      <div className="p-6 rounded-xl bg-[var(--color-surface)] border border-[var(--color-border)] space-y-5 text-center max-w-md w-full">
         <div className="w-10 h-10 rounded-full bg-red-500/10 border border-red-500/20 flex items-center justify-center mx-auto text-red-400">
           <ShieldAlert className="w-5 h-5" />
         </div>
@@ -132,7 +132,7 @@ function SetupFormContent() {
 
   if (isSuccess) {
     return (
-      <div className="p-6 rounded-xl bg-white/[0.018] border border-[var(--color-border)] space-y-5 text-center max-w-md w-full animate-in zoom-in-95 duration-500">
+      <div className="p-6 rounded-xl bg-[var(--color-surface)] border border-[var(--color-border)] space-y-5 text-center max-w-md w-full animate-in zoom-in-95 duration-500">
         <div className="w-10 h-10 rounded-full bg-emerald-500/20 border border-emerald-500/30 flex items-center justify-center mx-auto text-emerald-400">
           <Check className="w-5 h-5" />
         </div>
@@ -150,7 +150,7 @@ function SetupFormContent() {
     <form
       onSubmit={handleSubmit}
       noValidate
-      className="p-6 rounded-xl bg-white/[0.018] border border-[var(--color-border)] space-y-5 text-left max-w-md w-full"
+      className="p-6 rounded-xl bg-[var(--color-surface)] border border-[var(--color-border)] space-y-5 text-left max-w-md w-full"
     >
       <div className="border-b border-[var(--color-border)] pb-3">
         <h2 className="text-xl font-medium text-white tracking-[-0.03em] leading-[1.1]">
@@ -265,7 +265,7 @@ function SetupFormContent() {
 
 export default function AdminSetupPage() {
   return (
-    <div className="min-h-screen bg-[#070709] flex items-center justify-center p-6 relative overflow-hidden select-none">
+    <div className="min-h-screen bg-[#151414] flex items-center justify-center p-6 relative overflow-hidden select-none">
       <div className="w-full max-w-[440px] space-y-6 relative z-10 animate-in fade-in zoom-in-95 duration-1000 flex flex-col items-center">
         {/* Logo and Identity */}
         <div className="text-center space-y-2">
@@ -284,7 +284,7 @@ export default function AdminSetupPage() {
             <h1 className="text-3xl font-medium text-white tracking-[-0.04em] leading-[1.04]">
               forke<span className="text-accent">*</span> <span className="font-serif italic font-normal text-accent">admin setup</span>
             </h1>
-            <div className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/[0.03] px-3.5 py-1.5 font-mono text-[11px] text-white/55">
+            <div className="inline-flex items-center gap-2 rounded-[5px] border border-[var(--color-border-strong)] bg-white/[0.03] px-3.5 py-1.5 font-mono text-[11px] text-white/55">
               Complete administrator account configuration
             </div>
           </div>

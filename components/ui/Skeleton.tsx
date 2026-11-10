@@ -9,18 +9,22 @@
  */
 
 import React from 'react'
+import { AsciiSkeleton } from 'ascii-reveal'
 import { cn } from '@/lib/utils/cn'
 
 // 1. Core Reusable Shimmer Block (#7 shimmer sweep)
+function seedFrom(text = '') {
+  let h = 7
+  for (let i = 0; i < text.length; i++) h = (h * 31 + text.charCodeAt(i)) % 997
+  return h
+}
+
 export function Skeleton({ className, ...props }: React.HTMLAttributes<HTMLDivElement>) {
+  const seed = seedFrom(className)
   return (
-    <div
-      className={cn(
-        "skeleton-shimmer rounded-md bg-white/[0.02] border border-white/[0.04] shadow-[inset_0_1px_0_rgba(255,255,255,0.01)]",
-        className
-      )}
-      {...props}
-    />
+    <div aria-hidden className={cn('overflow-hidden rounded-[4px] text-[#5f5c5a]', className)} {...props}>
+      <AsciiSkeleton rows={12} width="100%" height="100%" seed={seed} className="block" />
+    </div>
   )
 }
 
@@ -29,9 +33,9 @@ export function Skeleton({ className, ...props }: React.HTMLAttributes<HTMLDivEl
 // A. Overview Page Skeleton
 export function DashboardSkeleton() {
   return (
-    <div className="flex flex-col h-full bg-[#060608] text-white">
+    <div className="flex flex-col h-full bg-[#151414] text-white">
       {/* Top Bar Skeleton */}
-      <div className="h-14 border-b border-white/[0.06] flex items-center px-8 justify-between shrink-0">
+      <div className="h-14 border-b border-[var(--color-border)] flex items-center px-8 justify-between shrink-0">
         <Skeleton className="h-4 w-28" />
         <div className="flex gap-2">
           <Skeleton className="h-8 w-8 rounded-full" />
@@ -55,7 +59,7 @@ export function DashboardSkeleton() {
         {/* Stats Grid */}
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
           {[...Array(4)].map((_, i) => (
-            <div key={i} className="rounded-xl border border-white/[0.06] bg-white/[0.018] p-4 space-y-3">
+            <div key={i} className="rounded-xl border border-[var(--color-border)] bg-[var(--color-surface)] p-4 space-y-3">
               <div className="flex justify-between">
                 <Skeleton className="h-3 w-16" />
                 <Skeleton className="h-3.5 w-3.5" />
@@ -75,7 +79,7 @@ export function DashboardSkeleton() {
               <Skeleton className="h-3 w-16" />
             </div>
             {[...Array(3)].map((_, i) => (
-              <div key={i} className="rounded-xl border border-white/[0.06] bg-white/[0.01] p-5 flex gap-4">
+              <div key={i} className="rounded-xl border border-[var(--color-border)] bg-white/[0.01] p-5 flex gap-4">
                 <Skeleton className="h-12 w-12 rounded-lg shrink-0" />
                 <div className="space-y-2 flex-grow">
                   <Skeleton className="h-4 w-1/3" />
@@ -91,9 +95,9 @@ export function DashboardSkeleton() {
 
           {/* Right panel */}
           <div className="lg:col-span-4 space-y-4">
-            <div className="rounded-xl border border-white/[0.06] bg-white/[0.018] p-4 space-y-4">
+            <div className="rounded-xl border border-[var(--color-border)] bg-[var(--color-surface)] p-4 space-y-4">
               <Skeleton className="h-4 w-28" />
-              <hr className="border-white/[0.06]" />
+              <hr className="border-[var(--color-border)]" />
               {[...Array(4)].map((_, i) => (
                 <div key={i} className="flex justify-between items-center py-1">
                   <Skeleton className="h-3.5 w-24" />
@@ -102,7 +106,7 @@ export function DashboardSkeleton() {
               ))}
             </div>
 
-            <div className="rounded-xl border border-white/[0.06] bg-white/[0.018] p-4 space-y-3">
+            <div className="rounded-xl border border-[var(--color-border)] bg-[var(--color-surface)] p-4 space-y-3">
               <Skeleton className="h-4 w-36" />
               <Skeleton className="h-3 w-full" />
               <Skeleton className="h-3 w-2/3" />
@@ -118,8 +122,8 @@ export function DashboardSkeleton() {
 // B. Tasks Page Skeleton
 export function TasksSkeleton() {
   return (
-    <div className="flex flex-col h-full bg-[#060608] text-white">
-      <div className="h-14 border-b border-white/[0.06] flex items-center px-8 shrink-0">
+    <div className="flex flex-col h-full bg-[#151414] text-white">
+      <div className="h-14 border-b border-[var(--color-border)] flex items-center px-8 shrink-0">
         <Skeleton className="h-4 w-20" />
       </div>
 
@@ -134,7 +138,7 @@ export function TasksSkeleton() {
         </div>
 
         {/* Filters bar */}
-        <div className="flex flex-wrap items-center justify-between gap-4 p-4 rounded-xl border border-white/[0.06] bg-white/[0.01]">
+        <div className="flex flex-wrap items-center justify-between gap-4 p-4 rounded-xl border border-[var(--color-border)] bg-white/[0.01]">
           <div className="flex items-center gap-3 flex-grow max-w-md">
             <Skeleton className="h-9 w-full rounded-lg" />
           </div>
@@ -152,7 +156,7 @@ export function TasksSkeleton() {
         {/* Tasks List */}
         <div className="space-y-3">
           {[...Array(4)].map((_, i) => (
-            <div key={i} className="rounded-xl border border-white/[0.06] bg-white/[0.01] p-5 flex justify-between items-start gap-4">
+            <div key={i} className="rounded-xl border border-[var(--color-border)] bg-white/[0.01] p-5 flex justify-between items-start gap-4">
               <div className="space-y-2 flex-grow text-left">
                 <div className="flex items-center gap-2">
                   <Skeleton className="h-5 w-48" />
@@ -182,8 +186,8 @@ export function TasksSkeleton() {
 // C. Submissions Page Skeleton
 export function SubmissionsSkeleton() {
   return (
-    <div className="flex flex-col h-full bg-[#060608] text-white">
-      <div className="h-14 border-b border-white/[0.06] flex items-center px-8 shrink-0">
+    <div className="flex flex-col h-full bg-[#151414] text-white">
+      <div className="h-14 border-b border-[var(--color-border)] flex items-center px-8 shrink-0">
         <Skeleton className="h-4 w-24" />
       </div>
       <div className="flex-grow overflow-y-auto px-5 md:px-8 py-6 max-w-6xl mx-auto w-full space-y-6">
@@ -192,7 +196,7 @@ export function SubmissionsSkeleton() {
           <Skeleton className="h-4 w-60" />
         </div>
         {/* Tabs skeleton */}
-        <div className="flex border-b border-white/[0.06] gap-6">
+        <div className="flex border-b border-[var(--color-border)] gap-6">
           <Skeleton className="h-8 w-16" />
           <Skeleton className="h-8 w-16" />
           <Skeleton className="h-8 w-16" />
@@ -200,7 +204,7 @@ export function SubmissionsSkeleton() {
         {/* Submissions items */}
         <div className="space-y-3">
           {[...Array(3)].map((_, i) => (
-            <div key={i} className="rounded-xl border border-white/[0.06] bg-white/[0.01] p-5 space-y-4">
+            <div key={i} className="rounded-xl border border-[var(--color-border)] bg-white/[0.01] p-5 space-y-4">
               <div className="flex justify-between items-start">
                 <div className="space-y-1">
                   <Skeleton className="h-4 w-32" />
@@ -209,7 +213,7 @@ export function SubmissionsSkeleton() {
                 <Skeleton className="h-6 w-20 rounded" />
               </div>
               <Skeleton className="h-3 w-full" />
-              <div className="flex justify-between items-center pt-2 border-t border-white/[0.04]">
+              <div className="flex justify-between items-center pt-2 border-t border-[var(--color-border)]">
                 <Skeleton className="h-4 w-32" />
                 <Skeleton className="h-8 w-24 rounded-lg" />
               </div>
@@ -224,10 +228,10 @@ export function SubmissionsSkeleton() {
 // D. Chat Console Skeleton
 export function MessagesSkeleton() {
   return (
-    <div className="flex h-full bg-[#060608] text-white">
+    <div className="flex h-full bg-[#151414] text-white">
       {/* Sidebar conversasion list */}
-      <div className="w-80 border-r border-white/[0.06] flex flex-col shrink-0">
-        <div className="h-14 border-b border-white/[0.06] flex items-center px-5 shrink-0">
+      <div className="w-80 border-r border-[var(--color-border)] flex flex-col shrink-0">
+        <div className="h-14 border-b border-[var(--color-border)] flex items-center px-5 shrink-0">
           <Skeleton className="h-4 w-20" />
         </div>
         <div className="p-3 shrink-0">
@@ -251,7 +255,7 @@ export function MessagesSkeleton() {
 
       {/* Main chat window */}
       <div className="flex-grow flex flex-col min-w-0">
-        <div className="h-14 border-b border-white/[0.06] flex items-center px-6 justify-between shrink-0">
+        <div className="h-14 border-b border-[var(--color-border)] flex items-center px-6 justify-between shrink-0">
           <div className="flex items-center gap-3">
             <Skeleton className="h-8 w-8 rounded-full" />
             <Skeleton className="h-4 w-28" />
@@ -261,25 +265,25 @@ export function MessagesSkeleton() {
         <div className="flex-grow p-6 space-y-4 overflow-y-auto flex flex-col justify-end">
           <div className="flex gap-3 max-w-sm">
             <Skeleton className="h-8 w-8 rounded-full shrink-0" />
-            <div className="p-3 rounded-xl border border-white/[0.06] bg-white/[0.018] space-y-1.5 flex-grow">
+            <div className="p-3 rounded-xl border border-[var(--color-border)] bg-[var(--color-surface)] space-y-1.5 flex-grow">
               <Skeleton className="h-3.5 w-24" />
               <Skeleton className="h-3 w-full" />
             </div>
           </div>
           <div className="flex gap-3 max-w-sm ml-auto justify-end">
-            <div className="p-3 rounded-xl border border-white/[0.06] bg-white/[0.04] space-y-1.5 flex-grow">
+            <div className="p-3 rounded-xl border border-[var(--color-border)] bg-white/[0.04] space-y-1.5 flex-grow">
               <Skeleton className="h-3 w-36" />
             </div>
           </div>
           <div className="flex gap-3 max-w-sm">
             <Skeleton className="h-8 w-8 rounded-full shrink-0" />
-            <div className="p-3 rounded-xl border border-white/[0.06] bg-white/[0.018] space-y-1.5 flex-grow">
+            <div className="p-3 rounded-xl border border-[var(--color-border)] bg-[var(--color-surface)] space-y-1.5 flex-grow">
               <Skeleton className="h-3 w-48" />
             </div>
           </div>
         </div>
         {/* Input box */}
-        <div className="p-4 border-t border-white/[0.06] shrink-0 flex gap-2">
+        <div className="p-4 border-t border-[var(--color-border)] shrink-0 flex gap-2">
           <Skeleton className="h-9 flex-grow rounded-lg" />
           <Skeleton className="h-9 w-16 rounded-lg" />
         </div>
@@ -291,8 +295,8 @@ export function MessagesSkeleton() {
 // E. Earnings Page Skeleton
 export function EarningsSkeleton() {
   return (
-    <div className="flex flex-col h-full bg-[#060608] text-white">
-      <div className="h-14 border-b border-white/[0.06] flex items-center px-8 shrink-0">
+    <div className="flex flex-col h-full bg-[#151414] text-white">
+      <div className="h-14 border-b border-[var(--color-border)] flex items-center px-8 shrink-0">
         <Skeleton className="h-4 w-16" />
       </div>
       <div className="flex-grow overflow-y-auto px-5 md:px-8 py-6 max-w-6xl mx-auto w-full space-y-6">
@@ -302,13 +306,13 @@ export function EarningsSkeleton() {
         </div>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           {[...Array(3)].map((_, i) => (
-            <div key={i} className="rounded-xl border border-white/[0.06] bg-white/[0.018] p-5 space-y-3">
+            <div key={i} className="rounded-xl border border-[var(--color-border)] bg-[var(--color-surface)] p-5 space-y-3">
               <Skeleton className="h-3.5 w-24" />
               <Skeleton className="h-7 w-28" />
             </div>
           ))}
         </div>
-        <div className="rounded-xl border border-white/[0.06] bg-white/[0.01] p-5 space-y-4">
+        <div className="rounded-xl border border-[var(--color-border)] bg-white/[0.01] p-5 space-y-4">
           <Skeleton className="h-4.5 w-32" />
           {[...Array(3)].map((_, i) => (
             <div key={i} className="flex justify-between items-center py-2">
@@ -328,12 +332,12 @@ export function EarningsSkeleton() {
 // F. Profile / Company Profile Skeleton
 export function ProfileSkeleton() {
   return (
-    <div className="flex flex-col h-full bg-[#060608] text-white">
-      <div className="h-14 border-b border-white/[0.06] flex items-center px-8 shrink-0">
+    <div className="flex flex-col h-full bg-[#151414] text-white">
+      <div className="h-14 border-b border-[var(--color-border)] flex items-center px-8 shrink-0">
         <Skeleton className="h-4 w-16" />
       </div>
       <div className="flex-grow overflow-y-auto px-5 md:px-8 py-6 max-w-3xl mx-auto w-full space-y-6 text-left">
-        <div className="flex items-center gap-4 pb-6 border-b border-white/[0.06]">
+        <div className="flex items-center gap-4 pb-6 border-b border-[var(--color-border)]">
           <Skeleton className="h-16 w-16 rounded-full shrink-0" />
           <div className="space-y-2">
             <Skeleton className="h-6 w-32" />
@@ -362,8 +366,8 @@ export function SettingsSkeleton() {
 // H. Support Skeleton
 export function SupportSkeleton() {
   return (
-    <div className="flex flex-col h-full bg-[#060608] text-white">
-      <div className="h-14 border-b border-white/[0.06] flex items-center px-8 shrink-0">
+    <div className="flex flex-col h-full bg-[#151414] text-white">
+      <div className="h-14 border-b border-[var(--color-border)] flex items-center px-8 shrink-0">
         <Skeleton className="h-4 w-20" />
       </div>
       <div className="flex-grow overflow-y-auto px-5 md:px-8 py-6 max-w-xl mx-auto w-full space-y-5 text-left">
@@ -411,7 +415,7 @@ export function PanelSkeleton() {
       {/* Metrics Row */}
       <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-6 gap-3.5 shrink-0">
         {[...Array(6)].map((_, i) => (
-          <div key={i} className="rounded-xl border border-[var(--color-border)] bg-white/[0.018] p-3.5 space-y-2">
+          <div key={i} className="rounded-xl border border-[var(--color-border)] bg-[var(--color-surface)] p-3.5 space-y-2">
             <Skeleton className="h-2.5 w-16 rounded" />
             <Skeleton className="h-5 w-20 rounded" />
             <Skeleton className="h-2 w-28 rounded" />
@@ -426,7 +430,7 @@ export function PanelSkeleton() {
       </div>
 
       {/* Table Skeleton */}
-      <div className="rounded-xl border border-[var(--color-border)] bg-white/[0.018] overflow-hidden flex-grow min-h-0">
+      <div className="rounded-xl border border-[var(--color-border)] bg-[var(--color-surface)] overflow-hidden flex-grow min-h-0">
         <div className="h-9 border-b border-[var(--color-border)] px-4 flex items-center gap-6">
           <Skeleton className="h-2.5 w-24 rounded" />
           <Skeleton className="h-2.5 w-32 rounded" />
@@ -467,7 +471,7 @@ export function TableLoadingRows({ cols = 4, rows = 6 }: { cols?: number; rows?:
 // Generic Fallback Loader
 export function GenericPageSkeleton() {
   return (
-    <div className="flex flex-col h-full bg-[#060608] text-white p-8 space-y-6">
+    <div className="flex flex-col h-full bg-[#151414] text-white p-8 space-y-6">
       <Skeleton className="h-6 w-32" />
       <Skeleton className="h-4 w-64" />
       <div className="grid grid-cols-3 gap-4">

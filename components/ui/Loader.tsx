@@ -18,7 +18,7 @@ interface LoaderProps {
 
 export function Loader({ text = 'LOADING...', fullScreen = false }: LoaderProps) {
   const containerClasses = fullScreen 
-    ? 'fixed inset-0 z-50 flex flex-col items-center justify-center bg-[#050505] overflow-hidden' 
+    ? 'fixed inset-0 z-50 flex flex-col items-center justify-center bg-[#151414] overflow-hidden' 
     : 'w-full h-full min-h-[300px] flex flex-col items-center justify-center'
 
   return (

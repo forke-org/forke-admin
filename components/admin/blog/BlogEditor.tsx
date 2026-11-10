@@ -439,7 +439,7 @@ export default function BlogEditor({
         shouldShow={({ editor: ed, from, to }) =>
           from !== to && !ed.isActive('image') && !ed.isActive('embed')
         }
-        className="flex items-center gap-0.5 rounded-lg border border-[var(--color-border)] bg-[#0b0b0e] p-1 shadow-2xl shadow-black/50"
+        className="flex items-center gap-0.5 rounded-lg border border-[var(--color-border)] bg-[#1a1919] p-1 shadow-2xl shadow-black/50"
       >
         {linkPromptOpen ? (
           <form
@@ -458,7 +458,7 @@ export default function BlogEditor({
             />
             <button
               type="submit"
-              className="rounded-md px-2 py-1 text-xs font-medium text-accent hover:bg-accent/10"
+              className="inline-flex h-7 items-center rounded-md px-2 text-xs font-medium text-accent hover:bg-accent/10"
             >
               Apply
             </button>
@@ -571,7 +571,7 @@ export default function BlogEditor({
         >
           <div
             onClick={(e) => e.stopPropagation()}
-            className="w-full max-w-md rounded-xl border border-[var(--color-border)] bg-[#0b0b0e] p-5 shadow-2xl shadow-black/60"
+            className="w-full max-w-md rounded-xl border border-[var(--color-border)] bg-[#1a1919] p-5 shadow-2xl shadow-black/60"
           >
             <h3 className="mb-1 text-sm font-medium text-white">Add cover image</h3>
             <p className="mb-4 text-xs text-[var(--color-text-muted)]">
@@ -583,7 +583,7 @@ export default function BlogEditor({
                 setCoverPromptOpen(false)
                 coverFileRef.current?.click()
               }}
-              className="mb-4 flex w-full items-center justify-center gap-2 rounded-lg bg-accent px-3 py-2.5 text-xs font-medium text-white transition-colors hover:bg-accent-hover"
+              className="mb-4 flex w-full items-center justify-center gap-2 rounded-lg bg-accent px-3 py-2.5 text-xs font-medium text-[#1a0a00] transition-colors hover:bg-accent-hover"
             >
               <ImagePlus className="h-4 w-4" /> Upload from device
             </button>
@@ -612,13 +612,13 @@ export default function BlogEditor({
                 <button
                   type="button"
                   onClick={() => setCoverPromptOpen(false)}
-                  className="rounded-lg border border-[var(--color-border)] px-3 py-1.5 text-xs font-medium text-[var(--color-text-muted)] transition-colors hover:text-white"
+                  className="inline-flex h-8 items-center justify-center rounded-lg border border-[var(--color-border)] px-3 text-xs font-medium text-[var(--color-text-muted)] transition-colors hover:text-white"
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
-                  className="rounded-lg border border-[var(--color-border)] px-3 py-1.5 text-xs font-medium text-white transition-colors hover:bg-white/[0.05]"
+                  className="inline-flex h-8 items-center justify-center rounded-lg border border-[var(--color-border)] px-3 text-xs font-medium text-white transition-colors hover:bg-white/[0.05]"
                 >
                   Use link
                 </button>
@@ -636,7 +636,7 @@ export default function BlogEditor({
         >
           <div
             onClick={(e) => e.stopPropagation()}
-            className="w-full max-w-md rounded-xl border border-[var(--color-border)] bg-[#0b0b0e] p-5 shadow-2xl shadow-black/60"
+            className="w-full max-w-md rounded-xl border border-[var(--color-border)] bg-[#1a1919] p-5 shadow-2xl shadow-black/60"
           >
             <h3 className="mb-1 text-sm font-medium text-white">Add image</h3>
             <p className="mb-4 text-xs text-[var(--color-text-muted)]">
@@ -648,7 +648,7 @@ export default function BlogEditor({
                 setImagePromptOpen(false)
                 bodyFileRef.current?.click()
               }}
-              className="mb-4 flex w-full items-center justify-center gap-2 rounded-lg bg-accent px-3 py-2.5 text-xs font-medium text-white transition-colors hover:bg-accent-hover"
+              className="mb-4 flex w-full items-center justify-center gap-2 rounded-lg bg-accent px-3 py-2.5 text-xs font-medium text-[#1a0a00] transition-colors hover:bg-accent-hover"
             >
               <ImagePlus className="h-4 w-4" /> Upload from device
             </button>
@@ -673,13 +673,13 @@ export default function BlogEditor({
                 <button
                   type="button"
                   onClick={() => setImagePromptOpen(false)}
-                  className="rounded-lg border border-[var(--color-border)] px-3 py-1.5 text-xs font-medium text-[var(--color-text-muted)] transition-colors hover:text-white"
+                  className="inline-flex h-8 items-center justify-center rounded-lg border border-[var(--color-border)] px-3 text-xs font-medium text-[var(--color-text-muted)] transition-colors hover:text-white"
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
-                  className="rounded-lg border border-[var(--color-border)] px-3 py-1.5 text-xs font-medium text-white transition-colors hover:bg-white/[0.05]"
+                  className="inline-flex h-8 items-center justify-center rounded-lg border border-[var(--color-border)] px-3 text-xs font-medium text-white transition-colors hover:bg-white/[0.05]"
                 >
                   Use link
                 </button>
@@ -702,7 +702,7 @@ export default function BlogEditor({
       {/* Full-screen uploading veil with progress bar */}
       {uploading && (
         <div className="fixed inset-0 z-[90] flex items-center justify-center bg-black/50 backdrop-blur-sm">
-          <div className="w-72 rounded-xl border border-[var(--color-border)] bg-[#0b0b0e] p-5 shadow-2xl shadow-black/60">
+          <div className="w-72 rounded-xl border border-[var(--color-border)] bg-[#1a1919] p-5 shadow-2xl shadow-black/60">
             <div className="mb-3 flex items-center justify-between">
               <span className="text-xs font-medium text-white">
                 {isGif ? 'Uploading GIF…' : 'Uploading image…'}
@@ -782,7 +782,7 @@ function UrlPrompt({
     >
       <div
         onClick={(e) => e.stopPropagation()}
-        className="w-full max-w-md rounded-xl border border-[var(--color-border)] bg-[#0b0b0e] p-5 shadow-2xl shadow-black/60"
+        className="w-full max-w-md rounded-xl border border-[var(--color-border)] bg-[#1a1919] p-5 shadow-2xl shadow-black/60"
       >
         <h3 className="mb-1 text-sm font-medium text-white">{label}</h3>
         {hint && (
@@ -805,13 +805,13 @@ function UrlPrompt({
             <button
               type="button"
               onClick={onCancel}
-              className="rounded-lg border border-[var(--color-border)] px-3 py-1.5 text-xs font-medium text-[var(--color-text-muted)] transition-colors hover:text-white"
+              className="inline-flex h-8 items-center justify-center rounded-lg border border-[var(--color-border)] px-3 text-xs font-medium text-[var(--color-text-muted)] transition-colors hover:text-white"
             >
               Cancel
             </button>
             <button
               type="submit"
-              className="rounded-lg bg-accent px-3 py-1.5 text-xs font-medium text-white transition-colors hover:bg-accent-hover"
+              className="inline-flex h-8 items-center justify-center rounded-lg bg-accent px-3 text-xs font-medium text-[#1a0a00] transition-colors hover:bg-accent-hover"
             >
               Insert
             </button>

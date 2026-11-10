@@ -218,7 +218,7 @@ const SlashList = forwardRef<{ onKeyDown: (p: { event: KeyboardEvent }) => boole
 
     if (items.length === 0) {
       return (
-        <div className="w-72 rounded-xl border border-[var(--color-border)] bg-[#0b0b0e] p-3 text-xs text-[var(--color-text-muted)] shadow-2xl shadow-black/50">
+        <div className="w-72 rounded-xl border border-[var(--color-border)] bg-[#1a1919] p-3 text-xs text-[var(--color-text-muted)] shadow-2xl shadow-black/50">
           No matching blocks
         </div>
       )
@@ -227,7 +227,7 @@ const SlashList = forwardRef<{ onKeyDown: (p: { event: KeyboardEvent }) => boole
     return (
       <div
         ref={listRef}
-        className="w-72 max-h-80 overflow-y-auto rounded-xl border border-[var(--color-border)] bg-[#0b0b0e] p-1.5 shadow-2xl shadow-black/50"
+        className="w-72 max-h-80 overflow-y-auto rounded-xl border border-[var(--color-border)] bg-[#1a1919] p-1.5 shadow-2xl shadow-black/50"
       >
         {items.map((item, i) => (
           <button

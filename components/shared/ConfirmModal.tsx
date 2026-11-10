@@ -54,7 +54,7 @@ export default function ConfirmModal({
 
   return (
     <div className="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-black/70 backdrop-blur-sm animate-in fade-in duration-300">
-      <div className="w-full max-w-sm bg-[#0c0c0e] border border-[var(--color-border)] rounded-xl p-6 shadow-2xl relative animate-in zoom-in-95 duration-200">
+      <div className="w-full max-w-sm bg-[#1a1919] border border-[var(--color-border)] rounded-xl p-6 shadow-2xl relative animate-in zoom-in-95 duration-200">
         <div className="space-y-4 text-left">
           <div className="border-b border-[var(--color-border)] pb-3">
             <h3 className="text-base font-medium text-white">{current.title}</h3>

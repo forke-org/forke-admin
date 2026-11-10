@@ -383,7 +383,7 @@ function BlogList({
           <button
             disabled={bulkBusy}
             onClick={runBulkDelete}
-            className="inline-flex items-center gap-1.5 rounded-md border border-red-500/30 bg-red-500/10 px-2.5 py-1 text-[11px] font-medium text-red-400 transition-colors hover:bg-red-500/20 disabled:opacity-50"
+            className="inline-flex items-center gap-1.5 h-7 rounded-md border border-red-500/30 bg-red-500/10 px-2.5 text-[11px] font-medium text-red-400 transition-colors hover:bg-red-500/20 disabled:opacity-50"
           >
             <Trash2 className="h-3.5 w-3.5" /> Delete
           </button>
@@ -397,10 +397,10 @@ function BlogList({
       )}
 
       {/* Table */}
-      <div className="flex-grow overflow-auto rounded-xl border border-[var(--color-border)] bg-white/[0.018]">
+      <div className="flex-grow overflow-auto rounded-xl border border-[var(--color-border)] bg-[var(--color-surface)]">
         <table className="w-full border-collapse text-left">
           <thead>
-            <tr className="border-b border-[var(--color-border)] text-[10px] uppercase tracking-wider text-white/35">
+            <tr className="border-b border-[var(--color-border)] bg-[#1e1d1c] font-mono text-[11px] font-normal uppercase tracking-[0.06em] text-[#8e8e93] whitespace-nowrap">
               <th className="w-10 px-3 py-2.5">
                 <Checkbox checked={allFilteredSelected} onChange={toggleAllFiltered} aria-label="Select all" />
               </th>
@@ -598,7 +598,7 @@ function Checkbox({
 
 function StatusBadge({ status }: { status: 'draft' | 'published' }) {
   return (
-    <span className="inline-flex items-center rounded-lg border border-white/[0.08] bg-white/[0.03] px-2.5 py-1 font-mono text-[11px] lowercase leading-none text-white/60">
+    <span className="inline-flex items-center rounded-lg border border-[var(--color-border)] bg-white/[0.03] px-2.5 py-1 font-mono text-[11px] lowercase leading-none text-white/60">
       {status}
     </span>
   )
@@ -868,7 +868,7 @@ function BlogEditorView({ id, onBack, onSaved }: { id: string | null; onBack: ()
             <button
               onClick={status === 'published' ? handleSaveChanges : handlePublishToggle}
               disabled={saving}
-              className="inline-flex h-9 min-w-[120px] items-center justify-center gap-1.5 rounded-lg bg-accent px-4 text-xs font-medium text-white shadow-lg shadow-accent/20 transition-colors hover:bg-accent-hover disabled:opacity-50"
+              className="inline-flex h-9 min-w-[120px] items-center justify-center gap-1.5 rounded-lg bg-accent px-4 text-xs font-medium text-[#1a0a00] shadow-lg shadow-accent/20 transition-colors hover:bg-accent-hover disabled:opacity-50"
             >
               {status === 'published' ? (
                 <>

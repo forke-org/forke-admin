@@ -221,7 +221,7 @@ function CloudflareTimeSeriesChart({
 
         {/* SVG Plot Box */}
         <div 
-          className="flex-grow relative border border-white/[0.08] bg-black/[0.25] rounded overflow-hidden cursor-crosshair"
+          className="flex-grow relative border border-[var(--color-border)] bg-black/[0.25] rounded overflow-hidden cursor-crosshair"
           onMouseMove={(e) => {
             if (points.length === 0) return
             const rect = e.currentTarget.getBoundingClientRect()
@@ -246,7 +246,7 @@ function CloudflareTimeSeriesChart({
           {/* Horizontal Gridlines */}
           <div className="absolute inset-0 flex flex-col justify-between py-1 pointer-events-none">
             {yTicks.map((_, i) => (
-              <div key={i} className="border-b border-white/[0.06] w-full h-0 last:border-0" />
+              <div key={i} className="border-b border-[var(--color-border)] w-full h-0 last:border-0" />
             ))}
           </div>
 
@@ -283,7 +283,7 @@ function CloudflareTimeSeriesChart({
 
               {/* Tooltip Card */}
               <div 
-                className="absolute top-2 bg-[#0c0c0e]/95 backdrop-blur border border-white/[0.12] rounded-lg p-2 sm:p-2.5 text-left shadow-2xl text-[10px] space-y-1 z-20 pointer-events-none min-w-[120px] sm:min-w-[140px] font-sans"
+                className="absolute top-2 bg-[#1a1919]/95 backdrop-blur border border-white/[0.12] rounded-lg p-2 sm:p-2.5 text-left shadow-2xl text-[10px] space-y-1 z-20 pointer-events-none min-w-[120px] sm:min-w-[140px] font-sans"
                 style={{ 
                   left: `${Math.max(4, Math.min(62, (hoveredIdx / Math.max(1, points.length - 1)) * 100))}%`
                 }}
@@ -514,7 +514,7 @@ export default function VmOverviewPanel() {
               <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
               ONLINE &bull; HEALTHY
             </span>
-            <span className="bg-white/[0.04] border border-white/[0.08] text-white/60 px-2 py-0.5 rounded font-mono text-[10px]">
+            <span className="bg-white/[0.04] border border-[var(--color-border)] text-white/60 px-2 py-0.5 rounded font-mono text-[10px]">
               {host?.platform === 'linux' ? 'ORACLE CLOUD VM' : `${host?.type || 'HOST'} (${host?.arch || 'ARM64'})`}
             </span>
           </div>
@@ -538,7 +538,7 @@ export default function VmOverviewPanel() {
 
       {/* ─── Top Metric Cards ───────────────────────────────── */}
       <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-2.5 sm:gap-3.5 shrink-0">
-        <div className="rounded-xl bg-white/[0.018] border border-[var(--color-border)] p-3 sm:p-3.5 space-y-1">
+        <div className="rounded-xl bg-[var(--color-surface)] border border-[var(--color-border)] p-3 sm:p-3.5 space-y-1">
           <div className="text-[9px] sm:text-[10px] font-medium text-white/40 uppercase tracking-wider flex items-center gap-1">
             <Cpu className="w-3 h-3 text-white/30" />
             CPU Load (1m)
@@ -551,7 +551,7 @@ export default function VmOverviewPanel() {
           </div>
         </div>
 
-        <div className="rounded-xl bg-white/[0.018] border border-[var(--color-border)] p-3 sm:p-3.5 space-y-1">
+        <div className="rounded-xl bg-[var(--color-surface)] border border-[var(--color-border)] p-3 sm:p-3.5 space-y-1">
           <div className="text-[9px] sm:text-[10px] font-medium text-white/40 uppercase tracking-wider flex items-center gap-1">
             <Server className="w-3 h-3 text-white/30" />
             RAM Usage
@@ -564,7 +564,7 @@ export default function VmOverviewPanel() {
           </div>
         </div>
 
-        <div className="rounded-xl bg-white/[0.018] border border-[var(--color-border)] p-3 sm:p-3.5 space-y-1">
+        <div className="rounded-xl bg-[var(--color-surface)] border border-[var(--color-border)] p-3 sm:p-3.5 space-y-1">
           <div className="text-[9px] sm:text-[10px] font-medium text-white/40 uppercase tracking-wider flex items-center gap-1">
             <Clock className="w-3 h-3 text-white/30" />
             VM Uptime
@@ -577,7 +577,7 @@ export default function VmOverviewPanel() {
           </div>
         </div>
 
-        <div className="rounded-xl bg-white/[0.018] border border-[var(--color-border)] p-3 sm:p-3.5 space-y-1">
+        <div className="rounded-xl bg-[var(--color-surface)] border border-[var(--color-border)] p-3 sm:p-3.5 space-y-1">
           <div className="text-[9px] sm:text-[10px] font-medium text-white/40 uppercase tracking-wider flex items-center gap-1">
             <Database className="w-3 h-3 text-white/30" />
             PostgreSQL
@@ -590,7 +590,7 @@ export default function VmOverviewPanel() {
           </div>
         </div>
 
-        <div className="rounded-xl bg-white/[0.018] border border-[var(--color-border)] p-3 sm:p-3.5 space-y-1">
+        <div className="rounded-xl bg-[var(--color-surface)] border border-[var(--color-border)] p-3 sm:p-3.5 space-y-1">
           <div className="text-[9px] sm:text-[10px] font-medium text-white/40 uppercase tracking-wider flex items-center gap-1">
             <Activity className="w-3 h-3 text-white/30" />
             Connections
@@ -603,7 +603,7 @@ export default function VmOverviewPanel() {
           </div>
         </div>
 
-        <div className="rounded-xl bg-white/[0.018] border border-[var(--color-border)] p-3 sm:p-3.5 space-y-1">
+        <div className="rounded-xl bg-[var(--color-surface)] border border-[var(--color-border)] p-3 sm:p-3.5 space-y-1">
           <div className="text-[9px] sm:text-[10px] font-medium text-white/40 uppercase tracking-wider flex items-center gap-1">
             <Layers className="w-3 h-3 text-white/30" />
             Cache Hit Ratio
@@ -693,7 +693,7 @@ export default function VmOverviewPanel() {
       </div>
 
       {/* ─── SECTION 2: DATA API ADVISORS (ORIGINAL CLEAN ENGINE) ─── */}
-      <div className="rounded-xl border border-[var(--color-border)] bg-white/[0.018] p-4 sm:p-5 space-y-4">
+      <div className="rounded-xl border border-[var(--color-border)] bg-[var(--color-surface)] p-4 sm:p-5 space-y-4">
         <div className="flex items-center justify-between border-b border-[var(--color-border)] pb-3">
           <div className="flex items-center gap-2">
             <Shield className="w-4 h-4 text-accent" />
@@ -705,7 +705,7 @@ export default function VmOverviewPanel() {
         </div>
 
         {advisors.length === 0 ? (
-          <div className="border border-white/[0.06] rounded-xl bg-black/30 p-8 text-center text-emerald-400 space-y-2 select-none">
+          <div className="border border-[var(--color-border)] rounded-xl bg-black/30 p-8 text-center text-emerald-400 space-y-2 select-none">
             <CheckCircle2 className="w-7 h-7 mx-auto" />
             <div className="text-sm font-medium text-white">Database Optimization Scan Clean</div>
             <p className="text-xs text-white/40 max-w-sm mx-auto leading-relaxed">
@@ -715,7 +715,7 @@ export default function VmOverviewPanel() {
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             {advisors.map((rec) => (
-              <div key={rec.id} className="border border-white/[0.06] rounded-xl bg-black/30 p-4 flex flex-col justify-between gap-3 font-sans">
+              <div key={rec.id} className="border border-[var(--color-border)] rounded-xl bg-black/30 p-4 flex flex-col justify-between gap-3 font-sans">
                 <div className="space-y-1.5">
                   <div className="flex items-center gap-2">
                     {rec.type === 'security' ? (
@@ -733,7 +733,7 @@ export default function VmOverviewPanel() {
                 </div>
 
                 {rec.sqlSuggestion && (
-                  <div className="space-y-1.5 pt-2 border-t border-white/[0.04]">
+                  <div className="space-y-1.5 pt-2 border-t border-[var(--color-border)]">
                     <div className="flex items-center justify-between text-[9px] font-bold text-white/30 uppercase font-sans">
                       <span>Recommended SQL query</span>
                       <button
@@ -744,7 +744,7 @@ export default function VmOverviewPanel() {
                         Copy SQL
                       </button>
                     </div>
-                    <div className="p-2.5 bg-black/60 border border-white/[0.06] rounded-lg font-mono text-[11px] text-white/80 select-all overflow-x-auto whitespace-pre-wrap leading-relaxed">
+                    <div className="p-2.5 bg-black/60 border border-[var(--color-border)] rounded-lg font-mono text-[11px] text-white/80 select-all overflow-x-auto whitespace-pre-wrap leading-relaxed">
                       {rec.sqlSuggestion}
                     </div>
                   </div>
@@ -756,7 +756,7 @@ export default function VmOverviewPanel() {
       </div>
 
       {/* ─── SECTION 3: DATABASE CONNECTION PARAMETERS ─────────── */}
-      <div className="rounded-xl border border-[var(--color-border)] bg-white/[0.018] p-4 sm:p-5 space-y-4">
+      <div className="rounded-xl border border-[var(--color-border)] bg-[var(--color-surface)] p-4 sm:p-5 space-y-4">
         <div className="flex items-center justify-between border-b border-[var(--color-border)] pb-3">
           <div className="flex items-center gap-2">
             <Shield className="w-4 h-4 text-accent" />
@@ -804,12 +804,12 @@ export default function VmOverviewPanel() {
       </div>
 
       {/* ─── SECTION 4: DATABASE TABLES & STORAGE BREAKDOWN ───── */}
-      <div className="rounded-xl border border-[var(--color-border)] bg-white/[0.018] overflow-hidden">
+      <div className="rounded-xl border border-[var(--color-border)] bg-[var(--color-surface)] overflow-hidden">
         <div className="p-4 border-b border-[var(--color-border)] flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-white/[0.005]">
           <div className="flex items-center gap-2">
             <Database className="w-4 h-4 text-accent" />
             <h3 className="text-sm font-medium text-white">Database Tables &amp; Storage Breakdown</h3>
-            <span className="bg-white/[0.04] border border-white/[0.08] text-white/70 px-2 py-0.5 rounded font-mono text-[10px]">
+            <span className="bg-white/[0.04] border border-[var(--color-border)] text-white/70 px-2 py-0.5 rounded font-mono text-[10px]">
               {filteredTables.length} Tables
             </span>
           </div>
@@ -829,7 +829,7 @@ export default function VmOverviewPanel() {
         <div className="overflow-x-auto">
           <table className="w-full text-left border-collapse font-sans text-xs min-w-[600px]">
             <thead>
-              <tr className="border-b border-[var(--color-border)] text-[10px] uppercase tracking-wider text-white/35 font-medium">
+              <tr className="border-b border-[var(--color-border)] bg-[#1e1d1c] font-mono text-[11px] font-normal uppercase tracking-[0.06em] text-[#8e8e93] whitespace-nowrap">
                 <th className="px-4 py-2.5 cursor-pointer hover:text-white" onClick={() => { setSortField('name'); setSortAsc(!sortAsc); }}>
                   <div className="flex items-center gap-1">
                     Table Name
@@ -889,7 +889,7 @@ export default function VmOverviewPanel() {
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
         
         {/* Host Hardware Specs */}
-        <div className="rounded-xl border border-[var(--color-border)] bg-white/[0.018] p-4 sm:p-5 space-y-4">
+        <div className="rounded-xl border border-[var(--color-border)] bg-[var(--color-surface)] p-4 sm:p-5 space-y-4">
           <div className="flex items-center justify-between border-b border-[var(--color-border)] pb-3">
             <div className="flex items-center gap-2">
               <Server className="w-4 h-4 text-accent" />
@@ -899,23 +899,23 @@ export default function VmOverviewPanel() {
           </div>
 
           <div className="space-y-3 font-mono text-xs">
-            <div className="flex items-center justify-between py-1.5 border-b border-white/[0.03]">
+            <div className="flex items-center justify-between py-1.5 border-b border-[var(--color-border)]">
               <span className="text-[var(--color-text-muted)] font-sans">Hostname</span>
               <span className="text-white font-medium truncate max-w-[200px]">{host?.hostname || 'oracle-vm-instance'}</span>
             </div>
-            <div className="flex items-center justify-between py-1.5 border-b border-white/[0.03]">
+            <div className="flex items-center justify-between py-1.5 border-b border-[var(--color-border)]">
               <span className="text-[var(--color-text-muted)] font-sans">OS Platform &amp; Kernel</span>
               <span className="text-white font-medium truncate max-w-[200px]">{host?.type || 'Linux'} {host?.release || '6.8.0-generic'} ({host?.arch || 'aarch64'})</span>
             </div>
-            <div className="flex items-center justify-between py-1.5 border-b border-white/[0.03]">
+            <div className="flex items-center justify-between py-1.5 border-b border-[var(--color-border)]">
               <span className="text-[var(--color-text-muted)] font-sans">CPU Model</span>
               <span className="text-white font-medium truncate max-w-[200px]">{host?.cpuModel || 'Ampere Altra / Intel Xeon'}</span>
             </div>
-            <div className="flex items-center justify-between py-1.5 border-b border-white/[0.03]">
+            <div className="flex items-center justify-between py-1.5 border-b border-[var(--color-border)]">
               <span className="text-[var(--color-text-muted)] font-sans">Compute Sizing</span>
               <span className="text-white font-medium">{host?.cpuCount || 4} vCPUs &bull; {formatBytes(host?.totalMemBytes)} Memory</span>
             </div>
-            <div className="flex items-center justify-between py-1.5 border-b border-white/[0.03]">
+            <div className="flex items-center justify-between py-1.5 border-b border-[var(--color-border)]">
               <span className="text-[var(--color-text-muted)] font-sans">Process RSS Footprint</span>
               <span className="text-white font-medium">{formatBytes(host?.processRssBytes)}</span>
             </div>
@@ -927,7 +927,7 @@ export default function VmOverviewPanel() {
         </div>
 
         {/* Database Engine Information */}
-        <div className="rounded-xl border border-[var(--color-border)] bg-white/[0.018] p-4 sm:p-5 space-y-4">
+        <div className="rounded-xl border border-[var(--color-border)] bg-[var(--color-surface)] p-4 sm:p-5 space-y-4">
           <div className="flex items-center justify-between border-b border-[var(--color-border)] pb-3">
             <div className="flex items-center gap-2">
               <Database className="w-4 h-4 text-emerald-400" />
@@ -937,23 +937,23 @@ export default function VmOverviewPanel() {
           </div>
 
           <div className="space-y-3 font-mono text-xs">
-            <div className="flex items-center justify-between py-1.5 border-b border-white/[0.03]">
+            <div className="flex items-center justify-between py-1.5 border-b border-[var(--color-border)]">
               <span className="text-[var(--color-text-muted)] font-sans">Database Name</span>
               <span className="text-white font-medium">{data?.dbName || 'forkedb'}</span>
             </div>
-            <div className="flex items-center justify-between py-1.5 border-b border-white/[0.03]">
+            <div className="flex items-center justify-between py-1.5 border-b border-[var(--color-border)]">
               <span className="text-[var(--color-text-muted)] font-sans">Total Database Size</span>
               <span className="text-emerald-400 font-medium">{data?.dbSize || '0 MB'}</span>
             </div>
-            <div className="flex items-center justify-between py-1.5 border-b border-white/[0.03]">
+            <div className="flex items-center justify-between py-1.5 border-b border-[var(--color-border)]">
               <span className="text-[var(--color-text-muted)] font-sans">Public Schema Tables</span>
               <span className="text-white font-medium">{data?.tablesCount || 0} base tables</span>
             </div>
-            <div className="flex items-center justify-between py-1.5 border-b border-white/[0.03]">
+            <div className="flex items-center justify-between py-1.5 border-b border-[var(--color-border)]">
               <span className="text-[var(--color-text-muted)] font-sans">SSL / TLS Mode</span>
               <span className="text-white font-medium uppercase">{data?.sslMode || 'require'}</span>
             </div>
-            <div className="flex items-center justify-between py-1.5 border-b border-white/[0.03]">
+            <div className="flex items-center justify-between py-1.5 border-b border-[var(--color-border)]">
               <span className="text-[var(--color-text-muted)] font-sans">Transaction Commits</span>
               <span className="text-white font-medium">{data?.commits || '0'}</span>
             </div>

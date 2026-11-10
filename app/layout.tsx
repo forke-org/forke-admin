@@ -9,13 +9,13 @@
  */
 
 import type { Metadata, Viewport } from 'next'
-import { geistSans, instrumentSerif, jetbrainsMono } from '@/app/fonts'
+import { geistSans, geistMono, instrumentSerif } from '@/app/fonts'
 import './globals.css'
 import { NextAuthProvider } from '@/components/providers/NextAuthProvider'
 import { ScrollToTopOnLoad } from '@/components/providers/ScrollToTopOnLoad'
 
 export const viewport: Viewport = {
-  themeColor: '#FF7A00',
+  themeColor: '#151414',
   width: 'device-width',
   initialScale: 1,
 }
@@ -45,10 +45,10 @@ export default function RootLayout({
   return (
     <html
       lang="en"
-      className={`${geistSans.variable} ${instrumentSerif.variable} ${jetbrainsMono.variable}`}
+      className={`${geistSans.variable} ${instrumentSerif.variable} ${geistMono.variable}`}
       suppressHydrationWarning
     >
-      <body className="antialiased bg-[#0A0A0A]">
+      <body className="antialiased bg-[var(--color-bg)]">
         <ScrollToTopOnLoad />
         <NextAuthProvider>
           {children}

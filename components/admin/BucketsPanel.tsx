@@ -603,13 +603,13 @@ export default function BucketsPanel({ currentAdmin }: BucketsPanelProps) {
       {/* R2 Dashboard Summary Metrics */}
       {config.isConfigured && (
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-5 gap-3.5">
-          <div className="rounded-xl bg-white/[0.018] border border-[var(--color-border)] p-4 space-y-2">
+          <div className="rounded-xl bg-[var(--color-surface)] border border-[var(--color-border)] p-4 space-y-2">
             <div className="text-[10px] font-medium text-white/40 uppercase tracking-wider">Storage Class</div>
             <div className="text-base font-mono font-medium text-white">Standard</div>
             <div className="text-[10px] font-mono text-white/30">Default class</div>
           </div>
 
-          <div className="rounded-xl bg-white/[0.018] border border-[var(--color-border)] p-4 space-y-2">
+          <div className="rounded-xl bg-[var(--color-surface)] border border-[var(--color-border)] p-4 space-y-2">
             <div className="text-[10px] font-medium text-white/40 uppercase tracking-wider">Public Access</div>
             <div className="text-base font-mono font-medium text-white flex items-center gap-1.5">
               <span className={`w-2 h-2 rounded-full ${config.publicUrl ? 'bg-emerald-400' : 'bg-red-400'}`} />
@@ -620,19 +620,19 @@ export default function BucketsPanel({ currentAdmin }: BucketsPanelProps) {
             </div>
           </div>
 
-          <div className="rounded-xl bg-white/[0.018] border border-[var(--color-border)] p-4 space-y-2">
+          <div className="rounded-xl bg-[var(--color-surface)] border border-[var(--color-border)] p-4 space-y-2">
             <div className="text-[10px] font-medium text-white/40 uppercase tracking-wider">Bucket Size</div>
             <div className="text-base font-mono font-medium text-white">{formatBytes(totalStorageSize)}</div>
             <div className="text-[10px] font-mono text-white/30">Total listed objects</div>
           </div>
 
-          <div className="rounded-xl bg-white/[0.018] border border-[var(--color-border)] p-4 space-y-2">
+          <div className="rounded-xl bg-[var(--color-surface)] border border-[var(--color-border)] p-4 space-y-2">
             <div className="text-[10px] font-medium text-white/40 uppercase tracking-wider">Class A Ops</div>
             <div className="text-base font-mono font-medium text-accent">{metrics.classA}</div>
             <div className="text-[10px] font-mono text-white/30">Mutations</div>
           </div>
 
-          <div className="rounded-xl bg-white/[0.018] border border-[var(--color-border)] p-4 space-y-2">
+          <div className="rounded-xl bg-[var(--color-surface)] border border-[var(--color-border)] p-4 space-y-2">
             <div className="text-[10px] font-medium text-white/40 uppercase tracking-wider">Class B Ops</div>
             <div className="text-base font-mono font-medium text-accent">{metrics.classB}</div>
             <div className="text-[10px] font-mono text-white/30">Downloads</div>
@@ -675,7 +675,7 @@ export default function BucketsPanel({ currentAdmin }: BucketsPanelProps) {
           <div className="space-y-4 animate-in fade-in duration-200">
             
             {/* Folder / breadcrumbs path navigation & action triggers */}
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-[#0b0b0e] border border-white/[0.04] p-3 rounded-xl">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-[#1a1919] border border-[var(--color-border)] p-3 rounded-xl">
               
               {/* Breadcrumbs */}
               <div className="flex items-center gap-1.5 text-xs font-medium font-sans">
@@ -721,7 +721,7 @@ export default function BucketsPanel({ currentAdmin }: BucketsPanelProps) {
                     setIsFolderModalOpen(true)
                   }}
                   disabled={!isSuperAdmin}
-                  className="px-2.5 py-1.5 bg-white/[0.03] hover:bg-white/[0.08] disabled:opacity-40 border border-white/[0.06] rounded-lg text-[11px] font-semibold text-white transition-colors cursor-pointer flex items-center gap-1.5"
+                  className="px-2.5 py-1.5 bg-white/[0.03] hover:bg-white/[0.08] disabled:opacity-40 border border-[var(--color-border)] rounded-lg text-[11px] font-semibold text-white transition-colors cursor-pointer flex items-center gap-1.5"
                 >
                   <FolderPlus className="w-3.5 h-3.5 text-white/70" />
                   <span>Add folder</span>
@@ -742,7 +742,7 @@ export default function BucketsPanel({ currentAdmin }: BucketsPanelProps) {
                     fileInputRef.current?.click()
                   }}
                   disabled={uploading || !isSuperAdmin}
-                  className="px-2.5 py-1.5 bg-accent hover:bg-accent/80 disabled:opacity-50 rounded-lg text-[11px] font-semibold text-white transition-colors cursor-pointer flex items-center gap-1.5"
+                  className="px-2.5 py-1.5 bg-accent hover:bg-accent/80 disabled:opacity-50 rounded-lg text-[11px] font-semibold text-[#1a0a00] transition-colors cursor-pointer flex items-center gap-1.5"
                 >
                   {uploading ? (
                     <RefreshCw className="w-3.5 h-3.5 animate-spin" />
@@ -768,10 +768,10 @@ export default function BucketsPanel({ currentAdmin }: BucketsPanelProps) {
             </div>
 
             {/* Objects table */}
-            <div className="overflow-auto rounded-xl border border-[var(--color-border)] bg-white/[0.018]">
+            <div className="overflow-auto rounded-xl border border-[var(--color-border)] bg-[var(--color-surface)]">
               <table className="w-full min-w-[680px] border-collapse font-sans text-xs text-left">
                 <thead>
-                  <tr className="border-b border-[var(--color-border)] text-[10px] uppercase tracking-wider text-white/35 font-medium select-none">
+                  <tr className="border-b border-[var(--color-border)] bg-[#1e1d1c] font-mono text-[11px] font-normal uppercase tracking-[0.06em] text-[#8e8e93] whitespace-nowrap select-none">
                     <th className="w-10 px-4 py-2.5">
                       <input 
                         type="checkbox"
@@ -916,7 +916,7 @@ export default function BucketsPanel({ currentAdmin }: BucketsPanelProps) {
                               <img
                                 src={(item as any).url}
                                 alt={item.name}
-                                className="max-h-80 max-w-full rounded-lg border border-white/[0.08] object-contain bg-black/30"
+                                className="max-h-80 max-w-full rounded-lg border border-[var(--color-border)] object-contain bg-black/30"
                               />
                               <a
                                 href={(item as any).url}
@@ -946,7 +946,7 @@ export default function BucketsPanel({ currentAdmin }: BucketsPanelProps) {
             </div>
 
             {/* Pagination footer */}
-            <div className="flex items-center justify-between px-4 py-2.5 border-t border-white/[0.06] shrink-0 bg-white/[0.005]">
+            <div className="flex items-center justify-between px-4 py-2.5 border-t border-[var(--color-border)] shrink-0 bg-white/[0.005]">
               <div className="flex items-center gap-2">
                 <span className="text-[11px] font-mono text-white/30">Rows:</span>
                 {[10, 50, 100].map((n) => (
@@ -983,7 +983,7 @@ export default function BucketsPanel({ currentAdmin }: BucketsPanelProps) {
             {/* Folder creation overlay modal */}
             {isFolderModalOpen && (
               <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm animate-in fade-in duration-200">
-                <div className="w-full max-w-sm bg-[#0c0c0e] border border-white/[0.08] rounded-xl p-5 shadow-2xl space-y-4 text-left animate-in zoom-in-95 duration-150">
+                <div className="w-full max-w-sm bg-[#1a1919] border border-[var(--color-border)] rounded-xl p-5 shadow-2xl space-y-4 text-left animate-in zoom-in-95 duration-150">
                   <div className="space-y-1">
                     <h4 className="text-sm font-semibold text-white flex items-center gap-1.5">
                       <FolderOpen className="w-4 h-4 text-accent" />
@@ -1003,7 +1003,7 @@ export default function BucketsPanel({ currentAdmin }: BucketsPanelProps) {
                         value={newFolderName}
                         onChange={e => setNewFolderName(e.target.value)}
                         placeholder="e.g. avatars"
-                        className="w-full bg-white/[0.02] border border-white/[0.08] focus:border-accent rounded-lg px-3 py-2 text-xs text-white focus:outline-none focus:ring-0"
+                        className="w-full bg-white/[0.02] border border-[var(--color-border)] focus:border-accent rounded-lg px-3 py-2 text-xs text-white focus:outline-none focus:ring-0"
                       />
                     </div>
 
@@ -1018,7 +1018,7 @@ export default function BucketsPanel({ currentAdmin }: BucketsPanelProps) {
                       <button 
                         type="submit"
                         disabled={loading}
-                        className="px-3 py-1.5 bg-accent hover:bg-accent/80 rounded-lg text-white transition-colors cursor-pointer"
+                        className="inline-flex h-8 items-center justify-center px-3 bg-accent hover:bg-accent-hover rounded-lg text-[#1a0a00] transition-colors cursor-pointer"
                       >
                         Create Folder
                       </button>
@@ -1036,20 +1036,20 @@ export default function BucketsPanel({ currentAdmin }: BucketsPanelProps) {
           <div className="space-y-6 animate-in fade-in duration-200">
             
             {/* Filter toolbar */}
-            <div className="flex items-center justify-between gap-4 border-b border-white/[0.04] pb-3">
+            <div className="flex items-center justify-between gap-4 border-b border-[var(--color-border)] pb-3">
               <div className="flex items-center gap-2">
                 <BarChart3 className="w-4 h-4 text-accent" />
                 <span className="text-xs font-semibold uppercase tracking-wider text-white/70">Metrics Dashboard</span>
               </div>
               
-              <div className="flex items-center gap-2 bg-[#0b0b0e] border border-white/[0.06] rounded-lg px-3 py-1 text-xs">
+              <div className="flex items-center gap-2 bg-[#1a1919] border border-[var(--color-border)] rounded-lg px-3 py-1 text-xs">
                 <Calendar className="w-3.5 h-3.5 text-white/40" />
                 <span className="text-white/60 font-medium">Last 24 hours</span>
               </div>
             </div>
 
             {loadingMetrics ? (
-              <div className="flex items-center justify-center min-h-[300px] bg-[#0b0b0e] border border-white/[0.06] rounded-xl">
+              <div className="flex items-center justify-center min-h-[300px] bg-[#1a1919] border border-[var(--color-border)] rounded-xl">
                 <div className="flex flex-col items-center gap-3">
                   <RefreshCw className="w-5 h-5 animate-spin text-accent" />
                   <span className="text-[11px] font-mono text-white/40">Gathering Cloudflare GraphQL analytics...</span>
@@ -1060,27 +1060,27 @@ export default function BucketsPanel({ currentAdmin }: BucketsPanelProps) {
                 
                 {/* Metric Summary Widgets */}
                 <div className="grid grid-cols-2 md:grid-cols-5 gap-3.5">
-                  <div className="bg-[#0b0b0e] border border-white/[0.06] rounded-xl p-4">
+                  <div className="bg-[#1a1919] border border-[var(--color-border)] rounded-xl p-4">
                     <span className="text-[10px] text-white/40 uppercase font-semibold tracking-wider block">Average Storage</span>
                     <h3 className="text-xl font-mono font-bold text-white mt-1">{formatBytes(metrics.averageStorage)}</h3>
                   </div>
 
-                  <div className="bg-[#0b0b0e] border border-white/[0.06] rounded-xl p-4">
+                  <div className="bg-[#1a1919] border border-[var(--color-border)] rounded-xl p-4">
                     <span className="text-[10px] text-white/40 uppercase font-semibold tracking-wider block">Data Retrieved</span>
                     <h3 className="text-xl font-mono font-bold text-white mt-1">{formatBytes(metrics.dataRetrieved)}</h3>
                   </div>
 
-                  <div className="bg-[#0b0b0e] border border-white/[0.06] rounded-xl p-4">
+                  <div className="bg-[#1a1919] border border-[var(--color-border)] rounded-xl p-4">
                     <span className="text-[10px] text-white/40 uppercase font-semibold tracking-wider block">Class A Operations</span>
                     <h3 className="text-xl font-mono font-bold text-accent mt-1">{metrics.classA}</h3>
                   </div>
 
-                  <div className="bg-[#0b0b0e] border border-white/[0.06] rounded-xl p-4">
+                  <div className="bg-[#1a1919] border border-[var(--color-border)] rounded-xl p-4">
                     <span className="text-[10px] text-white/40 uppercase font-semibold tracking-wider block">Class B Operations</span>
                     <h3 className="text-xl font-mono font-bold text-accent mt-1">{metrics.classB}</h3>
                   </div>
 
-                  <div className="bg-[#0b0b0e] border border-white/[0.06] rounded-xl p-4 col-span-2 md:col-span-1">
+                  <div className="bg-[#1a1919] border border-[var(--color-border)] rounded-xl p-4 col-span-2 md:col-span-1">
                     <span className="text-[10px] text-white/40 uppercase font-semibold tracking-wider block">Requests Count</span>
                     <h3 className="text-xl font-mono font-bold text-white mt-1">{metrics.classA + metrics.classB}</h3>
                   </div>
@@ -1090,7 +1090,7 @@ export default function BucketsPanel({ currentAdmin }: BucketsPanelProps) {
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
                   
                   {/* Graph 1: Class A Operations */}
-                  <div className="bg-[#0b0b0e] border border-white/[0.06] rounded-xl p-5 space-y-4">
+                  <div className="bg-[#1a1919] border border-[var(--color-border)] rounded-xl p-5 space-y-4">
                     <div className="space-y-1">
                       <div className="text-[11px] font-semibold text-white/60 uppercase tracking-wider">
                         Class A Operations
@@ -1129,7 +1129,7 @@ export default function BucketsPanel({ currentAdmin }: BucketsPanelProps) {
 
                       {/* SVG Canvas Area */}
                       <div 
-                        className="flex-grow relative border border-white/[0.08] bg-black/[0.15] rounded overflow-hidden cursor-crosshair"
+                        className="flex-grow relative border border-[var(--color-border)] bg-black/[0.15] rounded overflow-hidden cursor-crosshair"
                         onMouseMove={(e) => {
                           if (!metrics.timeseries || metrics.timeseries.length === 0) return
                           const rect = e.currentTarget.getBoundingClientRect()
@@ -1143,7 +1143,7 @@ export default function BucketsPanel({ currentAdmin }: BucketsPanelProps) {
                         {/* Grid lines */}
                         <div className="absolute inset-0 flex flex-col justify-between py-1 pointer-events-none">
                           {yTicksA.map((_, i) => (
-                            <div key={i} className="border-b border-white/[0.06] w-full h-0 last:border-0" />
+                            <div key={i} className="border-b border-[var(--color-border)] w-full h-0 last:border-0" />
                           ))}
                         </div>
 
@@ -1176,7 +1176,7 @@ export default function BucketsPanel({ currentAdmin }: BucketsPanelProps) {
                             />
                             {/* Tooltip */}
                             <div 
-                              className="absolute top-2 bg-[#0c0c0e]/95 backdrop-blur border border-white/[0.08] rounded-lg p-2 text-left shadow-2xl text-[10px] space-y-1.5 z-20 pointer-events-none w-32 font-sans"
+                              className="absolute top-2 bg-[#1a1919]/95 backdrop-blur border border-[var(--color-border)] rounded-lg p-2 text-left shadow-2xl text-[10px] space-y-1.5 z-20 pointer-events-none w-32 font-sans"
                               style={{ 
                                 left: `${(hoveredIdxA / (metrics.timeseries.length - 1)) * 100}%`,
                                 transform: hoveredIdxA > (metrics.timeseries.length / 2) ? 'translateX(-115%)' : 'translateX(15%)'
@@ -1200,7 +1200,7 @@ export default function BucketsPanel({ currentAdmin }: BucketsPanelProps) {
 
                     {/* X-Axis Timeline */}
                     <div className="pl-12">
-                      <div className="relative border-t border-white/[0.08] h-5 pt-1">
+                      <div className="relative border-t border-[var(--color-border)] h-5 pt-1">
                         {timelineTicks.map((tick, idx) => (
                           <React.Fragment key={idx}>
                             <span 
@@ -1226,7 +1226,7 @@ export default function BucketsPanel({ currentAdmin }: BucketsPanelProps) {
                   </div>
 
                   {/* Graph 2: Class B Operations */}
-                  <div className="bg-[#0b0b0e] border border-white/[0.06] rounded-xl p-5 space-y-4">
+                  <div className="bg-[#1a1919] border border-[var(--color-border)] rounded-xl p-5 space-y-4">
                     <div className="space-y-1">
                       <div className="text-[11px] font-semibold text-white/60 uppercase tracking-wider">
                         Class B Operations
@@ -1265,7 +1265,7 @@ export default function BucketsPanel({ currentAdmin }: BucketsPanelProps) {
 
                       {/* SVG Canvas Area */}
                       <div 
-                        className="flex-grow relative border border-white/[0.08] bg-black/[0.15] rounded overflow-hidden cursor-crosshair"
+                        className="flex-grow relative border border-[var(--color-border)] bg-black/[0.15] rounded overflow-hidden cursor-crosshair"
                         onMouseMove={(e) => {
                           if (!metrics.timeseries || metrics.timeseries.length === 0) return
                           const rect = e.currentTarget.getBoundingClientRect()
@@ -1279,7 +1279,7 @@ export default function BucketsPanel({ currentAdmin }: BucketsPanelProps) {
                         {/* Grid lines */}
                         <div className="absolute inset-0 flex flex-col justify-between py-1 pointer-events-none">
                           {yTicksB.map((_, i) => (
-                            <div key={i} className="border-b border-white/[0.06] w-full h-0 last:border-0" />
+                            <div key={i} className="border-b border-[var(--color-border)] w-full h-0 last:border-0" />
                           ))}
                         </div>
 
@@ -1312,7 +1312,7 @@ export default function BucketsPanel({ currentAdmin }: BucketsPanelProps) {
                             />
                             {/* Tooltip */}
                             <div 
-                              className="absolute top-2 bg-[#0c0c0e]/95 backdrop-blur border border-white/[0.08] rounded-lg p-2 text-left shadow-2xl text-[10px] space-y-1.5 z-20 pointer-events-none w-32 font-sans"
+                              className="absolute top-2 bg-[#1a1919]/95 backdrop-blur border border-[var(--color-border)] rounded-lg p-2 text-left shadow-2xl text-[10px] space-y-1.5 z-20 pointer-events-none w-32 font-sans"
                               style={{ 
                                 left: `${(hoveredIdxB / (metrics.timeseries.length - 1)) * 100}%`,
                                 transform: hoveredIdxB > (metrics.timeseries.length / 2) ? 'translateX(-115%)' : 'translateX(15%)'
@@ -1336,7 +1336,7 @@ export default function BucketsPanel({ currentAdmin }: BucketsPanelProps) {
 
                     {/* X-Axis Timeline */}
                     <div className="pl-12">
-                      <div className="relative border-t border-white/[0.08] h-5 pt-1">
+                      <div className="relative border-t border-[var(--color-border)] h-5 pt-1">
                         {timelineTicks.map((tick, idx) => (
                           <React.Fragment key={idx}>
                             <span 
@@ -1369,7 +1369,7 @@ export default function BucketsPanel({ currentAdmin }: BucketsPanelProps) {
 
         {/* Disconnected Placeholder Screen */}
         {!config.isConfigured && (
-          <div className="flex flex-col items-center justify-center min-h-[350px] bg-white/[0.018] border border-[var(--color-border)] rounded-xl p-8 text-center space-y-4 font-sans max-w-2xl mx-auto my-6 shadow-xl animate-in fade-in duration-200">
+          <div className="flex flex-col items-center justify-center min-h-[350px] bg-[var(--color-surface)] border border-[var(--color-border)] rounded-xl p-8 text-center space-y-4 font-sans max-w-2xl mx-auto my-6 shadow-xl animate-in fade-in duration-200">
             <div className="w-12 h-12 rounded-full bg-red-500/10 border border-red-500/25 flex items-center justify-center text-red-500">
               <AlertTriangle className="w-6 h-6" />
             </div>

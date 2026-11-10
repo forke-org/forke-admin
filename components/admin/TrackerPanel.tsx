@@ -102,7 +102,7 @@ function formatLocalTimeOnly(iso: string | Date | null | undefined): string {
 
 function Card({ title, subtitle, children }: { title: string; subtitle?: string; children: React.ReactNode }) {
   return (
-    <div className="rounded-xl bg-white/[0.018] border border-[var(--color-border)] p-5">
+    <div className="rounded-xl bg-[var(--color-surface)] border border-[var(--color-border)] p-5">
       <div className="mb-4">
         <h3 className="text-sm font-medium text-white">{title}</h3>
         {subtitle && <p className="text-xs text-[var(--color-text-muted)] mt-0.5">{subtitle}</p>}
@@ -439,7 +439,7 @@ export default function TrackerPanel() {
               { icon: Target, label: days === -1 ? 'Subscribers (all-time)' : `Subscribers (${days}d)`, value: (days === -1 ? signupTotal : stats.conversions).toLocaleString() },
               { icon: Target, label: 'Conversion rate', value: `${stats.rate}%` },
             ].map((s) => (
-              <div key={s.label} className="rounded-xl bg-white/[0.018] border border-[var(--color-border)] px-4 py-3">
+              <div key={s.label} className="rounded-xl bg-[var(--color-surface)] border border-[var(--color-border)] px-4 py-3">
                 <div className="flex items-center gap-2 text-[var(--color-text-muted)]">
                   <s.icon className="w-3.5 h-3.5" />
                   <span className="text-[11px] uppercase tracking-wide">{s.label}</span>
