@@ -19,11 +19,56 @@ function seedFrom(text = '') {
   return h
 }
 
+function heightOf(className = '') {
+  const px = className.match(/(?:^|\s)h-\[(\d+)px\]/)
+  if (px) return Number(px[1])
+  const unit = className.match(/(?:^|\s)h-(\d+(?:\.\d+)?)(?:\s|$)/)
+  if (unit) return Number(unit[1]) * 4
+  if (/(?:^|\s)(h-full|flex-1|flex-grow|aspect-)/.test(className)) return 160
+  return 16
+}
+
 export function Skeleton({ className, ...props }: React.HTMLAttributes<HTMLDivElement>) {
   const seed = seedFrom(className)
+  const height = heightOf(className)
+  const round = /rounded-full/.test(className || '')
+
+  if (round) {
+    return (
+      <div aria-hidden className={cn('overflow-hidden rounded-full bg-white/[0.04] text-[#5f5c5a]', className)} {...props}>
+        <AsciiSkeleton rows={4} width="100%" height="100%" circle seed={seed} className="block opacity-70" />
+      </div>
+    )
+  }
+
+  if (height <= 24) {
+    return (
+      <div aria-hidden className={cn('flex items-center overflow-hidden text-[#5f5c5a]', className)} {...props}>
+        <AsciiSkeleton lines={1} widths={['100%']} seed={seed} className="block w-full" />
+      </div>
+    )
+  }
+
+  if (height <= 48) {
+    return (
+      <div
+        aria-hidden
+        className={cn('flex items-center overflow-hidden rounded-[6px] border border-[var(--color-border)] bg-white/[0.02] px-3 text-[#5f5c5a]', className)}
+        {...props}
+      >
+        <AsciiSkeleton lines={1} widths={['70%']} seed={seed} animate={false} className="block w-full opacity-60" />
+      </div>
+    )
+  }
+
+  const lines = Math.max(1, Math.min(6, Math.round((height - 32) / 22)))
   return (
-    <div aria-hidden className={cn('overflow-hidden rounded-[4px] text-[#5f5c5a]', className)} {...props}>
-      <AsciiSkeleton rows={12} width="100%" height="100%" seed={seed} className="block" />
+    <div
+      aria-hidden
+      className={cn('overflow-hidden rounded-[8px] border border-[var(--color-border)] bg-[var(--color-surface)] p-4 text-[#5f5c5a]', className)}
+      {...props}
+    >
+      <AsciiSkeleton lines={lines} seed={seed} className="block" />
     </div>
   )
 }
