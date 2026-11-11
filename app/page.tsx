@@ -42,7 +42,7 @@ import { Button } from '@/components/ui/Button'
 import { Select } from '@/components/ui/Select'
 import { Skeleton, TableLoadingRows } from '@/components/ui/Skeleton'
 import { AsciiReveal } from 'ascii-reveal'
-import { AdminSidebar } from '@/components/admin/AdminSidebar'
+import { AdminSidebar, ADMIN_TAB_META } from '@/components/admin/AdminSidebar'
 import { markAppReady } from '@/lib/app-ready'
 import { ForkyLoader } from '@/components/ui/ForkyLoader'
 import ToastContainer, { toast } from '@/components/shared/Toast'
@@ -1133,13 +1133,13 @@ export default function AdminDashboard() {
   }
 
   return (
-    <div className="min-h-screen bg-[#151414] text-white flex">
+    <div className="flex h-[100dvh] overflow-hidden bg-[var(--color-bg)] text-white">
 
       {/* --- MOBILE NAV BACKDROP --- */}
       {mobileNavOpen && (
         <div
           onClick={() => setMobileNavOpen(false)}
-          className="fixed inset-0 z-40 bg-black/60 backdrop-blur-sm lg:hidden"
+          className="fixed inset-0 z-40 bg-black/60 backdrop-blur-[2px] lg:hidden"
         />
       )}
 
@@ -1158,26 +1158,26 @@ export default function AdminDashboard() {
       />
 
       {/* --- MAIN PAGE CONTENT --- */}
-      <main className="flex-grow h-screen overflow-hidden bg-[var(--color-bg)] flex flex-col text-left">
+      <main className="flex min-w-0 flex-grow flex-col overflow-hidden bg-[var(--color-bg)] text-left">
         
-        {/* --- HEADER (mobile only — desktop uses sidebar for context) --- */}
-        <header className="lg:hidden h-14 px-4 sm:px-6 flex items-center justify-between shrink-0 [background:linear-gradient(90deg,var(--color-rail)_50%,transparent_50%)_bottom/32px_1px_repeat-x]">
-          <div className="flex items-center gap-2 sm:gap-3 min-w-0">
-            <button
-              onClick={() => setMobileNavOpen(true)}
-              className="p-1.5 -ml-1.5 rounded-lg text-[var(--color-text-muted)] hover:text-white hover:bg-white/[0.05] transition-colors cursor-pointer shrink-0"
-              aria-label="Open menu"
-            >
-              <Menu className="w-5 h-5" />
-            </button>
-            <h1 className="text-sm font-medium text-white tracking-tight capitalize truncate">
-              {activeTab === 'owner-approval'
-                ? 'Owners'
-                : activeTab === 'developer-ban'
-                ? 'Developers'
-                : activeTab}
-            </h1>
-          </div>
+        <header className="relative z-30 flex h-14 shrink-0 items-center gap-2 bg-[var(--color-bg)]/85 px-4 backdrop-blur-md sm:px-6 lg:px-8">
+          <span aria-hidden className="rail-x pointer-events-none absolute inset-x-0 bottom-0 h-px" />
+          <button
+            onClick={() => setMobileNavOpen(true)}
+            className="-ml-1.5 grid h-8 w-8 shrink-0 cursor-pointer place-items-center rounded-[6px] text-[var(--color-text-muted)] transition-colors hover:bg-white/[0.06] hover:text-white lg:hidden"
+            aria-label="Open menu"
+          >
+            <Menu className="h-[18px] w-[18px]" />
+          </button>
+          <nav aria-label="Breadcrumb" className="ml-1 flex min-w-0 items-center gap-2 text-[13px] lg:ml-0">
+            {ADMIN_TAB_META[activeTab].group ? (
+              <>
+                <span className="hidden text-[var(--color-text-muted)] sm:inline">{ADMIN_TAB_META[activeTab].group}</span>
+                <span className="hidden text-[#5f5c5a] sm:inline">/</span>
+              </>
+            ) : null}
+            <span className="truncate font-medium text-white">{ADMIN_TAB_META[activeTab].label}</span>
+          </nav>
         </header>
 
         {/* --- DYNAMIC BODY VIEWS --- */}

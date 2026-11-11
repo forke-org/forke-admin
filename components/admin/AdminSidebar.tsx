@@ -36,6 +36,24 @@ type Item = {
   status?: { label: string; on: boolean }
 }
 
+export const ADMIN_TAB_META: Record<AdminTab, { group: string | null; label: string }> = {
+  dashboard: { group: null, label: 'Overview' },
+  'owner-approval': { group: 'Users', label: 'Owners' },
+  'developer-ban': { group: 'Users', label: 'Developers' },
+  enquiries: { group: 'Content', label: 'Enquiries' },
+  subscribers: { group: 'Content', label: 'Subscribers' },
+  tracker: { group: 'Content', label: 'Tracker' },
+  blogs: { group: 'Content', label: 'Blog' },
+  changelog: { group: 'Content', label: 'Changelog' },
+  activity: { group: 'Content', label: 'Activity' },
+  'vm-overview': { group: 'Infrastructure', label: 'VM Overview' },
+  database: { group: 'Infrastructure', label: 'Tables' },
+  buckets: { group: 'Infrastructure', label: 'Buckets' },
+  backups: { group: 'Infrastructure', label: 'Backups' },
+  'sql-editor': { group: 'Infrastructure', label: 'SQL Editor' },
+  admins: { group: 'Infrastructure', label: 'Admins' },
+}
+
 function initials(name: string) {
   return name.split(/\s+/).filter(Boolean).map((p) => p[0]).join('').slice(0, 2).toUpperCase() || 'A'
 }
@@ -223,9 +241,9 @@ export function AdminSidebar({
   return (
     <aside
       className={cn(
-        'fixed left-0 top-0 z-50 flex h-screen shrink-0 select-none flex-col bg-[var(--color-bg)] transition-[width,transform] duration-300 lg:sticky',
+        'fixed left-0 top-0 z-50 flex h-[100dvh] shrink-0 select-none flex-col bg-[var(--color-bg)] transition-transform duration-300 lg:sticky',
         'lg:w-[240px]',
-        mobileOpen ? 'w-[min(280px,85vw)] translate-x-0' : 'w-[min(280px,85vw)] -translate-x-full lg:translate-x-0'
+        mobileOpen ? 'w-[min(280px,85vw)] translate-x-0 shadow-[0_24px_64px_-16px_rgba(0,0,0,0.7)] lg:shadow-none' : 'w-[min(280px,85vw)] -translate-x-full lg:translate-x-0'
       )}
     >
       <span aria-hidden className="rail-y pointer-events-none absolute inset-y-0 right-0 w-px" />
