@@ -37,7 +37,22 @@ export async function GET(request: NextRequest) {
           WHEN landing_path LIKE '/robots.txt%' OR landing_path LIKE '/sitemap%' THEN 'meta'
           ELSE 'profile'
         END as page_group,
-        COALESCE(source, 'direct') as source,
+        CASE
+          WHEN is_bot THEN COALESCE(source, 'direct')
+          WHEN COALESCE(NULLIF(source, ''), 'direct') <> 'direct' THEN source
+          WHEN referrer ~* 'google|bing|yahoo|duckduckgo|brave|ecosia|baidu|startpage|kagi' THEN 'organic'
+          WHEN user_agent_snippet ~* '(whatsapp|wa\.me)' THEN 'whatsapp'
+          WHEN user_agent_snippet ~* 'instagram' THEN 'instagram'
+          WHEN user_agent_snippet ~* 'linkedin' THEN 'linkedin'
+          WHEN user_agent_snippet ~* '(fban|fbav|fb_iab|fbios|fb4a)' THEN 'facebook'
+          WHEN user_agent_snippet ~* 'telegram' THEN 'telegram'
+          WHEN user_agent_snippet ~* '(twitter|tweetie)' THEN 'twitter'
+          WHEN user_agent_snippet ~* 'discord' THEN 'discord'
+          WHEN user_agent_snippet ~* 'slack' THEN 'slack'
+          WHEN user_agent_snippet ~* 'threads' THEN 'threads'
+          WHEN user_agent_snippet ~* '(tiktok|bytedance)' THEN 'tiktok'
+          ELSE 'direct'
+        END as source,
         COALESCE(country, 'XX') as country,
         is_bot,
         bot_category,

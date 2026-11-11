@@ -724,16 +724,28 @@ export async function getTrackerData(days = 30): Promise<{ success: boolean; dat
       ? sql`1=1`
       : sql`created_at >= now() - (${days} || ' days')::interval`
 
+    const rollupWindowSql = isAllTime
+      ? sql`1=1`
+      : sql`date >= (now() - (${days} || ' days')::interval)::date`
+    const rawCutoffSql = sql`(current_date - 2)`
+    const rolledHumanSql = sql`public.analytics_daily_rollups WHERE is_bot = false AND page_group <> 'scanner_probe' AND date < ${rawCutoffSql} AND ${rollupWindowSql}`
+
     const marketingFilterSql = sql`COALESCE(landing_path, '/') NOT LIKE '/admin%' AND COALESCE(landing_path, '/') NOT LIKE '/actuator%' AND COALESCE(landing_path, '/') NOT LIKE '/wp-%' AND COALESCE(landing_path, '/') NOT IN ('/crusader-404-probe', '/env', '/a', '/earnings', '/escrow', '/submissions', '/notifications', '/tasks', '/settings')`
+
+    const rawHumanSql = sql`public.page_visits WHERE is_bot = false AND ${marketingFilterSql} AND ${windowSql} AND created_at::date >= ${rawCutoffSql}`
 
     const [statsRows, seriesRows, funnelRows, landingRows, referrerRows, countryRows, recentRows] = await Promise.all([
       db.execute(sql`
-        SELECT count(*)::int AS clicks, count(DISTINCT session_id)::int AS visitors
-        FROM public.page_visits WHERE is_bot = false AND ${marketingFilterSql} AND ${windowSql}
+        SELECT
+          ((SELECT count(*) FROM ${rawHumanSql}) + (SELECT COALESCE(sum(visit_count), 0) FROM ${rolledHumanSql}))::int AS clicks,
+          ((SELECT count(DISTINCT session_id) FROM ${rawHumanSql}) + (SELECT COALESCE(sum(unique_sessions), 0) FROM ${rolledHumanSql}))::int AS visitors
       `),
       db.execute(sql`
-        SELECT to_char(date_trunc('day', created_at), 'YYYY-MM-DD') AS day, count(*)::int AS clicks
-        FROM public.page_visits WHERE is_bot = false AND ${marketingFilterSql} AND ${windowSql}
+        SELECT day, sum(clicks)::int AS clicks FROM (
+          SELECT to_char(created_at::date, 'YYYY-MM-DD') AS day, count(*) AS clicks FROM ${rawHumanSql} GROUP BY 1
+          UNION ALL
+          SELECT to_char(date, 'YYYY-MM-DD') AS day, sum(visit_count) AS clicks FROM ${rolledHumanSql} GROUP BY 1
+        ) d
         GROUP BY 1 ORDER BY 1 ASC
       `),
       db.execute(sql`
@@ -754,9 +766,15 @@ export async function getTrackerData(days = 30): Promise<{ success: boolean; dat
               ELSE COALESCE(NULLIF(source, ''), 'direct')
             END AS source,
             count(*)::int AS clicks
-          FROM public.page_visits
-          WHERE is_bot = false AND ${marketingFilterSql} AND ${windowSql}
+          FROM ${rawHumanSql}
           GROUP BY 1
+          UNION ALL
+          SELECT COALESCE(NULLIF(source, ''), 'direct') AS source, sum(visit_count)::int AS clicks
+          FROM ${rolledHumanSql}
+          GROUP BY 1
+        ),
+        clicks_total AS (
+          SELECT source, sum(clicks)::int AS clicks FROM clicks_by_source GROUP BY 1
         ),
         conv_by_source AS (
           SELECT 
@@ -770,7 +788,7 @@ export async function getTrackerData(days = 30): Promise<{ success: boolean; dat
           COALESCE(c.source, v.source) AS source,
           COALESCE(c.clicks, 0)::int AS clicks,
           COALESCE(v.conversions, 0)::int AS conversions
-        FROM clicks_by_source c
+        FROM clicks_total c
         FULL OUTER JOIN conv_by_source v ON v.source = c.source
         ORDER BY clicks DESC, conversions DESC
       `),
@@ -802,10 +820,11 @@ export async function getTrackerData(days = 30): Promise<{ success: boolean; dat
       `),
       db.execute(sql`
         WITH clicks_by_country AS (
-          SELECT COALESCE(NULLIF(UPPER(country), ''), 'unknown') AS country, count(*)::int AS clicks
-          FROM public.page_visits
-          WHERE is_bot = false AND ${marketingFilterSql} AND ${windowSql}
-          GROUP BY 1
+          SELECT country, sum(clicks)::int AS clicks FROM (
+            SELECT COALESCE(NULLIF(UPPER(country), ''), 'unknown') AS country, count(*) AS clicks FROM ${rawHumanSql} GROUP BY 1
+            UNION ALL
+            SELECT COALESCE(NULLIF(NULLIF(UPPER(country), ''), 'XX'), 'unknown') AS country, sum(visit_count) AS clicks FROM ${rolledHumanSql} GROUP BY 1
+          ) c GROUP BY 1
         ),
         conversions_by_country AS (
           SELECT COALESCE(NULLIF(UPPER(attribution->>'country'), ''), 'unknown') AS country, count(*)::int AS conversions

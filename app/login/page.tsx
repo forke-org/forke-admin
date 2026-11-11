@@ -105,7 +105,7 @@ export default function AdminLoginPage() {
             </Button>
           </div>
         </form>
-        <p className="text-xs text-[#5f5c5a]">Access is restricted to Forke administrators.</p>
+        <p className="text-xs text-[#5f5c5a]">© 2026 forke — all rights reserved</p>
       </div>
       <div className="relative hidden overflow-hidden bg-[radial-gradient(70%_60%_at_50%_48%,#1d1310_0%,#120c0a_55%,#0d0908_100%)] lg:block">
         <AsciiUser />
