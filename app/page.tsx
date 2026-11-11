@@ -1133,7 +1133,7 @@ export default function AdminDashboard() {
   }
 
   return (
-    <div className="flex h-[100dvh] overflow-hidden bg-[var(--color-bg)] text-white">
+    <div className="flex min-h-[100dvh] bg-[var(--color-bg)] text-white">
 
       {/* --- MOBILE NAV BACKDROP --- */}
       {mobileNavOpen && (
@@ -1158,7 +1158,7 @@ export default function AdminDashboard() {
       />
 
       {/* --- MAIN PAGE CONTENT --- */}
-      <main className="flex min-w-0 flex-grow flex-col overflow-hidden overscroll-contain bg-[var(--color-bg)] text-left max-lg:overflow-y-auto">
+      <main className="flex min-w-0 flex-grow flex-col bg-[var(--color-bg)] text-left">
         
         <header className="sticky top-0 z-30 flex h-14 shrink-0 items-center gap-2 bg-[var(--color-bg)]/70 px-4 backdrop-blur-md sm:px-6 lg:px-8">
           <span aria-hidden className="rail-x pointer-events-none absolute inset-x-0 bottom-0 h-px" />
@@ -1181,7 +1181,7 @@ export default function AdminDashboard() {
         </header>
 
         {/* --- DYNAMIC BODY VIEWS --- */}
-        <AsciiReveal key={activeTab} lazy={false} className="flex-grow min-h-0 w-full flex flex-col p-4 sm:p-6 lg:p-8 max-lg:min-h-fit max-lg:flex-none max-lg:[&_.flex-grow.min-h-0]:!min-h-fit max-lg:[&_.flex-grow.overflow-y-auto]:!overflow-visible max-lg:[&_.flex-grow.overflow-auto]:!overflow-y-visible max-lg:[&_.flex-grow.overflow-auto]:!overflow-x-auto max-lg:[&_.flex-grow.overflow-hidden]:!overflow-visible max-lg:[&_.flex-grow.h-full]:!h-auto max-lg:[&>*]:!flex-none max-lg:[&_.flex-1.min-h-0]:!min-h-fit max-lg:[&_.flex-1.overflow-y-auto]:!overflow-visible">
+        <AsciiReveal key={activeTab} lazy={false} className={activeTab === 'database' || activeTab === 'sql-editor' ? 'flex h-[calc(100dvh-3.5rem)] min-h-0 w-full flex-col p-4 sm:p-6 lg:p-8' : 'flex w-full flex-col p-4 sm:p-6 lg:p-8 [&>*]:!flex-none [&_.flex-grow.min-h-0]:!min-h-fit [&_.flex-grow.overflow-y-auto]:!overflow-visible [&_.flex-grow.overflow-auto]:!overflow-y-visible [&_.flex-grow.overflow-auto]:!overflow-x-auto [&_.flex-grow.overflow-hidden]:!overflow-visible [&_.flex-grow.h-full]:!h-auto [&_.flex-1.min-h-0]:!min-h-fit [&_.flex-1.overflow-y-auto]:!overflow-visible'}>
 
           {/* ==================== DASHBOARD PANEL ==================== */}
           {activeTab === 'dashboard' && (

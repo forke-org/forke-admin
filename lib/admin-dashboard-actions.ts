@@ -738,7 +738,7 @@ export async function getTrackerData(days = 30): Promise<{ success: boolean; dat
       db.execute(sql`
         SELECT
           ((SELECT count(*) FROM ${rawHumanSql}) + (SELECT COALESCE(sum(visit_count), 0) FROM ${rolledHumanSql}))::int AS clicks,
-          ((SELECT count(DISTINCT session_id) FROM ${rawHumanSql}) + (SELECT COALESCE(sum(unique_sessions), 0) FROM ${rolledHumanSql}))::int AS visitors
+          ((SELECT count(DISTINCT COALESCE(session_id, id::text)) FROM ${rawHumanSql}) + (SELECT COALESCE(sum(CASE WHEN unique_sessions = 0 THEN visit_count ELSE unique_sessions END), 0) FROM ${rolledHumanSql}))::int AS visitors
       `),
       db.execute(sql`
         SELECT day, sum(clicks)::int AS clicks FROM (
@@ -865,7 +865,7 @@ export async function getTrackerData(days = 30): Promise<{ success: boolean; dat
     const totalConversions = funnel.reduce((a, r) => a + r.conversions, 0)
     const totalClicks = Number(s.clicks || 0)
     const totalVisitors = Number(s.visitors || 0)
-    const baseCount = totalVisitors > 0 ? totalVisitors : totalClicks
+    const baseCount = totalClicks
 
     const data: TrackerData = {
       stats: {

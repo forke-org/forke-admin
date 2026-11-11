@@ -58,7 +58,7 @@ export async function GET(request: NextRequest) {
         bot_category,
         bot_name,
         COUNT(*) as visit_count,
-        COUNT(DISTINCT session_id) as unique_sessions
+        COUNT(DISTINCT COALESCE(session_id, id::text)) as unique_sessions
       FROM page_visits
       WHERE created_at >= NOW() - INTERVAL '3 days'
       GROUP BY 1, 2, 3, 4, 5, 6, 7
