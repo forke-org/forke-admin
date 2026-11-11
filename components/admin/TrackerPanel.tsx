@@ -17,7 +17,6 @@ import { Skeleton } from '@/components/ui/Skeleton'
 import { cn } from '@/lib/utils/cn'
 import WorldHeatmap, { countryName } from '@/components/admin/WorldHeatmap'
 import CrawlerIntelligenceView from '@/components/admin/CrawlerIntelligenceView'
-import CampaignLinkBuilderCard from '@/components/admin/CampaignLinkBuilderCard'
 
 const RANGES: { label: string; days: number }[] = [
   { label: '7d', days: 7 },
@@ -152,7 +151,7 @@ function BarList({
             <div className="flex-grow h-2 rounded-full bg-white/[0.04] overflow-hidden">
               <div className="h-full rounded-full bg-accent/70" style={{ width: `${(r.count / max) * 100}%` }} />
             </div>
-            <span className="w-12 shrink-0 text-right text-xs font-mono text-white/80">{r.count}</span>
+            <span className="min-w-12 shrink-0 text-right text-xs font-mono tabular-nums text-white/80">{r.count.toLocaleString()}</span>
           </div>
         ))}
       </div>
@@ -229,30 +228,56 @@ function FunnelCard({ funnel }: { funnel: { source: string; clicks: number; conv
   const unreliable = funnel.some((f) => f.conversions > f.clicks)
   return (
     <Card title={title} subtitle={subtitle}>
-      <div className="mb-3 grid grid-cols-[6rem_1fr_auto] gap-3 font-mono text-[10.5px] uppercase tracking-[0.06em] text-[#5f5c5a]">
-        <span>Source</span>
-        <span />
-        <span className="w-40 text-right">Visits · Signups · Rate</span>
-      </div>
-      <div className="space-y-2.5">
-        {visible.map((f) => {
-          const trustworthy = f.clicks > 0 && f.conversions <= f.clicks
-          return (
-            <div key={f.source} className="grid grid-cols-[6rem_1fr_auto] items-center gap-3">
-              <span className="truncate text-xs font-mono text-white/70" title={f.source}>{f.source}</span>
-              <div className="relative h-2 overflow-hidden rounded-[2px] bg-white/[0.04]">
-                <div className="h-full rounded-[2px] bg-white/15" style={{ width: `${(f.clicks / maxValue) * 100}%` }} />
-                <div className="absolute left-0 top-0 h-full rounded-[2px] bg-accent/80" style={{ width: `${(Math.min(f.conversions, f.clicks || f.conversions) / maxValue) * 100}%` }} />
-              </div>
-              <span className="w-40 text-right text-xs font-mono tabular-nums text-white/80">
-                {f.clicks.toLocaleString()} · <span className="text-accent-text">{f.conversions.toLocaleString()}</span> ·{' '}
-                <span className="text-[var(--color-text-muted)]" title={trustworthy ? undefined : 'Visits from this source were not fully recorded, so no rate is shown'}>
-                  {trustworthy ? `${f.rate}%` : '—'}
+      <div className="@container">
+        <div
+          role="table"
+          aria-label={title}
+          className="grid grid-cols-[minmax(0,1fr)_auto_auto_auto] @[460px]:grid-cols-[6rem_minmax(4rem,1fr)_auto_auto_auto] items-center gap-x-3 @[540px]:gap-x-4 gap-y-3 @[460px]:gap-y-2.5"
+        >
+          <div
+            role="row"
+            className="col-span-full grid grid-cols-subgrid items-center pb-2 border-b border-[var(--color-border)]/70 font-mono text-[10.5px] uppercase tracking-[0.06em] text-[#5f5c5a]"
+          >
+            <span role="columnheader">Source</span>
+            <span className="hidden @[460px]:block" aria-hidden="true" />
+            <span role="columnheader" className="text-right">Visits</span>
+            <span role="columnheader" className="text-right">Signups</span>
+            <span role="columnheader" className="text-right">Rate</span>
+          </div>
+          {visible.map((f) => {
+            const trustworthy = f.clicks > 0 && f.conversions <= f.clicks
+            return (
+              <div key={f.source} role="row" className="col-span-full grid grid-cols-subgrid items-center gap-y-1.5">
+                <span role="rowheader" className="truncate text-xs font-mono text-white/75" title={f.source}>
+                  {f.source}
                 </span>
-              </span>
-            </div>
-          )
-        })}
+                <div
+                  aria-hidden="true"
+                  className="col-span-full row-start-2 @[460px]:col-span-1 @[460px]:row-start-auto relative h-2 overflow-hidden rounded-[2px] bg-white/[0.04]"
+                >
+                  <div className="h-full rounded-[2px] bg-white/15" style={{ width: `${(f.clicks / maxValue) * 100}%` }} />
+                  <div
+                    className="absolute inset-y-0 left-0 rounded-[2px] bg-accent/80"
+                    style={{ width: `${(Math.min(f.conversions, f.clicks || f.conversions) / maxValue) * 100}%` }}
+                  />
+                </div>
+                <span role="cell" className="text-right text-xs font-mono tabular-nums text-white/85">
+                  {f.clicks.toLocaleString()}
+                </span>
+                <span role="cell" className="text-right text-xs font-mono tabular-nums text-accent-text">
+                  {f.conversions.toLocaleString()}
+                </span>
+                <span
+                  role="cell"
+                  className="text-right text-xs font-mono tabular-nums text-[var(--color-text-muted)]"
+                  title={trustworthy ? undefined : 'Visits from this source were not fully recorded, so no rate is shown'}
+                >
+                  {trustworthy ? `${f.rate.toFixed(1)}%` : '—'}
+                </span>
+              </div>
+            )
+          })}
+        </div>
       </div>
       {funnel.length > LIST_PAGE_SIZE && (
         <ShowMoreToggle expanded={expanded} total={funnel.length} onToggle={() => setExpanded((v) => !v)} />
@@ -283,9 +308,10 @@ function SignupSourceCard({
         <div className="flex-grow h-2 rounded-full bg-white/[0.04] overflow-hidden">
           <div className="h-full rounded-full bg-accent/70" style={{ width: `${(s.count / max) * 100}%` }} />
         </div>
-        <span className="w-24 shrink-0 text-right text-xs font-mono text-white/80">
-          {s.count} <span className="text-[var(--color-text-muted)]">({pct}%)</span>
-        </span>
+        <div className="w-28 shrink-0 flex items-center justify-end gap-2 text-xs font-mono tabular-nums">
+          <span className="text-white/85">{s.count.toLocaleString()}</span>
+          <span className="w-14 text-right text-[var(--color-text-muted)]">{pct.toFixed(1)}%</span>
+        </div>
       </div>
     )
   })
@@ -530,9 +556,6 @@ export default function TrackerPanel() {
 
           {/* Per-source funnel */}
           <FunnelCard funnel={funnel} />
-
-          {/* 1-Click Campaign Link Generator */}
-          <CampaignLinkBuilderCard />
 
           {/* All-time signups by source */}
           {signupSources.length > 0 && (
