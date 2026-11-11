@@ -43,6 +43,7 @@ import { Select } from '@/components/ui/Select'
 import { Skeleton, TableLoadingRows } from '@/components/ui/Skeleton'
 import { AsciiReveal } from 'ascii-reveal'
 import { AdminSidebar, ADMIN_TAB_META } from '@/components/admin/AdminSidebar'
+import { ScrollArea } from '@/components/ui/ScrollArea'
 import { markAppReady } from '@/lib/app-ready'
 import { ForkyLoader } from '@/components/ui/ForkyLoader'
 import ToastContainer, { toast } from '@/components/shared/Toast'
@@ -1133,7 +1134,7 @@ export default function AdminDashboard() {
   }
 
   return (
-    <div className="flex min-h-[100dvh] bg-[var(--color-bg)] text-white">
+    <div className="flex h-[100dvh] overflow-hidden bg-[var(--color-bg)] text-white">
 
       {/* --- MOBILE NAV BACKDROP --- */}
       {mobileNavOpen && (
@@ -1158,9 +1159,9 @@ export default function AdminDashboard() {
       />
 
       {/* --- MAIN PAGE CONTENT --- */}
-      <main className="flex min-w-0 flex-grow flex-col bg-[var(--color-bg)] text-left">
+      <main className="flex min-w-0 flex-grow flex-col overflow-hidden bg-[var(--color-bg)] text-left">
         
-        <header className="sticky top-0 z-30 flex h-14 shrink-0 items-center gap-2 bg-[var(--color-bg)]/70 px-4 backdrop-blur-md sm:px-6 lg:px-8">
+        <header className="relative z-30 flex h-14 shrink-0 items-center gap-2 bg-[var(--color-bg)] px-4 sm:px-6 lg:px-8">
           <span aria-hidden className="rail-x pointer-events-none absolute inset-x-0 bottom-0 h-px" />
           <button
             onClick={() => setMobileNavOpen(true)}
@@ -1181,7 +1182,8 @@ export default function AdminDashboard() {
         </header>
 
         {/* --- DYNAMIC BODY VIEWS --- */}
-        <AsciiReveal key={activeTab} lazy={false} className={activeTab === 'database' || activeTab === 'sql-editor' ? 'flex h-[calc(100dvh-3.5rem)] min-h-0 w-full flex-col p-4 sm:p-6 lg:p-8' : 'flex w-full flex-col p-4 sm:p-6 lg:p-8 [&>*]:!flex-none [&_.flex-grow.min-h-0]:!min-h-fit [&_.flex-grow.overflow-y-auto]:!overflow-visible [&_.flex-grow.overflow-auto]:!overflow-y-visible [&_.flex-grow.overflow-auto]:!overflow-x-auto [&_.flex-grow.overflow-hidden]:!overflow-visible [&_.flex-grow.h-full]:!h-auto [&_.flex-1.min-h-0]:!min-h-fit [&_.flex-1.overflow-y-auto]:!overflow-visible'}>
+        <ScrollArea id="admin-scroll" className="flex-grow" contentClassName={activeTab === 'database' || activeTab === 'sql-editor' ? 'h-full' : ''}>
+        <AsciiReveal key={activeTab} lazy={false} className={activeTab === 'database' || activeTab === 'sql-editor' ? 'flex h-full min-h-0 w-full flex-col p-4 sm:p-6 lg:p-8' : 'flex w-full flex-col p-4 sm:p-6 lg:p-8 [&>*]:!flex-none [&_.flex-grow.min-h-0]:!min-h-fit [&_.flex-grow.overflow-y-auto]:!overflow-visible [&_.flex-grow.overflow-auto]:!overflow-y-visible [&_.flex-grow.overflow-auto]:!overflow-x-auto [&_.flex-grow.overflow-hidden]:!overflow-visible [&_.flex-grow.h-full]:!h-auto [&_.flex-1.min-h-0]:!min-h-fit [&_.flex-1.overflow-y-auto]:!overflow-visible'}>
 
           {/* ==================== DASHBOARD PANEL ==================== */}
           {activeTab === 'dashboard' && (
@@ -2528,6 +2530,7 @@ export default function AdminDashboard() {
           )}
 
         </AsciiReveal>
+        </ScrollArea>
 
       </main>
 
