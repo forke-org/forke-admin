@@ -157,7 +157,7 @@ export default function BackupsPanel() {
   return (
     <div className="flex-grow flex flex-col space-y-4 overflow-hidden h-full min-h-0 text-left">
       {/* Header */}
-      <div className="flex items-center justify-between gap-4 mb-1">
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between sm:gap-4 [&_button]:whitespace-nowrap [&_h2+span]:whitespace-nowrap mb-1">
         <div>
           <h2 className="text-base font-medium text-white">Database Backups</h2>
           <p className="mt-0.5 text-xs text-[var(--color-text-muted)]">

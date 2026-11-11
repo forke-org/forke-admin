@@ -565,7 +565,7 @@ export default function BucketsPanel({ currentAdmin }: BucketsPanelProps) {
     <div className="flex-grow overflow-y-auto space-y-5 text-left select-none text-white font-sans h-full min-h-0 pr-1">
       
       {/* Header */}
-      <div className="flex items-center justify-between gap-4 border-b border-[var(--color-border)] pb-3 shrink-0">
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between sm:gap-4 [&_button]:whitespace-nowrap [&_h2+span]:whitespace-nowrap border-b border-[var(--color-border)] pb-3 shrink-0">
         <div>
           <div className="flex items-center gap-2">
             <h2 className="text-base font-medium text-white">Storage &amp; R2 Buckets</h2>

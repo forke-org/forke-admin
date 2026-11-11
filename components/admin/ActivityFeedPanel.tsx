@@ -206,7 +206,7 @@ export default function ActivityFeedPanel({ currentAdmin }: ActivityFeedPanelPro
       <ConfirmModal state={confirmState} onClose={() => setConfirmState(null)} />
       {/* Header */}
       <div className="shrink-0 space-y-4 pb-4">
-        <div className="flex items-start justify-between gap-4 flex-wrap">
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between sm:gap-4 [&_button]:whitespace-nowrap">
           <div>
             <h2 className="text-base font-medium text-white">Activity</h2>
             <p className="mt-0.5 text-xs text-[var(--color-text-muted)]">

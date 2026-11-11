@@ -1561,7 +1561,7 @@ export default function AdminDashboard() {
               <div className="flex flex-col min-h-0 flex-grow gap-5 overflow-y-auto pr-1">
                 
                 {/* Header */}
-                <div className="flex items-center justify-between gap-4 border-b border-[var(--color-border)] pb-3 shrink-0">
+                <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between sm:gap-4 [&_button]:whitespace-nowrap [&_h2+span]:whitespace-nowrap border-b border-[var(--color-border)] pb-3 shrink-0">
                   <div>
                     <div className="flex items-center gap-2">
                       <h2 className="text-base font-medium text-white">Clients &amp; Company Owners</h2>
@@ -1815,7 +1815,7 @@ export default function AdminDashboard() {
             <div className="flex flex-col min-h-0 flex-grow gap-5 overflow-y-auto pr-1">
               
               {/* Header */}
-              <div className="flex items-center justify-between gap-4 border-b border-[var(--color-border)] pb-3 shrink-0">
+              <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between sm:gap-4 [&_button]:whitespace-nowrap [&_h2+span]:whitespace-nowrap border-b border-[var(--color-border)] pb-3 shrink-0">
                 <div>
                   <div className="flex items-center gap-2">
                     <h2 className="text-base font-medium text-white">Developer Accounts</h2>
@@ -1982,7 +1982,7 @@ export default function AdminDashboard() {
             <div className="flex flex-col min-h-0 flex-grow gap-5 overflow-y-auto pr-1">
               
               {/* Header */}
-              <div className="flex items-center justify-between gap-4 border-b border-[var(--color-border)] pb-3 shrink-0">
+              <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between sm:gap-4 [&_button]:whitespace-nowrap [&_h2+span]:whitespace-nowrap border-b border-[var(--color-border)] pb-3 shrink-0">
                 <div>
                   <div className="flex items-center gap-2">
                     <h2 className="text-base font-medium text-white">Support Enquiries</h2>
@@ -2089,7 +2089,7 @@ export default function AdminDashboard() {
             <div className="flex flex-col min-h-0 flex-grow gap-5 overflow-y-auto pr-1">
 
               {/* Header */}
-              <div className="flex items-center justify-between gap-4 border-b border-[var(--color-border)] pb-3 shrink-0">
+              <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between sm:gap-4 [&_button]:whitespace-nowrap [&_h2+span]:whitespace-nowrap border-b border-[var(--color-border)] pb-3 shrink-0">
                 <div>
                   <div className="flex items-center gap-2">
                     <h2 className="text-base font-medium text-white">Newsletter Subscribers</h2>
@@ -2264,7 +2264,7 @@ export default function AdminDashboard() {
             <div className="flex flex-col min-h-0 flex-grow gap-5 overflow-y-auto pr-1">
               
               {/* Header */}
-              <div className="flex items-center justify-between gap-4 border-b border-[var(--color-border)] pb-3 shrink-0">
+              <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between sm:gap-4 [&_button]:whitespace-nowrap [&_h2+span]:whitespace-nowrap border-b border-[var(--color-border)] pb-3 shrink-0">
                 <div>
                   <div className="flex items-center gap-2">
                     <h2 className="text-base font-medium text-white">Administrators</h2>

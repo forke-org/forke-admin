@@ -420,7 +420,7 @@ function ChangelogListView({
   return (
     <div className="flex flex-grow flex-col overflow-hidden">
       {/* Header */}
-      <div className="mb-4 flex items-center justify-between gap-4">
+      <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between sm:gap-4 [&_button]:whitespace-nowrap max-sm:[&>button]:self-start">
         <div>
           <h2 className="text-base font-medium text-white">Changelog</h2>
           <p className="mt-0.5 text-xs text-[var(--color-text-muted)]">
