@@ -1,5 +1,7 @@
 'use client'
 
+const IMPORTED_UNTIL = '2026-09-19'
+
 /**
  * @fileoverview Forke Platform
  * @copyright (c) 2026 Forke Inc. (https://www.forke.space/)
@@ -339,7 +341,7 @@ export default function CrawlerIntelligenceView({ days = 14 }: CrawlerIntelligen
               {hoverBar ? (
                 <div className="flex flex-wrap items-center gap-3 text-white">
                   <span className="text-[var(--color-text-muted)]">
-                    {hoverBar.day}:
+                    {hoverBar.day}{hoverBar.day <= IMPORTED_UNTIL ? ' (imported from server logs)' : ''}:
                   </span>
                   <span className="text-emerald-400">
                     AI: {hoverBar.ai.toLocaleString()}
@@ -385,7 +387,7 @@ export default function CrawlerIntelligenceView({ days = 14 }: CrawlerIntelligen
                   return (
                     <div
                       key={item.day}
-                      className="flex-1 flex flex-col justify-end h-full group relative cursor-pointer min-w-[4px]"
+                      className={`flex-1 flex flex-col justify-end h-full group relative cursor-pointer min-w-[4px] ${item.day <= IMPORTED_UNTIL ? 'opacity-35' : ''}`}
                       onMouseEnter={() => setHoverBar(item)}
                       onMouseLeave={() => setHoverBar(null)}
                     >
@@ -436,6 +438,12 @@ export default function CrawlerIntelligenceView({ days = 14 }: CrawlerIntelligen
                 <span>{chartSeries[chartSeries.length - 1]?.day}</span>
               </div>
             </div>
+            {chartSeries.some((d) => d.day <= IMPORTED_UNTIL) ? (
+              <p className="mt-3 text-[11px] leading-relaxed text-[var(--color-text-muted)]">
+                Faded days (up to 19 Sept 2026) were imported once from server logs, which saw every request. Live tracking after that only
+                records requests that reach the site&rsquo;s tracker, so those early days look much higher than normal.
+              </p>
+            ) : null}
           </div>
         )}
       </Card>

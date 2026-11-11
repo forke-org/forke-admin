@@ -32,7 +32,7 @@ export default function Template({ children }: { children: React.ReactNode }) {
   }, [])
 
   return (
-    <div className="relative min-h-screen">
+    <div className="relative min-h-[100dvh]">
       <div className={visible ? 'opacity-100 transition-opacity duration-300' : 'opacity-0'}>{children}</div>
       {showLoader ? <ForkyLoader fullScreen exiting={minimum && ready} onExited={() => setShowLoader(false)} /> : null}
     </div>

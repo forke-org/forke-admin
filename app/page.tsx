@@ -1158,9 +1158,9 @@ export default function AdminDashboard() {
       />
 
       {/* --- MAIN PAGE CONTENT --- */}
-      <main className="flex min-w-0 flex-grow flex-col overflow-hidden bg-[var(--color-bg)] text-left">
+      <main className="flex min-w-0 flex-grow flex-col overflow-hidden overscroll-contain bg-[var(--color-bg)] text-left max-lg:overflow-y-auto">
         
-        <header className="relative z-30 flex h-14 shrink-0 items-center gap-2 bg-[var(--color-bg)]/85 px-4 backdrop-blur-md sm:px-6 lg:px-8">
+        <header className="sticky top-0 z-30 flex h-14 shrink-0 items-center gap-2 bg-[var(--color-bg)]/70 px-4 backdrop-blur-md sm:px-6 lg:px-8">
           <span aria-hidden className="rail-x pointer-events-none absolute inset-x-0 bottom-0 h-px" />
           <button
             onClick={() => setMobileNavOpen(true)}
@@ -1181,7 +1181,7 @@ export default function AdminDashboard() {
         </header>
 
         {/* --- DYNAMIC BODY VIEWS --- */}
-        <AsciiReveal key={activeTab} lazy={false} className="flex-grow min-h-0 w-full flex flex-col p-4 sm:p-6 lg:p-8">
+        <AsciiReveal key={activeTab} lazy={false} className="flex-grow min-h-0 w-full flex flex-col p-4 sm:p-6 lg:p-8 max-lg:min-h-fit max-lg:flex-none max-lg:[&_.flex-grow.min-h-0]:!min-h-fit max-lg:[&_.flex-grow.overflow-y-auto]:!overflow-visible max-lg:[&_.flex-grow.overflow-auto]:!overflow-y-visible max-lg:[&_.flex-grow.overflow-auto]:!overflow-x-auto max-lg:[&_.flex-grow.overflow-hidden]:!overflow-visible max-lg:[&_.flex-grow.h-full]:!h-auto max-lg:[&>*]:!flex-none max-lg:[&_.flex-1.min-h-0]:!min-h-fit max-lg:[&_.flex-1.overflow-y-auto]:!overflow-visible">
 
           {/* ==================== DASHBOARD PANEL ==================== */}
           {activeTab === 'dashboard' && (

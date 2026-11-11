@@ -216,33 +216,53 @@ function PagedBarRows({
 
 function FunnelCard({ funnel }: { funnel: { source: string; clicks: number; conversions: number; rate: number }[] }) {
   const [expanded, setExpanded] = useState(false)
+  const title = 'Visits → signups by source'
+  const subtitle = 'Visits recorded from each source (grey) and the waitlist signups credited to it (orange).'
   if (funnel.length === 0)
     return (
-      <Card title="Click → signup funnel" subtitle="Per source: total clicks (grey) vs. signups they produced (accent)">
+      <Card title={title} subtitle={subtitle}>
         <p className="text-xs text-[var(--color-text-muted)] py-4 text-center">No source data yet.</p>
       </Card>
     )
-  const maxClicks = Math.max(...funnel.map((f) => f.clicks), 1)
+  const maxValue = Math.max(...funnel.map((f) => Math.max(f.clicks, f.conversions)), 1)
   const visible = expanded ? funnel : funnel.slice(0, LIST_PAGE_SIZE)
+  const unreliable = funnel.some((f) => f.conversions > f.clicks)
   return (
-    <Card title="Click → signup funnel" subtitle="Per source: total clicks (grey) vs. signups they produced (accent)">
+    <Card title={title} subtitle={subtitle}>
+      <div className="mb-3 grid grid-cols-[6rem_1fr_auto] gap-3 font-mono text-[10.5px] uppercase tracking-[0.06em] text-[#5f5c5a]">
+        <span>Source</span>
+        <span />
+        <span className="w-40 text-right">Visits · Signups · Rate</span>
+      </div>
       <div className="space-y-2.5">
-        {visible.map((f) => (
-          <div key={f.source} className="flex items-center gap-3">
-            <span className="w-24 shrink-0 text-xs font-mono text-white/70 truncate" title={f.source}>{f.source}</span>
-            <div className="flex-grow h-2 rounded-full bg-white/[0.04] overflow-hidden relative">
-              <div className="h-full rounded-full bg-white/15" style={{ width: `${(f.clicks / maxClicks) * 100}%` }} />
-              <div className="h-full rounded-full bg-accent/80 absolute top-0 left-0" style={{ width: `${(f.conversions / maxClicks) * 100}%` }} />
+        {visible.map((f) => {
+          const trustworthy = f.clicks > 0 && f.conversions <= f.clicks
+          return (
+            <div key={f.source} className="grid grid-cols-[6rem_1fr_auto] items-center gap-3">
+              <span className="truncate text-xs font-mono text-white/70" title={f.source}>{f.source}</span>
+              <div className="relative h-2 overflow-hidden rounded-[2px] bg-white/[0.04]">
+                <div className="h-full rounded-[2px] bg-white/15" style={{ width: `${(f.clicks / maxValue) * 100}%` }} />
+                <div className="absolute left-0 top-0 h-full rounded-[2px] bg-accent/80" style={{ width: `${(Math.min(f.conversions, f.clicks || f.conversions) / maxValue) * 100}%` }} />
+              </div>
+              <span className="w-40 text-right text-xs font-mono tabular-nums text-white/80">
+                {f.clicks.toLocaleString()} · <span className="text-accent-text">{f.conversions.toLocaleString()}</span> ·{' '}
+                <span className="text-[var(--color-text-muted)]" title={trustworthy ? undefined : 'Visits from this source were not fully recorded, so no rate is shown'}>
+                  {trustworthy ? `${f.rate}%` : '—'}
+                </span>
+              </span>
             </div>
-            <span className="w-36 shrink-0 text-right text-xs font-mono text-white/80">
-              {f.conversions}/{f.clicks} <span className="text-[var(--color-text-muted)]">({f.rate}%)</span>
-            </span>
-          </div>
-        ))}
+          )
+        })}
       </div>
       {funnel.length > LIST_PAGE_SIZE && (
         <ShowMoreToggle expanded={expanded} total={funnel.length} onToggle={() => setExpanded((v) => !v)} />
       )}
+      {unreliable ? (
+        <p className="mt-4 border-t border-[var(--color-border)] pt-3 text-[11px] leading-relaxed text-[var(--color-text-muted)]">
+          A dash means more signups than recorded visits. From 19 Sept to 11 Nov 2026 a tracking bug saved most visits without their source, so they
+          landed under &ldquo;direct&rdquo;, and some signups come from forms rather than site visits. Rates for that period are not reliable.
+        </p>
+      ) : null}
     </Card>
   )
 }
@@ -347,7 +367,7 @@ export default function TrackerPanel() {
   }, [series, days])
 
   return (
-    <div className="flex flex-col min-h-0 flex-grow gap-4 overflow-y-auto overflow-x-hidden w-full max-w-full pr-1">
+    <div className="flex flex-col min-h-0 flex-grow gap-4 overflow-y-auto overflow-x-hidden w-full max-w-full pr-1 [&>*]:shrink-0">
       {/* Header + mode selector + range selector */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-3.5 shrink-0 pb-1 border-b border-[var(--color-border)]/40">
         <div>
@@ -521,14 +541,14 @@ export default function TrackerPanel() {
 
           {/* Landing pages + Referrers side by side */}
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-            <Card title="Top landing pages" subtitle="First page visitors hit">
+            <Card title="Top landing pages" subtitle="First page visitors hit · up to the last 90 days">
               <div className="flex items-center gap-2 mb-3 text-[var(--color-text-muted)]"><FileText className="w-3.5 h-3.5" /></div>
               <BarList
                 rows={landingPages.map((p) => ({ label: p.path, count: p.clicks }))}
                 emptyHint="No landing data yet."
               />
             </Card>
-            <Card title="Top referrers" subtitle="External sites sending traffic">
+            <Card title="Top referrers" subtitle="External sites sending traffic · up to the last 90 days">
               <div className="flex items-center gap-2 mb-3 text-[var(--color-text-muted)]"><ExternalLink className="w-3.5 h-3.5" /></div>
               <BarList
                 rows={referrers.map((r) => ({ label: shortUrl(r.referrer), count: r.clicks, title: r.referrer }))}
