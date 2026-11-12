@@ -11,17 +11,16 @@
 /**
  * Forke transactional email system.
  *
- * Design language mirrors the marketing site's "ledger" aesthetic:
- *  - dark canvas (#050505) with a single hairline-bordered card (#0A0A0B)
- *  - the `forke*` wordmark (lowercase, accent asterisk) instead of a heavy logo lockup
- *  - a mono eyebrow (NN ── LABEL) marking each message, like the site's <Eyebrow>
- *  - headings in Geist/system sans-medium with one serif-italic accent word
- *  - flat, refined buttons (no 3D drop-shadow / chunky uppercase) — felt, not shouted
- *  - accent #FF7A00, muted body copy, generous spacing
+ * Design language mirrors forke.space (the forke-new redesign):
+ *  - warm dark canvas (#0F0E0E) with one hairline-bordered card (#151414)
+ *  - the forke logo tile + `forke*` wordmark in the header
+ *  - two-tone headings: a white line, then a muted grey line (no serif italics)
+ *  - banners inset in a rounded frame, like the site's painted panels
+ *  - primary and outline buttons share one box so side-by-side pairs line up
+ *  - accent #FF7A00 used sparingly (buttons, callouts), muted body copy
  *
  * All markup is inline-styled table HTML for broad email-client support. Web fonts
- * aren't reliable in email, so we use a system sans stack for UI/body and Georgia
- * as the serif stand-in for Instrument Serif's editorial italics.
+ * aren't reliable in email, so Geist is listed first and falls back to the system sans stack.
  */
 
 // ----------------------------------------------------------------------------
@@ -30,18 +29,19 @@
 const BRAND = {
   accent: '#FF7A00',
   accentDeep: '#E66E00',
-  canvas: '#050505',
-  card: '#0A0A0B',
-  cardSoft: '#0E0E10',
-  hairline: 'rgba(255,255,255,0.08)',
-  hairlineSoft: 'rgba(255,255,255,0.05)',
-  textHigh: '#F5F5F7',
-  textBody: 'rgba(255,255,255,0.55)',
-  textMuted: 'rgba(255,255,255,0.40)',
-  textFaint: 'rgba(255,255,255,0.28)',
-  sans: "-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif",
+  accentText: '#FFA347',
+  canvas: '#0F0E0E',
+  card: '#151414',
+  cardSoft: '#1C1B1A',
+  hairline: 'rgba(240,227,222,0.12)',
+  hairlineSoft: 'rgba(240,227,222,0.08)',
+  textHigh: '#F4F4F5',
+  textBody: 'rgba(255,255,255,0.58)',
+  textMuted: 'rgba(255,255,255,0.42)',
+  textFaint: 'rgba(255,255,255,0.30)',
+  sans: "'Geist','Inter',-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif",
   serif: "Georgia,'Times New Roman',serif",
-  mono: "ui-monospace,SFMono-Regular,Menlo,Consolas,'Liberation Mono',monospace",
+  mono: "'Geist Mono',ui-monospace,SFMono-Regular,Menlo,Consolas,'Liberation Mono',monospace",
   baseUrl: 'https://www.forke.space',
 }
 
@@ -49,45 +49,49 @@ const BRAND = {
 // Reusable markup primitives
 // ----------------------------------------------------------------------------
 
-/** The `forke*` wordmark — lowercase, tight tracking, accent asterisk. */
+/** The forke logo tile + `forke*` wordmark, as on the site's nav. */
 function wordmark(size = 22): string {
-  return `<span style="font-family:${BRAND.sans};font-size:${size}px;font-weight:600;letter-spacing:-0.04em;color:${BRAND.textHigh};line-height:1;">forke<span style="color:${BRAND.accent};">*</span></span>`
+  const icon = Math.round(size * 1.18)
+  return `<table role="presentation" cellpadding="0" cellspacing="0" border="0"><tr>
+    <td style="vertical-align:middle;padding-right:${Math.round(size * 0.36)}px;line-height:0;"><img src="${BRAND.baseUrl}/forke-assets/favicon.png" width="${icon}" height="${icon}" alt="" style="display:block;width:${icon}px;height:${icon}px;border-radius:${Math.round(icon * 0.25)}px;" /></td>
+    <td style="vertical-align:middle;"><span style="font-family:${BRAND.sans};font-size:${size}px;font-weight:600;letter-spacing:-0.04em;color:${BRAND.textHigh};line-height:1;">forke<span style="color:${BRAND.accent};">*</span></span></td>
+  </tr></table>`
 }
 
-/** Section heading: sans-medium with one serif-italic accent word/clause. */
-function heading(lead: string, accent: string, size = 30): string {
+/** Heading in the site's two-tone style: a white line, then a muted line. */
+function heading(lead: string, accent: string, size = 40): string {
   return `
-    <h1 class="email-headline" style="font-family:${BRAND.sans};font-size:${size}px;font-weight:500;letter-spacing:-0.035em;line-height:1.1;color:${BRAND.textHigh};margin:0 0 18px 0;">
-      ${lead} <span style="font-family:${BRAND.serif};font-style:italic;font-weight:400;color:${BRAND.accent};letter-spacing:0;">${accent}</span>
+    <h1 class="email-headline" style="font-family:${BRAND.sans};font-size:${size}px;font-weight:500;letter-spacing:-0.04em;line-height:1.04;color:${BRAND.textHigh};margin:0 0 24px 0;">
+      ${lead}<br><span style="color:rgba(255,255,255,0.42);">${accent}</span>
     </h1>
   `
 }
 
 /** Body paragraph. */
 function p(text: string, mb = 18): string {
-  return `<p style="font-family:${BRAND.sans};font-size:15px;line-height:1.7;color:${BRAND.textBody};margin:0 0 ${mb}px 0;font-weight:400;">${text}</p>`
+  return `<p style="font-family:${BRAND.sans};font-size:16px;line-height:1.7;color:${BRAND.textBody};margin:0 0 ${mb}px 0;font-weight:400;">${text}</p>`
 }
 
-/** Flat, refined primary button (filled accent). */
+/** Primary button: filled accent. Shares its exact box with buttonGhost so pairs line up. */
 function buttonPrimary(href: string, label: string): string {
   return `
     <table role="presentation" cellpadding="0" cellspacing="0" border="0" style="margin:4px 0 4px 0;">
       <tr>
-        <td align="center" style="border-radius:10px;background:${BRAND.accent};">
-          <a href="${href}" target="_blank" style="display:inline-block;padding:13px 26px;font-family:${BRAND.sans};font-size:14px;font-weight:600;letter-spacing:-0.01em;color:#0A0A0B;text-decoration:none;border-radius:10px;white-space:nowrap;">${label}&nbsp;&rarr;</a>
+        <td align="center" style="border-radius:10px;background:${BRAND.accent};border:1px solid ${BRAND.accent};">
+          <a href="${href}" target="_blank" style="display:inline-block;padding:11px 20px;font-family:${BRAND.sans};font-size:14px;line-height:18px;font-weight:600;letter-spacing:-0.01em;color:#1A0A00;text-decoration:none;border-radius:10px;white-space:nowrap;">${label}&nbsp;&rsaquo;</a>
         </td>
       </tr>
     </table>
   `
 }
 
-/** Flat, refined secondary button (hairline outline). */
+/** Secondary button: hairline outline, same box as buttonPrimary. */
 function buttonGhost(href: string, label: string): string {
   return `
     <table role="presentation" cellpadding="0" cellspacing="0" border="0" style="margin:4px 0 4px 0;">
       <tr>
-        <td align="center" style="border-radius:10px;border:1px solid ${BRAND.hairline};background:rgba(255,255,255,0.02);">
-          <a href="${href}" target="_blank" style="display:inline-block;padding:12px 24px;font-family:${BRAND.sans};font-size:14px;font-weight:500;letter-spacing:-0.01em;color:${BRAND.textHigh};text-decoration:none;border-radius:10px;white-space:nowrap;">${label}</a>
+        <td align="center" style="border-radius:10px;border:1px solid rgba(255,255,255,0.15);background:rgba(255,255,255,0.04);">
+          <a href="${href}" target="_blank" style="display:inline-block;padding:11px 20px;font-family:${BRAND.sans};font-size:14px;line-height:18px;font-weight:500;letter-spacing:-0.01em;color:${BRAND.textHigh};text-decoration:none;border-radius:10px;white-space:nowrap;">${label}</a>
         </td>
       </tr>
     </table>
@@ -96,7 +100,7 @@ function buttonGhost(href: string, label: string): string {
 
 /** Subtle "paste this link" fallback line under a button. */
 function fallbackLink(href: string): string {
-  return `<p style="font-family:${BRAND.sans};font-size:12px;line-height:1.7;color:${BRAND.textFaint};margin:14px 0 0 0;font-weight:400;">Button not working? Paste this into your browser:<br><a href="${href}" style="color:${BRAND.accent};text-decoration:none;word-break:break-all;">${href}</a></p>`
+  return `<p style="font-family:${BRAND.sans};font-size:12px;line-height:1.7;color:${BRAND.textFaint};margin:14px 0 0 0;font-weight:400;">Button not working? Paste this into your browser:<br><a href="${href}" style="color:${BRAND.accentText};text-decoration:none;word-break:break-all;">${href}</a></p>`
 }
 
 /** An accent-tinted callout box (used for reasons, key facts). */
@@ -104,8 +108,8 @@ function calloutBox(label: string, body: string): string {
   return `
     <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="margin:4px 0 24px 0;">
       <tr>
-        <td style="background:rgba(255,122,0,0.04);border:1px solid rgba(255,122,0,0.18);border-radius:12px;padding:16px 18px;">
-          <p style="font-family:${BRAND.mono};font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:0.14em;color:${BRAND.accent};margin:0 0 8px 0;">${label}</p>
+        <td style="background:rgba(255,122,0,0.05);border:1px solid rgba(255,122,0,0.20);border-radius:14px;padding:16px 18px;">
+          <p style="font-family:${BRAND.mono};font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:0.14em;color:${BRAND.accentText};margin:0 0 8px 0;">${label}</p>
           <p style="font-family:${BRAND.sans};font-size:14px;line-height:1.65;color:rgba(255,255,255,0.72);margin:0;font-weight:400;">${body}</p>
         </td>
       </tr>
@@ -176,8 +180,8 @@ function emailShell(opts: {
     : ''
 
   const bannerRow = opts.banner
-    ? `<tr><td align="center" style="padding:0;line-height:0;font-size:0;">
-         <img src="${BRAND.baseUrl}/forke-assets/email-banners/${opts.banner}" alt="Forke" width="${cardW}" style="width:100%;max-width:${cardW}px;height:auto;display:block;border-bottom:1px solid ${BRAND.hairlineSoft};" />
+    ? `<tr><td class="email-pad" style="padding:0 20px 34px 20px;line-height:0;font-size:0;">
+         <img src="${BRAND.baseUrl}/forke-assets/email-banners/${opts.banner}" alt="Forke" width="${cardW - 40}" style="width:100%;max-width:${cardW - 40}px;height:auto;display:block;border-radius:18px;" />
        </td></tr>`
     : ''
 
@@ -185,43 +189,29 @@ function emailShell(opts: {
     ? `<div style="display:none;max-height:0;overflow:hidden;opacity:0;mso-hide:all;">${opts.preheader}&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;</div>`
     : ''
 
-  const pad = opts.fullBleedBody ? '36px' : '32px'
+  const today = new Date().toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric', timeZone: 'Asia/Kolkata' })
+  const rule = `<tr><td class="email-pad" style="padding:0 28px;"><div style="height:1px;line-height:1px;font-size:0;background:${BRAND.hairlineSoft};">&nbsp;</div></td></tr>`
+
   const recent = (opts.recentPosts || []).slice(0, 3)
   const recentRows = recent.length
-    ? `
-      <tr><td style="padding:0 ${pad};"><div style="height:1px;background:${BRAND.hairlineSoft};"></div></td></tr>
-      <tr><td style="padding:32px ${pad} 14px ${pad};">
-        <table role="presentation" cellpadding="0" cellspacing="0" border="0" style="margin:0 0 20px;">
-          <tr>
-            <td style="font-family:${BRAND.sans};font-size:10px;letter-spacing:0.16em;text-transform:uppercase;color:${BRAND.textMuted};padding-right:12px;">Latest from the blog</td>
-            <td><div style="width:60px;height:1px;background:${BRAND.hairlineSoft};"></div></td>
-          </tr>
-        </table>
+    ? `${rule}
+      <tr><td class="email-pad" style="padding:30px 28px 10px 28px;">
+        <p style="font-family:${BRAND.sans};font-size:13px;color:${BRAND.textMuted};margin:0 0 18px 0;">Latest from the blog</p>
         ${recent.map((r, i) => blogRecentRow(r, i % 2 === 1)).join('')}
       </td></tr>`
     : ''
 
-  const socialsRow = `
-    <tr><td style="padding:18px ${pad} 24px ${pad};border-top:1px solid ${BRAND.hairlineSoft};">
-      <p style="font-family:${BRAND.mono};font-size:10px;letter-spacing:0.14em;text-transform:uppercase;color:${BRAND.textMuted};margin:0 0 14px;">Follow along</p>
-      ${blogSocials()}
-    </td></tr>
-  `
-
   const combinedStyle = `
-    .social-icon-img { display: block !important; margin: 0 auto !important; width: 18px !important; height: 18px !important; max-width: 18px !important; max-height: 18px !important; }
+    .social-icon-img { display: block !important; margin: 10px auto 0 auto !important; width: 16px !important; height: 16px !important; max-width: 16px !important; max-height: 16px !important; }
     @media only screen and (max-width: 620px) {
-      .email-outer-td { padding: 20px 8px !important; }
-      .email-card-table { width: 100% !important; max-width: 100% !important; border-radius: 16px !important; }
-      .email-header-td { padding: 14px 16px !important; }
-      .email-body-td { padding: 24px 16px !important; }
-      .email-footer-td { padding: 20px 16px !important; }
-      .email-media-td { padding: 0 12px !important; }
+      .email-pad { padding-left: 18px !important; padding-right: 18px !important; }
+      .email-body-td { padding-left: 18px !important; padding-right: 18px !important; }
+      .email-headline { font-size: 32px !important; line-height: 1.06 !important; }
       .email-highlights-col { display: block !important; width: 100% !important; box-sizing: border-box !important; padding: 10px 12px !important; }
-      .email-headline { font-size: 22px !important; line-height: 1.25 !important; }
       .nrow { direction: ltr !important; }
       .nrow .ncol { display: block !important; width: 100% !important; min-width: 0 !important; }
       .nrow .nthumb { margin-bottom: 12px !important; }
+      .nthumb-img { height: 0 !important; padding-top: 56.25% !important; }
       .nrow .ngap { display: none !important; }
     }
     ${opts.headStyle || ''}
@@ -238,21 +228,21 @@ function emailShell(opts: {
     <!--[if mso]><style>table,td,a{font-family:Arial,Helvetica,sans-serif !important;}</style><![endif]-->
     <style>${combinedStyle}</style>
   </head>
-  <body style="margin:0;padding:0;background:${BRAND.canvas};-webkit-font-smoothing:antialiased;-webkit-text-size-adjust:100%;">
+  <body style="margin:0;padding:0;background:${BRAND.card};-webkit-font-smoothing:antialiased;-webkit-text-size-adjust:100%;">
     ${preheader}
-    <!-- "Glow Halo" canvas: a soft orange radial glow blooms from the top, behind the card -->
-    <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="background:${BRAND.canvas};background-image:radial-gradient(circle at 50% 6%, rgba(255,122,0,0.18) 0%, rgba(5,5,5,0) 52%);">
+    <!-- 'Letter' layout: no card, one calm column on the site's #151414 -->
+    <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="background:${BRAND.card};">
       <tr>
-        <td align="center" class="email-outer-td" style="padding:52px 16px;">
-          <table role="presentation" class="email-card-table" width="${cardW}" cellpadding="0" cellspacing="0" border="0" style="max-width:${cardW}px;width:100%;background:${BRAND.card};border:1px solid rgba(255,122,0,0.16);border-radius:24px;overflow:hidden;box-shadow:0 0 80px rgba(255,122,0,0.07);">
+        <td align="center" style="padding:44px 6px 48px 6px;">
+          <table role="presentation" class="email-card-table" width="${cardW}" cellpadding="0" cellspacing="0" border="0" style="max-width:${cardW}px;width:100%;">
 
-            <!-- Header bar: wordmark + tiny mono tag -->
+            <!-- logo + date -->
             <tr>
-              <td class="email-header-td" style="padding:22px 32px;border-bottom:1px solid ${BRAND.hairlineSoft};">
+              <td class="email-pad" style="padding:0 28px 36px 28px;">
                 <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0">
                   <tr>
-                    <td align="left" style="vertical-align:middle;">${wordmark(22)}</td>
-                    <td align="right" style="vertical-align:middle;font-family:${BRAND.mono};font-size:10px;letter-spacing:0.14em;text-transform:uppercase;color:${BRAND.textFaint};">prove skill by shipping</td>
+                    <td align="left" style="vertical-align:middle;">${wordmark(18)}</td>
+                    <td align="right" style="vertical-align:middle;font-family:${BRAND.mono};font-size:11.5px;color:${BRAND.textFaint};">${today}</td>
                   </tr>
                 </table>
               </td>
@@ -261,32 +251,41 @@ function emailShell(opts: {
             ${draftRow}
             ${bannerRow}
 
-            <!-- Body -->
+            <!-- the letter -->
             <tr>
-              <td class="email-body-td" style="padding:${opts.fullBleedBody ? '0' : '40px 32px 36px 32px'};">
+              <td class="email-body-td" style="padding:${opts.fullBleedBody ? '0' : '0 28px 8px 28px'};">
                 ${opts.bodyHtml}
               </td>
             </tr>
 
-            ${recentRows}
-            ${socialsRow}
-
-            <!-- Footer -->
+            <!-- sign-off -->
             <tr>
-              <td class="email-footer-td" style="padding:24px 32px 30px 32px;border-top:1px solid ${BRAND.hairlineSoft};">
-                <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0">
-                  <tr>
-                    <td align="left" style="vertical-align:top;">
-                      ${wordmark(16)}
-                      <p style="font-family:${BRAND.sans};font-size:12px;line-height:1.6;color:${BRAND.textFaint};margin:8px 0 0 0;">
-                        The micro-task marketplace for developers.<br>
-                        <a href="mailto:support@forke.space" style="color:${BRAND.textMuted};text-decoration:none;">support@forke.space</a>
-                      </p>
-                    </td>
-                  </tr>
-                </table>
-                <p style="font-family:${BRAND.mono};font-size:9px;font-weight:600;text-transform:uppercase;letter-spacing:0.22em;color:rgba(255,255,255,0.20);margin:22px 0 0 0;">
-                  &copy; 2026 Forke &nbsp;&middot;&nbsp; ${opts.footerLabel}
+              <td class="email-pad" style="padding:22px 28px 34px 28px;">
+                <p style="font-family:${BRAND.sans};font-size:16px;line-height:1.7;color:rgba(255,255,255,0.85);margin:0;">Talk soon,</p>
+                <p style="font-family:${BRAND.sans};font-size:16px;line-height:1.7;color:${BRAND.textMuted};margin:0;">The Forke team</p>
+              </td>
+            </tr>
+
+            ${recentRows}
+
+            <!-- the landing page's closing CTA, as a looping GIF -->
+            <tr>
+              <td class="email-pad" style="padding:16px 20px 0 20px;line-height:0;">
+                <a href="${BRAND.baseUrl}" target="_blank" style="display:block;text-decoration:none;line-height:0;">
+                  <img src="${BRAND.baseUrl}/forke-assets/email-banners/cta-loop.gif" width="${cardW - 40}" alt="Day one, you claim it. Day two, you&rsquo;re paid. forke.space" style="display:block;width:100%;max-width:${cardW - 40}px;height:auto;border:0;border-radius:16px;" />
+                </a>
+              </td>
+            </tr>
+
+            <!-- socials + footer -->
+            <tr><td style="height:36px;line-height:36px;font-size:0;">&nbsp;</td></tr>
+            ${rule}
+            <tr><td class="email-pad" style="padding:22px 28px 0 28px;">${blogSocials()}</td></tr>
+            <tr>
+              <td class="email-pad" style="padding:20px 28px 0 28px;">
+                <p style="font-family:${BRAND.sans};font-size:12px;line-height:1.7;color:rgba(255,255,255,0.34);margin:0;">
+                  The micro-task marketplace for developers &middot; <a href="mailto:support@forke.space" style="color:${BRAND.textMuted};text-decoration:none;">support@forke.space</a><br>
+                  &copy; 2026 forke &mdash; all rights reserved &nbsp;&middot;&nbsp; ${opts.footerLabel}
                 </p>
                 ${opts.footerExtra ?? ''}
               </td>
@@ -635,7 +634,12 @@ function blogImg(src: string | null | undefined, alt: string, href: string, radi
  *  photo-on-top on phones); `imgRight` only flips the visual side via dir=rtl. */
 function blogRecentRow(r: BlogEmailRecent, imgRight: boolean): string {
   const mins = r.readingMinutes && r.readingMinutes > 0 ? r.readingMinutes : 1
-  const thumb = `<div class="ncol nthumb" style="display:inline-block;width:44%;min-width:200px;vertical-align:top;direction:ltr;text-align:left;">${blogImg(r.coverImage, r.title, r.url, 12)}</div>`
+  // 16:9 thumbnail: the cover fills a fixed 16:9 box (email clients can't crop an <img> to a
+  // ratio). 240x135 beside the text; full width x 56.25% when the row stacks on phones.
+  const cover = r.coverImage
+    ? `<a href="${r.url}" target="_blank" style="display:block;text-decoration:none;line-height:0;"><div class="nthumb-img" role="img" aria-label="${r.title}" style="width:100%;height:135px;border-radius:12px;border:1px solid ${BRAND.hairline};background-color:${BRAND.cardSoft};background-image:url('${r.coverImage}');background-size:cover;background-position:center;background-repeat:no-repeat;"></div></a>`
+    : blogImg(null, r.title, r.url, 12)
+  const thumb = `<div class="ncol nthumb" style="display:inline-block;width:44%;min-width:200px;vertical-align:top;direction:ltr;text-align:left;">${cover}</div>`
   const text = `<div class="ncol ntext" style="display:inline-block;width:52%;min-width:200px;vertical-align:top;direction:ltr;text-align:left;">
       <div style="font-family:${BRAND.mono};font-size:10px;letter-spacing:0.1em;text-transform:uppercase;color:${BRAND.accent};margin:0 0 8px;">${mins} min read</div>
       <a href="${r.url}" target="_blank" style="text-decoration:none;"><h3 style="font-family:${BRAND.sans};font-size:17px;font-weight:600;letter-spacing:-0.02em;line-height:1.3;color:${BRAND.textHigh};margin:0 0 8px;">${r.title}</h3></a>
@@ -647,34 +651,23 @@ function blogRecentRow(r: BlogEmailRecent, imgRight: boolean): string {
 
 /** Footer-style social row: Instagram · LinkedIn · GitHub bordered icon tiles. */
 function blogSocials(): string {
-  const tile = (href: string, imgSrc: string, alt: string) => {
-    return `<td style="padding:0 5px 0 0;">
-      <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="38" height="38" style="width:38px;height:38px;border:1px solid ${BRAND.hairline};border-radius:10px;background:rgba(255,255,255,0.02);border-collapse:separate;">
-        <tr>
-          <td align="center" valign="middle" width="38" height="38" style="width:38px;height:38px;padding:0;text-align:center;vertical-align:middle;line-height:0;">
-            <a href="${href}" target="_blank" style="display:block;width:38px;height:38px;text-align:center;text-decoration:none;line-height:38px;">
-              <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" height="100%" style="width:100%;height:100%;">
-                <tr>
-                  <td align="center" valign="middle" style="padding:0;text-align:center;vertical-align:middle;line-height:0;">
-                    <img src="${imgSrc}" width="18" height="18" alt="${alt}" class="social-icon-img" style="display:block;margin:0 auto;border:0;width:18px;height:18px;max-width:18px;max-height:18px;outline:none;text-decoration:none;" />
-                  </td>
-                </tr>
-              </table>
-            </a>
-          </td>
-        </tr>
-      </table>
+  // Same buttons as the site footer: 36px, 10px corners, faint fill + hairline, Remix icons
+  // (rendered to PNG in /forke-assets/email-icons since email clients can't show SVG/icon fonts).
+  const tile = (href: string, icon: string, alt: string) => `<td style="padding:0 8px 0 0;">
+      <a href="${href}" target="_blank" title="${alt}" style="display:block;width:36px;height:36px;border:1px solid rgba(255,255,255,0.10);border-radius:10px;background:rgba(255,255,255,0.03);text-decoration:none;line-height:0;">
+        <img src="${BRAND.baseUrl}/forke-assets/email-icons/${icon}.png" width="16" height="16" alt="${alt}" class="social-icon-img" style="display:block;width:16px;height:16px;margin:10px auto 0 auto;border:0;outline:none;" />
+      </a>
     </td>`
-  }
   return `
     <table role="presentation" cellpadding="0" cellspacing="0" border="0" align="left">
       <tr>
-        ${tile('https://www.linkedin.com/company/forke/', 'https://img.icons8.com/ios-glyphs/60/a3a3a3/linkedin.png', 'LinkedIn')}
-        ${tile('https://x.com/forkespace', 'https://img.icons8.com/ios-glyphs/60/a3a3a3/twitterx.png', 'X')}
-        ${tile('https://www.instagram.com/forke.space/', 'https://img.icons8.com/ios-glyphs/60/a3a3a3/instagram-new.png', 'Instagram')}
-        ${tile('https://www.threads.com/@forke.space', 'https://img.icons8.com/ios-filled/60/a3a3a3/threads.png', 'Threads')}
-        ${tile('https://www.facebook.com/people/Forke/61591130679350/', 'https://img.icons8.com/ios-glyphs/60/a3a3a3/facebook-new.png', 'Facebook')}
-        ${tile('https://github.com/forke-org', 'https://img.icons8.com/ios-glyphs/60/a3a3a3/github.png', 'GitHub')}
+        ${tile('https://x.com/forkespace', 'x', 'X')}
+        ${tile('https://www.linkedin.com/company/forke/', 'linkedin', 'LinkedIn')}
+        ${tile('https://www.instagram.com/forke.space/', 'instagram', 'Instagram')}
+        ${tile('https://www.threads.com/@forke.space', 'threads', 'Threads')}
+        ${tile('https://www.facebook.com/people/Forke/61591130679350/', 'facebook', 'Facebook')}
+        ${tile('https://github.com/forke-org', 'github', 'GitHub')}
+        ${tile('mailto:support@forke.space', 'mail', 'Email support@forke.space')}
       </tr>
     </table>
   `
@@ -719,12 +712,12 @@ export function buildBlogEmail(data: BlogEmailData): string {
     recentPosts: data.recentPosts,
     bodyHtml: `
       <!-- Featured (Apple-Newsroom) -->
-      <table width="100%" cellpadding="0" cellspacing="0" border="0"><tr><td style="padding:34px 44px 24px;text-align:center;">
-        <p style="font-family:${BRAND.mono};font-size:10.5px;letter-spacing:0.2em;text-transform:uppercase;color:${BRAND.accent};margin:0 0 16px;">From the Forke blog</p>
-        <h1 style="font-family:${BRAND.sans};font-size:29px;font-weight:600;letter-spacing:-0.035em;line-height:1.2;color:${BRAND.textHigh};margin:0;"><a href="${targetUrl}" target="_blank" style="color:${BRAND.textHigh};text-decoration:none;">${data.title}</a></h1>
+      <table width="100%" cellpadding="0" cellspacing="0" border="0"><tr><td class="email-pad" style="padding:0 28px 24px;">
+        <p style="font-family:${BRAND.mono};font-size:10.5px;letter-spacing:0.14em;text-transform:uppercase;color:${BRAND.accentText};margin:0 0 16px;">From the Forke blog</p>
+        <h1 class="email-headline" style="font-family:${BRAND.sans};font-size:38px;font-weight:500;letter-spacing:-0.04em;line-height:1.06;color:${BRAND.textHigh};margin:0;"><a href="${targetUrl}" target="_blank" style="color:${BRAND.textHigh};text-decoration:none;">${data.title}</a></h1>
       </td></tr>
-      <tr><td style="padding:0 24px;line-height:0;font-size:0;"><div>${blogImg(data.coverImage, data.title, targetUrl, 14)}</div></td></tr>
-      <tr><td style="padding:24px 44px 34px;text-align:center;">
+      <tr><td class="email-pad" style="padding:0 20px;line-height:0;font-size:0;"><div>${blogImg(data.coverImage, data.title, targetUrl, 14)}</div></td></tr>
+      <tr><td class="email-pad" style="padding:24px 28px 8px;">
         ${excerptLine}
         <p style="font-family:${BRAND.mono};font-size:11px;color:${BRAND.textFaint};margin:0 0 22px;">${metaLine}</p>
         <div>${buttonPrimary(targetUrl, 'Read more')}</div>
@@ -799,7 +792,7 @@ export function buildChangelogEmail(data: ChangelogEmailData): string {
   }
 
   const mediaRow = data.mediaUrl
-    ? `<tr><td class="email-media-td" style="padding:0 24px;line-height:0;font-size:0;"><div style="border-radius:12px;overflow:hidden;border:1px solid ${BRAND.hairlineSoft};">${blogImg(data.mediaUrl, data.title, changelogUrl, 12)}</div></td></tr>`
+    ? `<tr><td class="email-media-td email-pad" style="padding:0 20px;line-height:0;font-size:0;"><div style="border-radius:12px;overflow:hidden;border:1px solid ${BRAND.hairlineSoft};">${blogImg(data.mediaUrl, data.title, changelogUrl, 12)}</div></td></tr>`
     : ''
 
   const footerExtra = data.unsubscribe
@@ -839,24 +832,24 @@ export function buildChangelogEmail(data: ChangelogEmailData): string {
     bodyHtml: `
       <table width="100%" cellpadding="0" cellspacing="0" border="0">
         <tr>
-          <td style="padding:32px 36px 20px;text-align:center;">
-            <p style="font-family:${BRAND.mono};font-size:10.5px;letter-spacing:0.2em;text-transform:uppercase;color:${BRAND.accent};margin:0 0 14px;">
+          <td class="email-pad" style="padding:0 28px 20px;">
+            <p style="font-family:${BRAND.mono};font-size:10.5px;letter-spacing:0.14em;text-transform:uppercase;color:${BRAND.accentText};margin:0 0 14px;">
               From the Forke changelog &middot; ${tagLabel}
             </p>
-            <h1 style="font-family:${BRAND.sans};font-size:27px;font-weight:600;letter-spacing:-0.035em;line-height:1.22;color:${BRAND.textHigh};margin:0 0 16px;">
+            <h1 class="email-headline" style="font-family:${BRAND.sans};font-size:36px;font-weight:500;letter-spacing:-0.04em;line-height:1.06;color:${BRAND.textHigh};margin:0 0 18px;">
               <a href="${changelogUrl}" target="_blank" style="color:${BRAND.textHigh};text-decoration:none;">${data.title}</a>
             </h1>
             ${descriptionHtml}
-            <p style="font-family:${BRAND.mono};font-size:11px;color:${BRAND.textFaint};margin:16px 0 20px;text-align:center;">
+            <p style="font-family:${BRAND.mono};font-size:11px;color:${BRAND.textFaint};margin:16px 0 20px;">
               ${dateStr} &middot; Release Note
             </p>
           </td>
         </tr>
         ${mediaRow}
         <tr>
-          <td style="padding:16px 36px 32px;">
+          <td class="email-pad" style="padding:16px 28px 8px;">
             ${highlightsHtml}
-            <div style="text-align:center;margin-top:24px;">
+            <div style="margin-top:24px;">
               ${buttonPrimary(changelogUrl, 'View Full Changelog')}
             </div>
           </td>
