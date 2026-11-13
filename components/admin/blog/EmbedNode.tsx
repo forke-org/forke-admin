@@ -187,7 +187,7 @@ function EmbedView({ node, updateAttributes, selected, editor, getPos }: NodeVie
         <div className={cn(editable && 'pointer-events-none')}>
         {/* ── renderers per type ── */}
         {embedType === 'video' && (
-          <div className="relative w-full overflow-hidden rounded-xl border border-[var(--color-border)] bg-black" style={{ aspectRatio: '16 / 9' }}>
+          <div className="relative w-full overflow-hidden rounded-[14px] border border-[var(--color-border)] bg-black" style={{ aspectRatio: '16 / 9' }}>
             <iframe
               src={embedSrc}
               className="absolute inset-0 h-full w-full"
@@ -199,7 +199,7 @@ function EmbedView({ node, updateAttributes, selected, editor, getPos }: NodeVie
         )}
 
         {embedType === 'iframe' && (
-          <div className="relative w-full overflow-hidden rounded-xl border border-[var(--color-border)] bg-[#1a1919]" style={{ aspectRatio: '16 / 10' }}>
+          <div className="relative w-full overflow-hidden rounded-[14px] border border-[var(--color-border)] bg-[#1a1919]" style={{ aspectRatio: '16 / 10' }}>
             <iframe
               src={embedSrc}
               className="absolute inset-0 h-full w-full"
@@ -210,7 +210,7 @@ function EmbedView({ node, updateAttributes, selected, editor, getPos }: NodeVie
         )}
 
         {embedType === 'tweet' && (
-          <div className="overflow-hidden rounded-xl border border-[var(--color-border)] bg-[#1a1919] p-2">
+          <div className="overflow-hidden rounded-[14px] border border-[var(--color-border)] bg-[#1a1919] p-2">
             <blockquote className="twitter-tweet" data-theme="dark" data-dnt="true">
               <a href={embedSrc}>{embedSrc}</a>
             </blockquote>

@@ -609,6 +609,7 @@ function StatusBadge({ status }: { status: 'draft' | 'published' }) {
 function BlogEditorView({ id, onBack, onSaved }: { id: string | null; onBack: () => void; onSaved?: () => void }) {
   const [loading, setLoading] = useState(id !== null)
   const [status, setStatus] = useState<'draft' | 'published'>('draft')
+  const [meta, setMeta] = useState<{ publishedAt: Date | null; views: number }>({ publishedAt: null, views: 0 })
   const [initial, setInitial] = useState<{
     title: string
     authorName: string
@@ -648,6 +649,7 @@ function BlogEditorView({ id, onBack, onSaved }: { id: string | null; onBack: ()
           contentHtml: res.data.contentHtml ?? null,
         })
         setStatus(res.data.status)
+        setMeta({ publishedAt: res.data.publishedAt ?? null, views: res.data.views ?? 0 })
       } else {
         toast(res.error || 'Failed to load post.', 'error')
         onBack()
@@ -898,6 +900,9 @@ function BlogEditorView({ id, onBack, onSaved }: { id: string | null; onBack: ()
             initialContent={initial.content}
             onChange={handleEditorChange}
             onImageUpload={handleImageUpload}
+            status={status}
+            publishedAt={meta.publishedAt}
+            views={meta.views}
           />
         )}
       </div>

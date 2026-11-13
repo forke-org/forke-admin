@@ -13,8 +13,8 @@
 /**
  * Medium-style blog editor.
  *
- * Layout mirrors Medium's writing surface: a wide cover-image strip, a large
- * serif title field, then a centered prose column. Formatting happens through a
+ * Layout mirrors the public post page on forke.space: the cover panel with the
+ * title and facts row on its fade, then a contents rail beside the article. Formatting happens through a
  * floating bubble menu on text selection and a "/" slash command for blocks —
  * no persistent top toolbar, matching Medium's minimal feel.
  *
@@ -55,7 +55,6 @@ import ImageCropper from './ImageCropper'
 import { getLinkPreview } from '@/lib/embed-actions'
 import { toast } from '@/components/shared/Toast'
 import { cn } from '@/lib/utils/cn'
-import { instrumentSerif } from '@/app/fonts'
 
 export interface BlogEditorValue {
   title: string
@@ -73,6 +72,10 @@ interface BlogEditorProps {
   /** Called (debounced by parent if desired) whenever content changes. */
   onChange?: (value: BlogEditorValue) => void
   onImageUpload?: (url: string) => void
+  /** Shown in the facts row, the same way the public post page shows them. */
+  status?: 'draft' | 'published'
+  publishedAt?: Date | string | null
+  views?: number
 }
 
 export interface BlogEditorHandle {
@@ -86,6 +89,9 @@ export default function BlogEditor({
   initialContent,
   onChange,
   onImageUpload,
+  status = 'draft',
+  publishedAt = null,
+  views = 0,
 }: BlogEditorProps) {
   const [title, setTitle] = useState(initialTitle)
   const [authorName, setAuthorName] = useState(initialAuthorName)
@@ -327,6 +333,66 @@ export default function BlogEditor({
     setLinkValue('')
   }
 
+  // Contents list + reading time, rebuilt from the document as you type.
+  // Same rules as the public page: h1/h2 become entries, ~200 words a minute.
+  const [toc, setToc] = useState<{ text: string }[]>([])
+  const [readingMinutes, setReadingMinutes] = useState(1)
+  const [activeHeading, setActiveHeading] = useState(0)
+
+  useEffect(() => {
+    if (!editor) return
+    const rebuild = () => {
+      const items: { text: string }[] = []
+      editor.state.doc.descendants((node) => {
+        if (node.type.name === 'heading' && node.attrs.level <= 2 && node.textContent.trim()) {
+          items.push({ text: node.textContent.trim() })
+        }
+      })
+      setToc((prev) => (JSON.stringify(prev) === JSON.stringify(items) ? prev : items))
+      const words = editor.state.doc.textContent.trim().split(/\s+/).filter(Boolean).length
+      setReadingMinutes(Math.max(1, Math.ceil(words / 200)))
+    }
+    rebuild()
+    editor.on('update', rebuild)
+    return () => {
+      editor.off('update', rebuild)
+    }
+  }, [editor])
+
+  const headingEls = useCallback(
+    () =>
+      editor
+        ? Array.from(editor.view.dom.querySelectorAll<HTMLElement>('h1, h2')).filter((el) => el.textContent?.trim())
+        : [],
+    [editor]
+  )
+
+  // Highlight the section in view; the editor scrolls inside the admin panel,
+  // so listen on the nearest scrolling ancestor rather than the window.
+  useEffect(() => {
+    if (!editor || toc.length === 0) return
+    const dom = editor.view.dom as HTMLElement
+    let scroller: HTMLElement | null = dom.parentElement
+    while (scroller && !/(auto|scroll)/.test(getComputedStyle(scroller).overflowY)) scroller = scroller.parentElement
+    const target: HTMLElement | Window = scroller ?? window
+    const onScroll = () => {
+      const top = scroller ? scroller.getBoundingClientRect().top : 0
+      const line = top + (scroller ? scroller.clientHeight : window.innerHeight) * 0.3
+      let current = 0
+      headingEls().forEach((el, i) => {
+        if (el.getBoundingClientRect().top <= line) current = i
+      })
+      setActiveHeading(current)
+    }
+    onScroll()
+    target.addEventListener('scroll', onScroll, { passive: true })
+    return () => target.removeEventListener('scroll', onScroll)
+  }, [editor, toc, headingEls])
+
+  const scrollToHeading = (i: number) => {
+    headingEls()[i]?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+  }
+
   const titleRef = useRef<HTMLTextAreaElement>(null)
   // Auto-grow the title textarea.
   useEffect(() => {
@@ -339,38 +405,101 @@ export default function BlogEditor({
 
   if (!editor) return null
 
+  const openCoverPrompt = () => {
+    setCoverUrl('')
+    setCoverPromptOpen(true)
+  }
+
+  const facts: [string, React.ReactNode][] = [
+    [
+      'Written by',
+      <input
+        key="author"
+        value={authorName}
+        onChange={(e) => {
+          setAuthorName(e.target.value)
+          emitChange(title, coverImage, e.target.value)
+        }}
+        placeholder="The Forke Team"
+        aria-label="Author"
+        className="w-full min-w-0 bg-transparent text-white/90 outline-none placeholder:text-white/40"
+      />,
+    ],
+    ['Published', status === 'published' && publishedAt ? fmtLongDate(publishedAt) : 'Not yet, draft'],
+    ['Reading time', `${readingMinutes} minute${readingMinutes === 1 ? '' : 's'}`],
+    ['Readers', views.toLocaleString()],
+  ]
+
   return (
-    <div className="mx-auto w-full max-w-3xl">
-      {/* ── Cover image (shown at its original size, not force-cropped) ── */}
-      {coverImage ? (
-        <div className="group relative mb-8 overflow-hidden rounded-xl border border-[var(--color-border)]">
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img src={coverImage} alt="Cover" className="block h-auto w-full" />
+    <div className="mx-auto w-full max-w-[1200px]">
+      {/* ── Cover panel: same construction as the public post header. The title
+          and the facts row sit on a dark fade at the foot of the cover. ── */}
+      <header className="group relative isolate grid overflow-hidden rounded-[22px] border border-white/[0.08] bg-[var(--color-surface)]">
+        {coverImage ? (
+          // eslint-disable-next-line @next/next/no-img-element
+          <img src={coverImage} alt="" className="col-start-1 row-start-1 block h-auto w-full self-start" />
+        ) : (
+          <div
+            aria-hidden
+            className="col-start-1 row-start-1 aspect-[1200/630] w-full bg-[radial-gradient(90%_70%_at_70%_20%,rgba(255,122,0,0.14),transparent_70%),linear-gradient(rgba(240,227,222,0.04)_1px,transparent_1px),linear-gradient(90deg,rgba(240,227,222,0.04)_1px,transparent_1px)] [background-size:100%_100%,32px_32px,32px_32px]"
+          />
+        )}
+        <div
+          aria-hidden
+          className="pointer-events-none absolute inset-0 bg-[linear-gradient(180deg,rgba(11,8,7,0.35)_0%,transparent_20%,transparent_45%,rgba(11,8,7,0.82)_74%,#0b0807_100%)]"
+        />
+        <div className="absolute left-6 top-6 z-10 flex items-center gap-2 lg:left-8 lg:top-8">
           <button
             type="button"
-            onClick={() => {
-              setCoverImage(null)
-              emitChange(title, null)
-            }}
-            className="absolute right-3 top-3 flex h-8 w-8 items-center justify-center rounded-lg border border-white/20 bg-black/60 text-white opacity-0 backdrop-blur transition-opacity hover:bg-black/80 group-hover:opacity-100"
-            title="Remove cover"
+            onClick={openCoverPrompt}
+            className="inline-flex h-8 items-center gap-1.5 rounded-full border border-white/15 bg-black/35 px-3 text-[13px] text-white/85 backdrop-blur-md transition-colors hover:bg-black/55"
           >
-            <X className="h-4 w-4" />
+            <ImagePlus className="h-3.5 w-3.5" /> {coverImage ? 'Change cover' : 'Add cover image'}
           </button>
+          {coverImage && (
+            <button
+              type="button"
+              onClick={() => {
+                setCoverImage(null)
+                emitChange(title, null)
+              }}
+              className="inline-flex h-8 items-center gap-1.5 rounded-full border border-white/15 bg-black/35 px-3 text-[13px] text-white/85 backdrop-blur-md transition-colors hover:bg-black/55"
+            >
+              <X className="h-3.5 w-3.5" /> Remove
+            </button>
+          )}
         </div>
-      ) : (
-        <button
-          type="button"
-          onClick={() => {
-            setCoverUrl('')
-            setCoverPromptOpen(true)
-          }}
-          className="mb-6 inline-flex items-center gap-2 rounded-lg border border-dashed border-[var(--color-border)] px-3 py-2 text-xs font-medium text-[var(--color-text-muted)] transition-colors hover:border-white/20 hover:text-white"
-        >
-          <ImagePlus className="h-4 w-4" />
-          Add cover image
-        </button>
-      )}
+        <div className="relative col-start-1 row-start-1 self-end px-6 pb-6 pt-24 lg:px-12 lg:pb-10">
+          {/* ── Title ── */}
+          <textarea
+            ref={titleRef}
+            value={title}
+            onChange={(e) => {
+              setTitle(e.target.value)
+              emitChange(e.target.value)
+            }}
+            onKeyDown={(e) => {
+              // Enter from the title drops focus into the body.
+              if (e.key === 'Enter') {
+                e.preventDefault()
+                editor.commands.focus('start')
+              }
+            }}
+            rows={1}
+            placeholder="Title"
+            className="block w-full max-w-[980px] resize-none overflow-hidden bg-transparent text-[38px] font-medium leading-[1.05] tracking-[-0.04em] text-white outline-none placeholder:text-white/30 lg:text-[54px] xl:text-[64px]"
+          />
+          {/* ── Facts row (author is editable) ── */}
+          <div className="mt-6 grid grid-cols-2 gap-6 border-t border-white/15 pt-5 font-mono text-[12px] sm:grid-cols-4 lg:mt-8">
+            {facts.map(([k, v]) => (
+              <div key={k} className="min-w-0">
+                <p className="text-white/45">{k}</p>
+                <div className="mt-1 truncate text-[13px] text-white/90">{v}</div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </header>
 
       {/* Hidden file inputs — drive image uploads (upload only, no URL). */}
       <input
@@ -394,43 +523,6 @@ export default function BlogEditor({
         className="hidden"
         onChange={handleGifFile}
       />
-
-      {/* ── Title ─────────────────────────────────────────────────── */}
-      <textarea
-        ref={titleRef}
-        value={title}
-        onChange={(e) => {
-          setTitle(e.target.value)
-          emitChange(e.target.value)
-        }}
-        onKeyDown={(e) => {
-          // Enter from the title drops focus into the body.
-          if (e.key === 'Enter') {
-            e.preventDefault()
-            editor.commands.focus('start')
-          }
-        }}
-        rows={1}
-        placeholder="Title"
-        className={cn(
-          instrumentSerif.className,
-          'mb-4 w-full resize-none overflow-hidden bg-transparent text-4xl leading-tight text-white outline-none placeholder:text-white/25 sm:text-5xl'
-        )}
-      />
-
-      {/* ── Author byline ─────────────────────────────────────────── */}
-      <div className="mb-8 flex items-center gap-2 text-sm text-[var(--color-text-muted)]">
-        <span className="shrink-0">By</span>
-        <input
-          value={authorName}
-          onChange={(e) => {
-            setAuthorName(e.target.value)
-            emitChange(title, coverImage, e.target.value)
-          }}
-          placeholder="The Forke Team"
-          className="w-full max-w-xs bg-transparent text-white outline-none placeholder:text-white/25"
-        />
-      </div>
 
       {/* ── Bubble menu (inline formatting on selection) ──────────── */}
       <BubbleMenu
@@ -547,8 +639,36 @@ export default function BlogEditor({
         )}
       </BubbleMenu>
 
-      {/* ── Body ──────────────────────────────────────────────────── */}
-      <EditorContent editor={editor} />
+      {/* ── Body: contents rail + article column, as on the public page ── */}
+      <div className={cn('grid gap-12 py-16 sm:px-6 lg:gap-16', toc.length > 0 && 'lg:grid-cols-[200px_minmax(0,1fr)]')}>
+        {toc.length > 0 && (
+          <nav aria-label="On this page" className="hidden lg:sticky lg:top-6 lg:block lg:self-start">
+            <p className="text-sm text-white/40">On this page</p>
+            <ol className="mt-3 space-y-[3px] border-l border-[var(--color-line)]">
+              {toc.map((item, i) => (
+                <li key={`${i}-${item.text}`}>
+                  <button
+                    type="button"
+                    onClick={() => scrollToHeading(i)}
+                    className={cn(
+                      '-ml-px flex w-full gap-2.5 border-l py-1 pl-4 text-left text-[13px] leading-5 transition-colors',
+                      activeHeading === i ? 'border-accent text-white' : 'border-transparent text-white/45 hover:text-white/80',
+                    )}
+                  >
+                    <span className={cn('font-mono text-[11px] leading-5', activeHeading === i ? 'text-accent' : 'text-white/25')}>
+                      {String(i + 1).padStart(2, '0')}
+                    </span>
+                    {item.text}
+                  </button>
+                </li>
+              ))}
+            </ol>
+          </nav>
+        )}
+        <article className="min-w-0">
+          <EditorContent editor={editor} />
+        </article>
+      </div>
 
       {/* ── Embed URL prompt ──────────────────────────────────────── */}
       {embedPromptOpen && (
@@ -820,4 +940,9 @@ function UrlPrompt({
       </div>
     </div>
   )
+}
+
+/** "November 13, 2026", matching the public page's long date. */
+function fmtLongDate(d: Date | string) {
+  return new Date(d).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })
 }

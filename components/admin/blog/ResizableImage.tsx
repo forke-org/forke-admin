@@ -97,7 +97,7 @@ function ImageNodeView({ node, updateAttributes, selected, editor }: NodeViewPro
           src={src}
           alt={alt || ''}
           draggable={false}
-          className="block w-full h-auto rounded-md"
+          className="block w-full h-auto rounded-[14px] border border-white/[0.06]"
         />
 
         {editable && (
