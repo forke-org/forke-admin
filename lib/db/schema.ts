@@ -1,16 +1,30 @@
+/**
+ * @fileoverview Forke Platform
+ * @copyright (c) 2026 Forke Inc. (https://www.forke.space/)
+ *
+ * Source-Available License (Non-Commercial / Fair Source).
+ * This source code is open for inspection, learning, and personal development.
+ * Commercial use, hosting, or resale as a paid service without an explicit
+ * commercial license from Forke Inc. is strictly prohibited.
+ */
+
 import {
   pgTable,
   uuid,
   text,
   integer,
+  bigint,
   timestamp,
+  date,
   pgEnum,
   boolean,
   jsonb,
 } from 'drizzle-orm/pg-core'
+import { sql } from 'drizzle-orm'
 
 export const userRoleEnum = pgEnum('user_role', ['developer', 'owner'])
 export const taskStatusEnum = pgEnum('task_status', [
+  'processing',
   'open',
   'claimed',
   'submitted',
@@ -137,21 +151,26 @@ export const tasks = pgTable('tasks', {
   status: taskStatusEnum('status').default('open').notNull(),
   skillTags: text('skill_tags').array(),
   clientId: uuid('client_id')
-    .references(() => users.id)
+    .references(() => users.id, { onDelete: 'cascade' })
     .notNull(),
-  claimantId: uuid('claimant_id').references(() => users.id),
+  claimantId: uuid('claimant_id').references(() => users.id, { onDelete: 'set null' }),
   claimedAt: timestamp('claimed_at'),
   deadline: timestamp('deadline'),
+  sandboxRepoId: uuid('sandbox_repo_id').references(() => sandboxRepos.id, { onDelete: 'set null' }),
+  sourceRepo: text('source_repo'), // e.g. "owner/original-repo" — stored for reference
+  codespaceName: text('codespace_name'),
+  codespaceUrl: text('codespace_url'),
+  codespaceStatus: text('codespace_status'),
   createdAt: timestamp('created_at').defaultNow().notNull(),
 })
 
 export const submissions = pgTable('submissions', {
   id: uuid('id').primaryKey().defaultRandom(),
   taskId: uuid('task_id')
-    .references(() => tasks.id)
+    .references(() => tasks.id, { onDelete: 'cascade' })
     .notNull(),
   developerId: uuid('developer_id')
-    .references(() => users.id)
+    .references(() => users.id, { onDelete: 'cascade' })
     .notNull(),
   githubLink: text('github_link').notNull(),
   note: text('note'),
@@ -201,6 +220,28 @@ export const subscribers = pgTable('subscribers', {
   source: text('source').notNull().default('direct'), // primary, queryable marketing channel
   attribution: jsonb('attribution'), // full first-touch blob { medium, campaign, referrer, landingPage }
   createdAt: timestamp('created_at').defaultNow().notNull(),
+  // Lifecycle, mirrored from Forke Mail by /api/webhooks/forke-mail.
+  status: text('status').notNull().default('active'), // active | unsubscribed | bounced | complained | invalid
+  statusReason: text('status_reason'), // Forke Mail suppression source, e.g. unsubscribe_link, ses_bounce, dormancy
+  statusChangedAt: timestamp('status_changed_at', { withTimezone: true }),
+  pausedUntil: timestamp('paused_until', { withTimezone: true }),
+  topicsOptedOut: text('topics_opted_out').array().notNull().default(sql`'{}'::text[]`),
+})
+
+// Admin login sessions (only the SHA-256 of the cookie token is stored).
+export const adminSessions = pgTable('admin_sessions', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  adminId: uuid('admin_id').notNull(),
+  tokenHash: text('token_hash').notNull().unique(),
+  createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
+  expiresAt: timestamp('expires_at', { withTimezone: true }).notNull(),
+})
+
+// Forke Mail webhook delivery ids already applied (replay protection).
+export const forkeMailWebhookDeliveries = pgTable('forke_mail_webhook_deliveries', {
+  deliveryId: text('delivery_id').primaryKey(),
+  eventType: text('event_type').notNull(),
+  receivedAt: timestamp('received_at', { withTimezone: true }).defaultNow().notNull(),
 })
 
 export const systemSettings = pgTable('system_settings', {
@@ -219,6 +260,19 @@ export const adminAuditLog = pgTable('admin_audit_log', {
   target: text('target'),                          // human-readable subject (email / name / table)
   metadata: jsonb('metadata'),
   createdAt: timestamp('created_at').defaultNow().notNull(),
+})
+
+// Log of every automated/manual production database backup run (OCI cron + admin "Run now").
+export const backupRuns = pgTable('backup_runs', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  startedAt: timestamp('started_at').defaultNow().notNull(),
+  finishedAt: timestamp('finished_at'),
+  status: text('status').notNull(),              // 'success' | 'failed'
+  tier: text('tier').notNull(),                   // 'daily' | 'weekly' | 'monthly' | 'manual'
+  sizeBytes: bigint('size_bytes', { mode: 'number' }),
+  r2Key: text('r2_key'),
+  triggeredBy: text('triggered_by'),               // 'cron' | admin email for manual runs
+  errorMessage: text('error_message'),
 })
 
 export const developers = pgTable('developers', {
@@ -293,18 +347,76 @@ export const blogs = pgTable('blogs', {
   contentHtml: text('content_html'),               // rendered HTML snapshot
   status: blogStatusEnum('status').default('draft').notNull(),
   readingMinutes: integer('reading_minutes').default(1).notNull(),
+  views: integer('views').default(0).notNull(),
   publishedAt: timestamp('published_at'),
   createdAt: timestamp('created_at').defaultNow().notNull(),
   updatedAt: timestamp('updated_at').defaultNow().notNull(),
 })
 
-// ─── Sandbox Owners (GitHub users who import repos) ───────────────────────────
+// ===== IN-HOUSE ANALYTICS (free, first-party, no third-party tracker) =====
+//
+// One row per first-touch visit that carried a marketing signal (?source=, utm_*, ?ref=,
+// or an external referrer). Written fire-and-forget from /api/track, which the Edge
+// middleware pings — middleware itself can't use postgres-js, so the Node route does the
+// insert. `sessionId` is a random first-party cookie that lets us later join a visit to the
+// signup it produced (visit -> conversion), without any IP or device fingerprint.
+export const pageVisits = pgTable('page_visits', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  sessionId: text('session_id'),                   // random forke_session cookie (visit<->signup join key)
+  source: text('source').notNull().default('direct'),
+  medium: text('medium'),
+  campaign: text('campaign'),
+  referrer: text('referrer'),                      // external referring URL (truncated)
+  landingPath: text('landing_path'),               // first page they hit
+  country: text('country'),                         // coarse geo only (from edge header), never the IP
+  isBot: boolean('is_bot').default(false).notNull(),
+  botCategory: text('bot_category'),               // 'search_engine' | 'ai_agent' | 'social_preview' | 'malicious_scanner' | 'uptime_monitor'
+  botName: text('bot_name'),                       // 'Googlebot', 'GPTBot', 'PerplexityBot', etc.
+  userAgentSnippet: text('user_agent_snippet'),   // truncated UA for verification
+  createdAt: timestamp('created_at').defaultNow().notNull(),
+})
 
-export const sandboxOwners = pgTable('sandbox_owners', {
+// ===== PERMANENT ANALYTICS DAILY ROLLUPS (Permanent Historical Intelligence) =====
+export const analyticsDailyRollups = pgTable('analytics_daily_rollups', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  date: date('date').notNull(),
+  pageGroup: text('page_group').notNull(),
+  source: text('source').notNull(),
+  country: text('country').notNull().default('XX'),
+  isBot: boolean('is_bot').default(false).notNull(),
+  botCategory: text('bot_category'),
+  botName: text('bot_name'),
+  visitCount: integer('visit_count').default(1).notNull(),
+  uniqueSessions: integer('unique_sessions').default(1).notNull(),
+  createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
+})
+
+// ===== AUTH SECURITY LOG (separate from marketing attribution by design) =====
+//
+// Records sign-in / sign-up events for abuse detection only. We store a salted SHA-256
+// HASH of the IP (never the raw address) plus the resolved country, so we can spot
+// "same IP, many accounts" without holding personal data. Lawful basis: legitimate
+// interest (security / fraud prevention). Disclosed in /privacy. Purge rows > 90 days.
+export const authEvents = pgTable('auth_events', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  userId: uuid('user_id').references(() => users.id, { onDelete: 'set null' }),
+  email: text('email'),                            // snapshot, in case the user is later deleted
+  event: text('event').notNull(),                  // 'signin' | 'signup'
+  provider: text('provider'),                      // 'credentials' | 'google' | 'github'
+  ipHash: text('ip_hash'),                         // salted sha256 of the IP — NOT the raw IP
+  country: text('country'),
+  userAgent: text('user_agent'),
+  createdAt: timestamp('created_at').defaultNow().notNull(),
+})
+
+// ─── Sandbox Users (GitHub users who import repos or do tasks) ────────────────
+
+export const sandboxUsers = pgTable('sandbox_users', {
   id: uuid('id').primaryKey().defaultRandom(),
   githubId: integer('github_id').notNull().unique(),
   username: text('username').notNull(),
   accessToken: text('access_token').notNull(),
+  role: text('role').notNull(), // 'owner' | 'developer'
   createdAt: timestamp('created_at').defaultNow().notNull(),
 })
 
@@ -313,7 +425,7 @@ export const sandboxOwners = pgTable('sandbox_owners', {
 export const sandboxRepos = pgTable('sandbox_repos', {
   id: uuid('id').primaryKey().defaultRandom(),
   ownerId: uuid('owner_id')
-    .references(() => sandboxOwners.id, { onDelete: 'cascade' })
+    .references(() => sandboxUsers.id, { onDelete: 'cascade' })
     .notNull(),
   sourceRepo: text('source_repo').notNull(),       // e.g. "owner/original-repo"
   sandboxRepo: text('sandbox_repo').notNull(),      // e.g. "forke-sandbox/owner-repo-mirror"
@@ -340,16 +452,6 @@ export const developerForks = pgTable('developer_forks', {
   createdAt: timestamp('created_at').defaultNow().notNull(),
 })
 
-// ─── Sandbox Developers (GitHub users who do tasks) ───────────────────────────
-
-export const sandboxDevelopers = pgTable('sandbox_developers', {
-  id: uuid('id').primaryKey().defaultRandom(),
-  githubId: integer('github_id').notNull().unique(),
-  username: text('username').notNull(),
-  accessToken: text('access_token').notNull(),
-  createdAt: timestamp('created_at').defaultNow().notNull(),
-})
-
 // ─── Baseline Snapshots (Deterministic health check of base branch) ───────────
 
 export const baselineSnapshots = pgTable('baseline_snapshots', {
@@ -365,47 +467,84 @@ export const baselineSnapshots = pgTable('baseline_snapshots', {
   createdAt: timestamp('created_at').defaultNow().notNull(),
 })
 
-// ─── Review Results (Deterministic PR review with baseline comparison) ─────────
+// ─── Code Reviews (Unified automated and AI code reviews) ───────────────────
 
-export const reviewResults = pgTable('review_results', {
+export const codeReviews = pgTable('code_reviews', {
   id: uuid('id').primaryKey().defaultRandom(),
-  prNumber: integer('pr_number').notNull(),
   sandboxRepoId: uuid('sandbox_repo_id')
     .references(() => sandboxRepos.id, { onDelete: 'cascade' })
     .notNull(),
+  developerForkId: uuid('developer_fork_id')
+    .references(() => developerForks.id, { onDelete: 'cascade' }),
+  prNumber: integer('pr_number'),
   commitSha: text('commit_sha').notNull(),
   baselineSnapshotId: uuid('baseline_snapshot_id')
     .references(() => baselineSnapshots.id, { onDelete: 'set null' }),
-  results: text('results').notNull(),       // JSON of PR deterministic test results
-  comparison: text('comparison').notNull(), // JSON comparison diff
-  verdict: text('verdict').notNull(),       // 'pass', 'warn', 'fail'
+  // Deterministic checks
+  results: text('results'),
+  comparison: text('comparison'),
+  verdict: text('verdict'), // 'pass', 'warn', 'fail'
   reportHtml: text('report_html'),
+  // AI review metrics
+  aiVerdict: text('ai_verdict'), // 'pass', 'needs_changes', 'high_risk'
+  aiScore: integer('ai_score'), // 0 to 100
+  requirementMatch: text('requirement_match'),
+  aiSummary: text('ai_summary'),
+  aiStrengths: text('ai_strengths'), // JSON array string
+  aiIssues: text('ai_issues'), // JSON array string
+  aiRisks: text('ai_risks'), // JSON array string
+  unauthorizedEdits: text('unauthorized_edits'), // JSON array string
+  resolvedIssues: text('resolved_issues'), // JSON array string
+  resolvedRisks: text('resolved_risks'), // JSON array string
+  riskScore: integer('risk_score'),
+  riskRouting: text('risk_routing'),
+  aiModel: text('ai_model'),
+  tokensUsed: integer('tokens_used'),
   createdAt: timestamp('created_at').defaultNow().notNull(),
 })
 
-// ─── AI Reviews (Gemini/Claude structured code review) ────────────────────────
-
-export const aiReviews = pgTable('ai_reviews', {
+// ===== CHANGELOG SYSTEM (Linear / Supermemory style) =====
+export const changelogs = pgTable('changelogs', {
   id: uuid('id').primaryKey().defaultRandom(),
-  developerForkId: uuid('developer_fork_id')
-    .references(() => developerForks.id, { onDelete: 'cascade' }),
-  sandboxRepoId: uuid('sandbox_repo_id')
-    .references(() => sandboxRepos.id, { onDelete: 'cascade' }),
-  prNumber: integer('pr_number'),
-  verdict: text('verdict').notNull(),             // 'pass', 'needs_changes', 'high_risk'
-  score: integer('score').notNull(),               // 0 to 100
-  requirementMatch: text('requirement_match').notNull(),
-  summary: text('summary').notNull(),
-  strengths: text('strengths'),                    // JSON array string
-  issues: text('issues'),                          // JSON array string
-  risks: text('risks'),                            // JSON array string
-  unauthorizedEdits: text('unauthorized_edits'),   // JSON array string
-  resolvedIssues: text('resolved_issues'),         // JSON array string
-  resolvedRisks: text('resolved_risks'),           // JSON array string
-  // Layer 4 risk scoring
-  riskScore: integer('risk_score'),                // 0-100 composite risk score
-  riskRouting: text('risk_routing'),               // 'auto_approve', 'owner_review', 'reviewer_queue'
-  model: text('model'),                            // Which AI model was used
-  tokensUsed: integer('tokens_used'),              // Token usage tracking
+  title: text('title').notNull(),
+  slug: text('slug').notNull().unique(),
+  tag: text('tag').default('CORE').notNull(),
+  description: text('description').notNull(),
+  improvements: jsonb('improvements').default([]).$type<string[]>(),
+  fixes: jsonb('fixes').default([]).$type<string[]>(),
+  mediaType: text('media_type').default('none').notNull(), // 'none' | 'image' | 'video'
+  mediaUrl: text('media_url'),
+  isPublished: boolean('is_published').default(true).notNull(),
+  publishedAt: timestamp('published_at').defaultNow().notNull(),
   createdAt: timestamp('created_at').defaultNow().notNull(),
+  updatedAt: timestamp('updated_at').defaultNow().notNull(),
 })
+
+// ===== BROADCAST EMAIL APPROVALS (Admin Overview Notifications) =====
+export const broadcastApprovals = pgTable('broadcast_approvals', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  type: text('type').notNull(), // 'blog' | 'changelog'
+  contentId: uuid('content_id').notNull(),
+  title: text('title').notNull(),
+  slug: text('slug').notNull(),
+  tag: text('tag'),
+  excerpt: text('excerpt'),
+  description: text('description'),
+  coverImage: text('cover_image'),
+  mediaUrl: text('media_url'),
+  mediaType: text('media_type').default('none'),
+  authorName: text('author_name'),
+  readingMinutes: integer('reading_minutes'),
+  improvements: jsonb('improvements').default([]).$type<string[]>(),
+  fixes: jsonb('fixes').default([]).$type<string[]>(),
+  status: text('status').notNull().default('pending'), // 'pending' | 'approved' | 'dismissed' | 'failed'
+  broadcastId: text('broadcast_id'),
+  sentCount: integer('sent_count').default(0),
+  error: text('error'),
+  approvedAt: timestamp('approved_at'),
+  approvedBy: text('approved_by'),
+  createdAt: timestamp('created_at').defaultNow().notNull(),
+  updatedAt: timestamp('updated_at').defaultNow().notNull(),
+})
+
+

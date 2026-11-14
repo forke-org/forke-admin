@@ -1,22 +1,15 @@
 {
-  "name": "forke",
+  "name": "forke-admin",
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "dev": "tsx scripts/generate-changelog.ts && next dev",
-    "prebuild": "tsx scripts/generate-changelog.ts",
+    "dev": "next dev -p 3002",
     "build": "NODE_OPTIONS=--max-old-space-size=8192 next build",
-    "start": "next start",
-    "lint": "eslint",
-    "db:generate": "drizzle-kit generate",
-    "db:migrate": "tsx lib/db/migrate.ts",
-    "db:seed": "tsx lib/db/seed.ts",
-    "db:studio": "drizzle-kit studio"
+    "start": "next start -p 3002",
+    "lint": "eslint"
   },
   "dependencies": {
     "@auth/drizzle-adapter": "^1.11.2",
-    "@aws-sdk/client-s3": "^3.1065.0",
-    "@aws-sdk/s3-request-presigner": "^3.1075.0",
     "@google/generative-ai": "^0.24.1",
     "@gsap/react": "^2.1.2",
     "@next/third-parties": "^15.5.15",
@@ -24,6 +17,7 @@
     "@react-three/fiber": "^9.6.1",
     "@react-three/postprocessing": "^3.0.4",
     "@react-three/rapier": "^2.2.0",
+    "@remixicon/react": "^4.9.0",
     "@tiptap/extension-image": "^3.26.0",
     "@tiptap/extension-link": "^3.26.0",
     "@tiptap/extension-placeholder": "^3.26.0",
@@ -34,6 +28,8 @@
     "@tiptap/starter-kit": "^3.26.0",
     "@tiptap/suggestion": "^3.26.0",
     "adm-zip": "^0.5.18",
+    "ascii-reveal": "0.3.0",
+    "aws4fetch": "^1.0.20",
     "bcryptjs": "^3.0.3",
     "clsx": "^2.1.1",
     "drizzle-orm": "^0.45.2",

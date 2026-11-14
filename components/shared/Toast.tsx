@@ -1,5 +1,15 @@
 'use client'
 
+/**
+ * @fileoverview Forke Platform
+ * @copyright (c) 2026 Forke Inc. (https://www.forke.space/)
+ *
+ * Source-Available License (Non-Commercial / Fair Source).
+ * This source code is open for inspection, learning, and personal development.
+ * Commercial use, hosting, or resale as a paid service without an explicit
+ * commercial license from Forke Inc. is strictly prohibited.
+ */
+
 import React, { useState, useEffect, Suspense } from 'react'
 import { CheckCircle2, AlertTriangle, X } from 'lucide-react'
 import { cn } from '@/lib/utils/cn'
@@ -38,6 +48,10 @@ function QueryToastHandler() {
         toast('Submission approved! Bounty disbursed.', 'success')
       } else if (toastType === 'deleted') {
         toast('Mission deleted successfully.', 'success')
+      } else if (toastType === 'deletion_scheduled') {
+        toast('Your account has been scheduled for deletion in 30 days and you have been signed out.', 'info')
+      } else if (toastType === 'deletion_cancelled') {
+        toast('Your account deletion request has been cancelled! Welcome back.', 'success')
       }
 
       // Clear search param cleanly
@@ -71,37 +85,49 @@ export default function ToastContainer() {
     }
   }, [])
 
+  const visibleToasts = toasts.slice(-4)
+
   return (
-    <div className="fixed top-28 left-1/2 -translate-x-1/2 z-[99999] flex flex-col items-center gap-4 w-full max-w-lg pointer-events-none px-4">
+    <div className="fixed bottom-6 right-6 z-[99999] flex flex-col items-end gap-3 w-full max-w-sm pointer-events-none px-4 md:px-0">
       <Suspense fallback={null}>
         <QueryToastHandler />
       </Suspense>
 
-      {toasts.map((t) => (
-        <div
-          key={t.id}
-          className={cn(
-            "pointer-events-auto flex items-center justify-between gap-4 px-6 py-4 rounded-2xl backdrop-blur-xl border text-xs font-mono font-medium animate-in fade-in slide-in-from-top-8 zoom-in-95 duration-500 w-full select-none shadow-2xl transition-all duration-300",
-            t.type === 'success' && "border-emerald-500/30 bg-[#080f0c]/95 text-emerald-400 shadow-[0_12px_40px_rgba(16,185,129,0.08)]",
-            t.type === 'error' && "border-rose-500/30 bg-[#120709]/95 text-rose-400 shadow-[0_12px_40px_rgba(244,63,94,0.08)]",
-            t.type === 'info' && "border-accent/30 bg-[#0f0b07]/95 text-accent shadow-[0_12px_40px_rgba(255,122,0,0.08)]"
-          )}
-        >
-          <div className="flex items-center gap-3.5">
-            {t.type === 'success' && <CheckCircle2 className="w-5 h-5 text-emerald-450 shrink-0" />}
-            {t.type === 'error' && <AlertTriangle className="w-5 h-5 text-rose-400 shrink-0" />}
-            {t.type === 'info' && <CheckCircle2 className="w-5 h-5 text-accent shrink-0" />}
-            <span className="text-white text-[13px] font-sans font-medium tracking-wide leading-normal">{t.message}</span>
-          </div>
-          <button
-            onClick={() => setToasts((prev) => prev.filter((item) => item.id !== t.id))}
-            className="text-white/40 hover:text-white transition-colors p-1.5 rounded-lg hover:bg-white/5 shrink-0"
-            aria-label="Close notification"
+      {visibleToasts.map((t, idx) => {
+        const isFourth = visibleToasts.length === 4 && idx === 0
+        return (
+          <div
+            key={t.id}
+            style={isFourth ? {
+              maxHeight: '38px',
+              maskImage: 'linear-gradient(to bottom, transparent, black 85%)',
+              WebkitMaskImage: 'linear-gradient(to bottom, transparent, black 85%)',
+              transform: 'scale(0.96) translateY(2px)',
+            } : undefined}
+            className={cn(
+              "pointer-events-auto flex items-center justify-between gap-4 px-5 py-3 rounded-xl backdrop-blur-xl border text-xs font-mono font-medium animate-in fade-in slide-in-from-bottom-5 zoom-in-95 duration-300 w-full select-none shadow-2xl transition-all",
+              isFourth ? "opacity-35 select-none pointer-events-none" : "opacity-100",
+              t.type === 'success' && "border-emerald-500/20 bg-[#070e0a]/95 text-emerald-400 shadow-[0_8px_30px_rgba(16,185,129,0.06)]",
+              t.type === 'error' && "border-rose-500/20 bg-[#100608]/95 text-rose-400 shadow-[0_8px_30px_rgba(244,63,94,0.06)]",
+              t.type === 'info' && "border-accent/25 bg-[#0e0a07]/95 text-accent shadow-[0_8px_30px_rgba(255,122,0,0.06)]"
+            )}
           >
-            <X className="w-4 h-4" />
-          </button>
-        </div>
-      ))}
+            <div className="flex items-center gap-3">
+              {t.type === 'success' && <CheckCircle2 className="w-4 h-4 text-emerald-450 shrink-0" />}
+              {t.type === 'error' && <AlertTriangle className="w-4 h-4 text-rose-400 shrink-0" />}
+              {t.type === 'info' && <CheckCircle2 className="w-4 h-4 text-accent shrink-0" />}
+              <span className="text-white text-[12.5px] font-sans font-medium tracking-wide leading-normal">{t.message}</span>
+            </div>
+            <button
+              onClick={() => setToasts((prev) => prev.filter((item) => item.id !== t.id))}
+              className="text-white/40 hover:text-white transition-colors p-1 rounded-lg hover:bg-white/5 shrink-0"
+              aria-label="Close notification"
+            >
+              <X className="w-3.5 h-3.5" />
+            </button>
+          </div>
+        )
+      })}
     </div>
   )
 }
