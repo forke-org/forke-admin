@@ -15,7 +15,7 @@ import Globe from 'react-globe.gl'
 import * as THREE from 'three'
 
 // 3D WebGL globe (react-globe.gl / three-globe). Countries are extruded/shaded by
-// click volume. Client-only — this file is dynamically imported with ssr:false by
+// click volume. Client-only: this file is dynamically imported with ssr:false by
 // the parent, because the globe needs WebGL + window.
 
 type CountryDatum = { country: string; clicks: number; conversions?: number }
@@ -23,7 +23,7 @@ type Feature = { properties: Record<string, any>; bbox?: number[] }
 
 const GEOJSON_URL = '/countries-110m.geojson' // vendored in /public
 
-// Rough lat/long centroids for the countries we expect — used to rotate the globe to
+// Rough lat/long centroids for the countries we expect, used to rotate the globe to
 // a country. Falls back to the polygon bbox center for anything not listed.
 const CENTROIDS: Record<string, { lat: number; lng: number }> = {
   IN: { lat: 22, lng: 79 }, US: { lat: 39, lng: -98 }, GB: { lat: 54, lng: -2 },
@@ -65,7 +65,7 @@ export default function GlobeView({
 
   const max = useMemo(() => Math.max(...Array.from(byIso.values()), 1), [byIso])
 
-  // The country with the most volume in the active metric — the globe starts pointed here.
+  // The country with the most volume in the active metric, the globe starts pointed here.
   const topIso = useMemo(() => {
     let top: string | null = null
     let best = -1
@@ -106,7 +106,7 @@ export default function GlobeView({
     return () => { alive = false }
   }, [])
 
-  // Responsive sizing — observes both width and height of container.
+  // Responsive sizing: observes both width and height of container.
   useEffect(() => {
     if (!wrapRef.current) return
     const ro = new ResizeObserver((entries) => {

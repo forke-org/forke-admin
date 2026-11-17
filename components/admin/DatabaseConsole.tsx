@@ -1762,7 +1762,7 @@ export default function DatabaseConsole({ currentAdmin, initialTab }: DatabaseCo
                         <span>SQL Editor Console</span>
                       </div>
                       
-                      {/* Query Templates / Snippets — hidden on mobile */}
+                      {/* Query Templates / Snippets, hidden on mobile */}
                       <div className="hidden sm:flex items-center gap-1.5 overflow-x-auto max-w-xl no-scrollbar py-0.5">
                         <span className="text-[10px] text-white/30 uppercase font-semibold shrink-0 mr-1">Templates:</span>
                         {[

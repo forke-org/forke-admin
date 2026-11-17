@@ -55,7 +55,7 @@ function parseDate(iso: string | Date | null | undefined): Date | null {
 
 function timeAgo(iso: string): string {
   const d = parseDate(iso)
-  if (!d) return '—'
+  if (!d) return '-'
   const diff = Date.now() - d.getTime()
   if (diff < 0) return 'just now'
   const s = Math.floor(diff / 1000)
@@ -69,7 +69,7 @@ function timeAgo(iso: string): string {
 
 function formatLocalDateTime(iso: string | Date | null | undefined): string {
   const d = parseDate(iso)
-  if (!d) return '—'
+  if (!d) return '-'
   try {
     return new Intl.DateTimeFormat(undefined, {
       month: 'short',
@@ -87,7 +87,7 @@ function formatLocalDateTime(iso: string | Date | null | undefined): string {
 
 function formatLocalTimeOnly(iso: string | Date | null | undefined): string {
   const d = parseDate(iso)
-  if (!d) return '—'
+  if (!d) return '-'
   try {
     return new Intl.DateTimeFormat(undefined, {
       hour: 'numeric',
@@ -272,7 +272,7 @@ function FunnelCard({ funnel }: { funnel: { source: string; clicks: number; conv
                   className="text-right text-xs font-mono tabular-nums text-[var(--color-text-muted)]"
                   title={trustworthy ? undefined : 'Visits from this source were not fully recorded, so no rate is shown'}
                 >
-                  {trustworthy ? `${f.rate.toFixed(1)}%` : '—'}
+                  {trustworthy ? `${f.rate.toFixed(1)}%` : '-'}
                 </span>
               </div>
             )
@@ -318,7 +318,7 @@ function SignupSourceCard({
   return (
     <Card
       title="Subscribers by source (all-time)"
-      subtitle="Every waitlist subscriber, grouped by channel. These are confirmed conversions — click data wasn't recorded before the tracker, so no rate is shown here."
+      subtitle="Every waitlist subscriber, grouped by channel. These are confirmed conversions: click data wasn't recorded before the tracker, so no rate is shown here."
     >
       <div className="flex items-baseline gap-2 mb-4">
         <span className="text-2xl font-mono text-white">{signupTotal.toLocaleString()}</span>
@@ -502,7 +502,7 @@ export default function TrackerPanel() {
           >
             {chartSeries.length > 0 ? (
               <div className="relative w-full max-w-full overflow-hidden">
-                {/* Clean inline details badge — eliminates horizontal overflow */}
+                {/* Clean inline details badge, eliminates horizontal overflow */}
                 <div className="flex items-center justify-between min-h-[26px] mb-2 px-0.5">
                   {hoverBar ? (
                     <div className="inline-flex items-center gap-2 px-2.5 py-1 rounded-md border border-accent/30 bg-accent/10 text-xs font-mono shadow-sm animate-in fade-in duration-150">
@@ -575,22 +575,22 @@ export default function TrackerPanel() {
               <div className="flex items-center gap-2 mb-3 text-[var(--color-text-muted)]"><ExternalLink className="w-3.5 h-3.5" /></div>
               <BarList
                 rows={referrers.map((r) => ({ label: shortUrl(r.referrer), count: r.clicks, title: r.referrer }))}
-                emptyHint="No external referrers yet — most traffic is direct or tagged."
+                emptyHint="No external referrers yet: most traffic is direct or tagged."
               />
             </Card>
           </div>
 
-          {/* Geo — full width: 3D globe + searchable country table */}
+          {/* Geo: full width: 3D globe + searchable country table */}
           <Card
             title="Geo distribution & conversions"
-            subtitle="Spin the 3D globe — countries glow by volume. Sort by Clicks or Subscribers high to low, search, and inspect country metrics."
+            subtitle="Spin the 3D globe: countries glow by volume. Sort by Clicks or Subscribers high to low, search, and inspect country metrics."
           >
             <WorldHeatmap data={countries} />
           </Card>
 
           {/* Recent feed */}
           <div className="grid grid-cols-1 gap-4">
-            <Card title="Recent clicks" subtitle="Live feed — confirms tracking is firing">
+            <Card title="Recent clicks" subtitle="Live feed: confirms tracking is firing">
               {recent.length > 0 ? (
                 (() => {
                   const totalPages = Math.ceil(recent.length / RECENT_PAGE_SIZE)

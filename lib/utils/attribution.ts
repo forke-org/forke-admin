@@ -11,7 +11,7 @@
 import { cookies } from 'next/headers'
 
 // Single source of truth for marketing attribution.
-// First-party signals only (UTM params, referrer, landing page) — no IP / device fingerprint.
+// First-party signals only (UTM params, referrer, landing page): no IP / device fingerprint.
 
 export const ATTRIBUTION_COOKIE = 'forke_attribution'
 export const SESSION_COOKIE = 'forke_session'
@@ -25,7 +25,7 @@ export type Attribution = {
   firstSeenAt?: string
   country?: string
   signupRole?: 'developer' | 'owner'
-  sessionId?: string // forke_session cookie — joins this signup back to the click that produced it
+  sessionId?: string // forke_session cookie: joins this signup back to the click that produced it
 }
 
 /** Read the forke_session id (set by middleware) so a signup can be tied to its originating click. */
@@ -42,9 +42,9 @@ export async function readSessionId(): Promise<string | undefined> {
  * Known marketing channels and the variants we collapse into each one.
  *
  * Shared links get mangled in the wild in two ways:
- *  - concatenated — "?source=reddit" glued to the next URL becomes
+ *  - concatenated: "?source=reddit" glued to the next URL becomes
  *    "reddithttps://www…", which slugifies to "reddithttpsw…"
- *  - truncated — a link clipped mid-param leaves "?source=wh" / "?source=whatsa"
+ *  - truncated: a link clipped mid-param leaves "?source=wh" / "?source=whatsa"
  *
  * Matching on a prefix/contains for each canonical channel folds both cases back
  * into the right bucket so the dashboard shows "reddit"/"whatsapp", not garbage.

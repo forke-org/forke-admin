@@ -38,7 +38,7 @@ export const XP_BONUS_5_STAR = 30
 export const XP_BONUS_4_STAR = 10
 export const XP_PENALTY_REVISION = 20
 
-// Streak XP — awarded on login
+// Streak XP: awarded on login
 export const XP_STREAK: Record<number, number> = {
   2: 10, // 2-day streak
   3: 15,
@@ -50,7 +50,7 @@ export const XP_STREAK: Record<number, number> = {
 // Default daily login XP (day 1 or non-milestone days)
 export const XP_DAILY_LOGIN = 5
 
-// Cumulative XP thresholds — source of truth for levels
+// Cumulative XP thresholds: source of truth for levels
 // Level is ALWAYS derived from totalXp, never stored independently
 export const LEVEL_THRESHOLDS: { level: number; xpRequired: number }[] = [
   { level: 1, xpRequired: 0 },
@@ -89,7 +89,7 @@ export const LEVEL_TITLES: Record<number, string> = {
   15: 'Verified Pro',
 }
 
-// Minimum level to claim a task — derived from skill tags
+// Minimum level to claim a task, derived from skill tags
 export const SKILL_TIER: Record<string, number> = {
   'HTML/CSS': 1,
   'JavaScript': 1,

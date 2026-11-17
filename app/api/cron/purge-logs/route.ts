@@ -30,7 +30,7 @@ export async function GET(request: NextRequest) {
     // Purge accounts scheduled for deletion more than 30 days ago
     await db.delete(users).where(sql`deletion_scheduled_at < now() - interval '30 days'`)
 
-    // Purge auth security log older than 90 days — enforces the IP-retention window
+    // Purge auth security log older than 90 days, enforces the IP-retention window
     // promised in the privacy policy.
     await db.delete(authEvents).where(sql`created_at < now() - interval '90 days'`)
 

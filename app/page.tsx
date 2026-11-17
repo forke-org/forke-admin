@@ -138,7 +138,7 @@ function parseDate(iso: string | Date | null | undefined): Date | null {
 
 function formatLocalDateTime(iso: string | Date | null | undefined): string {
   const d = parseDate(iso)
-  if (!d) return '—'
+  if (!d) return '-'
   try {
     return new Intl.DateTimeFormat(undefined, {
       month: 'short',
@@ -149,7 +149,7 @@ function formatLocalDateTime(iso: string | Date | null | undefined): string {
       hour12: true,
     }).format(d)
   } catch {
-    return typeof iso === 'string' ? iso : '—'
+    return typeof iso === 'string' ? iso : '-'
   }
 }
 
@@ -381,7 +381,7 @@ export default function AdminDashboard() {
     }
 
     // Every fetch below is independent of the others, so they run concurrently
-    // instead of one-after-another — each one catches its own error so a
+    // instead of one-after-another: each one catches its own error so a
     // single failed fetch doesn't block the rest from loading.
     const tasks: Promise<void>[] = []
 
@@ -1023,7 +1023,7 @@ export default function AdminDashboard() {
     )
   })
 
-  // Signups grouped by marketing channel — sorted most → least, for the Sources breakdown card.
+  // Signups grouped by marketing channel, sorted most → least, for the Sources breakdown card.
   const sourceBreakdown = (() => {
     const counts = new Map<string, number>()
     for (const sub of subscribersList) {
@@ -1929,7 +1929,7 @@ export default function AdminDashboard() {
                                   </button>
                                 </div>
                               ) : (
-                                <span className="text-white/20 font-mono">—</span>
+                                <span className="text-white/20 font-mono">-</span>
                               )}
                             </td>
                             <td className="px-4 py-3 text-xs font-mono text-[var(--color-text-muted)]">
@@ -1963,7 +1963,7 @@ export default function AdminDashboard() {
                                   {dev.isBanned ? 'Unban' : 'Ban'}
                                 </button>
                               ) : (
-                                <span className="text-xs text-white/20 font-mono">—</span>
+                                <span className="text-xs text-white/20 font-mono">-</span>
                               )}
                             </td>
                           </tr>
@@ -2232,7 +2232,7 @@ export default function AdminDashboard() {
                                     {country.toUpperCase()}
                                   </span>
                                 ) : (
-                                  <span className="text-xs font-mono text-white/25">—</span>
+                                  <span className="text-xs font-mono text-white/25">-</span>
                                 )}
                               </td>
                               <td className="px-4 py-3 text-xs font-mono text-[var(--color-text-muted)] whitespace-nowrap">
@@ -2449,7 +2449,7 @@ export default function AdminDashboard() {
                                   </button>
                                 </div>
                               ) : (
-                                <span className="text-xs text-white/20 font-mono">—</span>
+                                <span className="text-xs text-white/20 font-mono">-</span>
                               )}
                             </td>
                           )}
@@ -2733,7 +2733,7 @@ export default function AdminDashboard() {
                   />
                   {editRoleValue === 'super_admin' && editRoleTargetAdmin.role !== 'super_admin' && (
                     <p className="text-[11px] text-orange-400/80 mt-1.5">
-                      Super Admins can manage other admins, the database, and SQL — grant carefully.
+                      Super Admins can manage other admins, the database, and SQL: grant carefully.
                     </p>
                   )}
                 </div>

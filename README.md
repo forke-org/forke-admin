@@ -5,7 +5,7 @@
 # 🛡️ Forke Admin Console
 
 <p align="center">
-  <i>The command center for Forke operations — user moderation, escrow settlement, dispute arbitration, and real-time security telemetry.</i>
+  <i>The command center for Forke operations: user moderation, escrow settlement, dispute arbitration, and real-time security telemetry.</i>
 </p>
 
 <p align="center">
@@ -136,6 +136,6 @@ forke-admin/
 ## 📄 License
 
 This repository is **source-available, not open-source**. The code is public for
-transparency and reference, but **all rights are reserved** — you may read and fork
+transparency and reference, but **all rights are reserved**: you may read and fork
 it on GitHub, but you may **not** use, deploy, copy, or commercialize it without
 prior written permission. See [LICENSE](./LICENSE) for the full terms.

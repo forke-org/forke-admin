@@ -326,7 +326,7 @@ export function createSlashCommand(onImage: () => void, onEmbed: () => void, onG
               if (!popup || !rect) return
               const menuH = popup.offsetHeight || 320
               const spaceBelow = window.innerHeight - rect.bottom
-              // Flip above the caret when there isn't room below — keeps the
+              // Flip above the caret when there isn't room below: keeps the
               // block list reachable at the bottom of the screen.
               const openUp = spaceBelow < menuH + 16
               popup.style.left = `${rect.left + window.scrollX}px`

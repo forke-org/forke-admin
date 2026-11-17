@@ -79,7 +79,7 @@ function getCategoryBadge(category?: string | null) {
 
 function timeAgo(iso: string): string {
   const d = new Date(iso)
-  if (isNaN(d.getTime())) return '—'
+  if (isNaN(d.getTime())) return '-'
   const diff = Date.now() - d.getTime()
   if (diff < 0) return 'just now'
   const s = Math.floor(diff / 1000)
@@ -629,9 +629,9 @@ export default function CrawlerIntelligenceView({ days = 14 }: CrawlerIntelligen
                       </td>
                       <td
                         className="py-2.5 text-[var(--color-text-muted)] max-w-[260px] truncate"
-                        title={visit.userAgentSnippet || '—'}
+                        title={visit.userAgentSnippet || '-'}
                       >
-                        {visit.userAgentSnippet || '—'}
+                        {visit.userAgentSnippet || '-'}
                       </td>
                     </tr>
                   )

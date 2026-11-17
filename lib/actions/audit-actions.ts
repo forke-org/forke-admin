@@ -61,7 +61,7 @@ interface LogEntry {
   actorId?: string | null
 }
 
-/** Records an admin action. Best-effort — never throws into the caller. */
+/** Records an admin action. Best-effort: never throws into the caller. */
 export async function logAudit(entry: LogEntry) {
   try {
     await ensureAuditLogTable()
@@ -167,7 +167,7 @@ const ev = (
 /**
  * The unified activity feed: explicitly-logged admin actions merged with
  * derived system events (signups, subscribers, enquiries, tasks…) read straight
- * from existing tables — so it reflects "everything happening" without having to
+ * from existing tables, so it reflects "everything happening" without having to
  * instrument the rest of the app.
  */
 export async function getActivityFeed(opts?: { category?: ActivityCategory | 'all'; limit?: number }) {

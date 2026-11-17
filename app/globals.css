@@ -121,7 +121,7 @@ img {
     border: 1px solid rgba(255, 255, 255, 0.06);
   }
 
-  /* Compact eyebrow label — used sparingly, GitHub/Linear style */
+  /* Compact eyebrow label: used sparingly, GitHub/Linear style */
   .ui-label {
     color: var(--color-text-muted);
     font-size: 11px;
@@ -165,7 +165,7 @@ img {
     background: rgba(240, 227, 222, 0.07);
   }
 
-  /* Terminal-style section eyebrow — `// label` in mono */
+  /* Terminal-style section eyebrow: `// label` in mono */
   .ui-eyebrow {
     font-family: var(--font-mono);
     font-size: 11px;
@@ -174,7 +174,7 @@ img {
     color: var(--color-text-muted);
   }
 
-  /* Outlined display type — giant footer wordmark */
+  /* Outlined display type: giant footer wordmark */
   .text-outline {
     color: transparent;
     -webkit-text-stroke: 1px rgba(255, 255, 255, 0.18);
@@ -346,11 +346,11 @@ img {
 }
 
 /* ──────────────────────────────────────────────────────────────────────────
-   Ledger layout system — hairline rails, crosshair joints, scroll reveals.
+   Ledger layout system: hairline rails, crosshair joints, scroll reveals.
    Used across the marketing pages.
    ────────────────────────────────────────────────────────────────────────── */
 
-/* Scroll reveal — toggled by <Reveal/> via IntersectionObserver */
+/* Scroll reveal: toggled by <Reveal/> via IntersectionObserver */
 .ui-reveal {
   opacity: 0;
   transform: translateY(16px);
@@ -384,7 +384,7 @@ img {
   user-select: none;
 }
 
-/* Blueprint flow line — marching dashes + a pulse traveling along it */
+/* Blueprint flow line: marching dashes + a pulse traveling along it */
 .ui-flow-line {
   background-image: linear-gradient(90deg, rgba(255, 122, 0, 0.45) 50%, transparent 50%);
   background-size: 12px 1px;
@@ -451,7 +451,7 @@ img {
   .ui-iso-float, .ui-iso-spin { animation: none; }
 }
 
-/* Fine blueprint grid, masked to the center — for feature sections */
+/* Fine blueprint grid, masked to the center: for feature sections */
 .ui-grid-soft {
   background-image:
     linear-gradient(rgba(255, 255, 255, 0.03) 1px, transparent 1px),
@@ -494,7 +494,7 @@ img {
   font-family: var(--font-serif);
 }
 
-/* Skeleton shimmer sweep (loading gallery #7) — used by the base Skeleton block */
+/* Skeleton shimmer sweep (loading gallery #7): used by the base Skeleton block */
 @keyframes skeleton-shimmer {
   0%   { background-position: 200% 0; }
   100% { background-position: -200% 0; }

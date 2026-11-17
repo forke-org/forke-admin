@@ -28,7 +28,7 @@ async function ensureAdmin() {
 }
 
 /**
- * Fire the new-blog email to all subscribers, fail-soft. Never throws — a Forke Mail
+ * Fire the new-blog email to all subscribers, fail-soft. Never throws: a Forke Mail
  * outage or a subscriber-query error must not roll back or block a publish.
  */
 async function announceBlogToSubscribers(blog: {
@@ -43,7 +43,7 @@ async function announceBlogToSubscribers(blog: {
 }) {
   try {
     const { success, sentCount, broadcastId, error } = await sendBlogPublishedBroadcast(blog)
-    // Record the TRUE outcome — a silent "sent" entry on a failed send is what
+    // Record the TRUE outcome, a silent "sent" entry on a failed send is what
     // previously hid a broadcast stuck in Forke Mail's "draft" state.
     await logAudit({
       category: 'system',
@@ -77,7 +77,7 @@ async function uniqueSlug(base: string, ignoreId?: string): Promise<string> {
   let candidate = base
   let n = 1
   // Loop until no other row owns the candidate slug.
-  // Bounded in practice — titles rarely collide more than a handful of times.
+  // Bounded in practice: titles rarely collide more than a handful of times.
   while (true) {
     const existing = await db
       .select({ id: blogs.id })
@@ -147,7 +147,7 @@ function collectLocalImages(content: unknown, coverImage?: string | null): Set<s
   add(coverImage)
 
   // Normalize to plain JSON first. Content handed in from a client component is
-  // a "temporary client reference" — dotting into its nested props on the server
+  // a "temporary client reference": dotting into its nested props on the server
   // throws. A JSON round-trip yields a plain, safely-walkable object.
   let plain: unknown = content
   try {
@@ -196,7 +196,7 @@ function collectLocalImagesFromHtml(html: string | null, coverImage?: string | n
  * Delete session-uploaded files that are no longer referenced in the saved
  * document.  Accepts `contentHtml` (a plain string) rather than the Tiptap JSON
  * tree because server-action serialisation can mangle the nested JSON and cause
- * `collectLocalImages` to miss URLs — which was the root cause of images being
+ * `collectLocalImages` to miss URLs, which was the root cause of images being
  * deleted on every save.
  */
 export async function cleanupSessionUploads(sessionUrls: string[], contentHtml: string | null, currentCoverImage: string | null) {
@@ -223,7 +223,7 @@ export async function cleanupSessionUploads(sessionUrls: string[], contentHtml: 
 }
 
 
-// New uploads younger than this are never swept — protects an image that's been
+// New uploads younger than this are never swept, protects an image that's been
 // uploaded but whose post hasn't saved yet (upload → edit → save race).
 const ORPHAN_GRACE_MS = 5 * 60 * 1000 // 5 minutes
 
@@ -261,10 +261,10 @@ async function sweepOrphanedImages() {
         const full = join(dir, file)
         try {
           const info = await stat(full)
-          if (now - info.mtimeMs < ORPHAN_GRACE_MS) return // too new — keep
+          if (now - info.mtimeMs < ORPHAN_GRACE_MS) return // too new, keep
           await unlink(full)
         } catch {
-          /* gone already / unreadable — ignore */
+          /* gone already / unreadable, ignore */
         }
       })
     )
@@ -280,7 +280,7 @@ export interface BlogInput {
   authorName?: string | null
   excerpt?: string | null
   coverImage?: string | null
-  content?: unknown          // Tiptap JSON — sent as a JSON *string* (see normalizeContent)
+  content?: unknown          // Tiptap JSON: sent as a JSON *string* (see normalizeContent)
   contentHtml?: string | null
 }
 
@@ -288,7 +288,7 @@ export interface BlogInput {
  * Normalize the incoming `content` into a plain Tiptap JSON object.
  *
  * The editor sends `content` as a JSON **string** on purpose: passing the raw
- * Tiptap object across the React Server Component boundary is lossy — node
+ * Tiptap object across the React Server Component boundary is lossy, node
  * `attrs` (heading `level`, image `src`, embed `embedType`/`embedSrc`, …) get
  * silently dropped in the prod build, corrupting the stored document while the
  * HTML snapshot still looks fine. A string round-trips losslessly, so we parse
@@ -344,7 +344,7 @@ export async function getBlog(id: string) {
 
 // ── public reads (no admin gate) ────────────────────────────────────────────
 
-/** All published posts, newest first — for the public /blog list. */
+/** All published posts, newest first: for the public /blog list. */
 export async function getPublishedBlogs() {
   return db
     .select({
@@ -362,7 +362,7 @@ export async function getPublishedBlogs() {
     .orderBy(desc(blogs.createdAt))
 }
 
-/** A single published post by slug — for /blog/[slug]. Drafts return null. */
+/** A single published post by slug, for /blog/[slug]. Drafts return null. */
 export async function getPublishedBlogBySlug(slug: string) {
   const row = await db
     .select()
@@ -372,7 +372,7 @@ export async function getPublishedBlogBySlug(slug: string) {
   return row[0] ?? null
 }
 
-/** Slugs + timestamps of published posts — for the sitemap. */
+/** Slugs + timestamps of published posts, for the sitemap. */
 export async function getPublishedBlogSlugs() {
   return db
     .select({ slug: blogs.slug, updatedAt: blogs.updatedAt, publishedAt: blogs.publishedAt })
@@ -433,7 +433,7 @@ export async function updateBlog(id: string, input: BlogInput) {
     .set({
       title,
       slug,
-      // Only overwrite the byline when one was supplied — an empty field must
+      // Only overwrite the byline when one was supplied, an empty field must
       // not clobber an existing author name.
       ...(input.authorName !== undefined
         ? { authorName: input.authorName?.trim() || null }
@@ -658,7 +658,7 @@ export async function bulkSetBlogStatus(ids: string[], status: 'draft' | 'publis
   return { success: true as const, count: ids.length }
 }
 
-/** Sidebar badge count — total posts. Best-effort, never throws upward. */
+/** Sidebar badge count: total posts. Best-effort, never throws upward. */
 export async function getBlogCount() {
   try {
     await ensureAdmin()
@@ -673,7 +673,7 @@ export async function getBlogCount() {
 
 // ── blog view tracking ────────────────────────────────────────────────────────
 
-/** Increment the views counter for a post by slug. No auth gate — public API route. */
+/** Increment the views counter for a post by slug. No auth gate: public API route. */
 export async function incrementBlogView(slug: string) {
   try {
     await db
@@ -686,7 +686,7 @@ export async function incrementBlogView(slug: string) {
   }
 }
 
-/** Views for a single post by id (public — no auth gate). */
+/** Views for a single post by id (public: no auth gate). */
 export async function getBlogViewCount(blogId: string): Promise<number> {
   try {
     const [row] = await db

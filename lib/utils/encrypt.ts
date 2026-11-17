@@ -12,12 +12,12 @@
  * AES-256-GCM symmetric encryption for file URLs stored in the database.
  *
  * Why NOT bcrypt:
- *   bcrypt is a one-way hash — you can never recover the original value.
+ *   bcrypt is a one-way hash, you can never recover the original value.
  *   We need to decrypt the URL later to serve the file, so we use
  *   AES-256-GCM (reversible, authenticated encryption).
  *
  * Setup:
- *   Add FILE_ENCRYPTION_KEY to your .env — a random 64-char hex string.
+ *   Add FILE_ENCRYPTION_KEY to your .env: a random 64-char hex string.
  *   Generate one with: node -e "console.log(require('crypto').randomBytes(32).toString('hex'))"
  */
 

@@ -12,7 +12,7 @@
  * Client-side image compression for the blog editor.
  *
  * Blog uploads go browser → R2 directly (presigned PUT), so the bytes never
- * touch our server — there's no place to run sharp. We therefore compress in the
+ * touch our server: there's no place to run sharp. We therefore compress in the
  * browser BEFORE upload: decode the image, downscale the longest edge, and
  * re-encode to WebP. This shrinks both the stored asset and the bytes on every
  * blog-page view, while staying a valid image for OG/social previews.
@@ -21,12 +21,12 @@
  *  - GIFs are returned untouched (canvas would flatten animation to one frame).
  *  - SVGs / unknown types are returned untouched.
  *  - If the result isn't actually smaller, we keep the original.
- *  - Any decode/encode failure falls back to the original file — uploads never
+ *  - Any decode/encode failure falls back to the original file, uploads never
  *    break because compression failed.
  */
 
 const MAX_EDGE = 1600 // cap the longest side; plenty for full-width blog images + OG cards
-const QUALITY = 0.8 // WebP quality — strong size win, visually lossless for photos
+const QUALITY = 0.8 // WebP quality: strong size win, visually lossless for photos
 const COMPRESSIBLE = new Set(['image/jpeg', 'image/png', 'image/webp', 'image/avif'])
 
 export interface CompressedImage {
@@ -115,7 +115,7 @@ export async function compressImage(file: File | Blob, filename = 'image'): Prom
       if (!ctx) throw new Error('no 2d context')
       // White matte avoids transparent PNGs turning black when flattened to a
       // format that still has alpha but is shown on dark/light surfaces; WebP
-      // keeps alpha, so only matters for the rare opaque-expected case — drawing
+      // keeps alpha, so only matters for the rare opaque-expected case, drawing
       // straight is fine and preserves transparency for WebP.
       src.draw(ctx, w, h)
 

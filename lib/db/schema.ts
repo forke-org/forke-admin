@@ -157,7 +157,7 @@ export const tasks = pgTable('tasks', {
   claimedAt: timestamp('claimed_at'),
   deadline: timestamp('deadline'),
   sandboxRepoId: uuid('sandbox_repo_id').references(() => sandboxRepos.id, { onDelete: 'set null' }),
-  sourceRepo: text('source_repo'), // e.g. "owner/original-repo" — stored for reference
+  sourceRepo: text('source_repo'), // e.g. "owner/original-repo": stored for reference
   codespaceName: text('codespace_name'),
   codespaceUrl: text('codespace_url'),
   codespaceStatus: text('codespace_status'),
@@ -333,7 +333,7 @@ export const sqlQueryRequests = pgTable('sql_query_requests', {
 // Blog posts authored in the admin portal's Medium-style editor.
 // `content` holds Tiptap's structured JSON (the source of truth, queryable/re-editable);
 // `contentHtml` is the rendered HTML snapshot used by the public reader to avoid
-// re-serializing JSON on every page view. `coverImage` and inline images are URLs —
+// re-serializing JSON on every page view. `coverImage` and inline images are URLs,
 // currently pasted by hand, later produced by the R2 upload pipeline.
 export const blogs = pgTable('blogs', {
   id: uuid('id').primaryKey().defaultRandom(),
@@ -357,7 +357,7 @@ export const blogs = pgTable('blogs', {
 //
 // One row per first-touch visit that carried a marketing signal (?source=, utm_*, ?ref=,
 // or an external referrer). Written fire-and-forget from /api/track, which the Edge
-// middleware pings — middleware itself can't use postgres-js, so the Node route does the
+// middleware pings: middleware itself can't use postgres-js, so the Node route does the
 // insert. `sessionId` is a random first-party cookie that lets us later join a visit to the
 // signup it produced (visit -> conversion), without any IP or device fingerprint.
 export const pageVisits = pgTable('page_visits', {
@@ -403,7 +403,7 @@ export const authEvents = pgTable('auth_events', {
   email: text('email'),                            // snapshot, in case the user is later deleted
   event: text('event').notNull(),                  // 'signin' | 'signup'
   provider: text('provider'),                      // 'credentials' | 'google' | 'github'
-  ipHash: text('ip_hash'),                         // salted sha256 of the IP — NOT the raw IP
+  ipHash: text('ip_hash'),                         // salted sha256 of the IP, NOT the raw IP
   country: text('country'),
   userAgent: text('user_agent'),
   createdAt: timestamp('created_at').defaultNow().notNull(),
@@ -429,7 +429,7 @@ export const sandboxRepos = pgTable('sandbox_repos', {
     .notNull(),
   sourceRepo: text('source_repo').notNull(),       // e.g. "owner/original-repo"
   sandboxRepo: text('sandbox_repo').notNull(),      // e.g. "forke-sandbox/owner-repo-mirror"
-  // Task metadata — filled in via Configure Task form
+  // Task metadata: filled in via Configure Task form
   taskTitle: text('task_title'),
   taskDescription: text('task_description'),
   frontendStack: text('frontend_stack'),

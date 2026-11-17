@@ -15,12 +15,12 @@
  *
  * Layout mirrors the public post page on forke.space: the cover panel with the
  * title and facts row on its fade, then a contents rail beside the article. Formatting happens through a
- * floating bubble menu on text selection and a "/" slash command for blocks —
+ * floating bubble menu on text selection and a "/" slash command for blocks,
  * no persistent top toolbar, matching Medium's minimal feel.
  *
  * Content is held as Tiptap JSON; on save we also serialize HTML so the future
  * public reader can render without re-parsing JSON. Image uploads are stubbed
- * (paste-URL only) until R2 is connected — see uploadImage.ts.
+ * (paste-URL only) until R2 is connected, see uploadImage.ts.
  */
 
 import { useEditor, EditorContent } from '@tiptap/react'
@@ -105,7 +105,7 @@ export default function BlogEditor({
   const [coverPromptOpen, setCoverPromptOpen] = useState(false)
   const [coverUrl, setCoverUrl] = useState('')
 
-  // Body-image prompt — same upload-or-link choice as the cover chooser.
+  // Body-image prompt: same upload-or-link choice as the cover chooser.
   const [imagePromptOpen, setImagePromptOpen] = useState(false)
   const [imageUrl, setImageUrl] = useState('')
 
@@ -121,7 +121,7 @@ export default function BlogEditor({
   const [uploadProgress, setUploadProgress] = useState(0)
 
   // Open the chooser (upload or paste a link) rather than jumping straight to
-  // the file dialog — mirrors how the cover image is added.
+  // the file dialog: mirrors how the cover image is added.
   const openImagePicker = useCallback(() => {
     setImageUrl('')
     setImagePromptOpen(true)
@@ -133,7 +133,7 @@ export default function BlogEditor({
   }, [])
 
   // GIFs skip the chooser/cropper entirely (cropping would flatten the
-  // animation) — go straight to the GIF-only file dialog, then upload as-is.
+  // animation): go straight to the GIF-only file dialog, then upload as-is.
   const openGifPicker = useCallback(() => {
     gifFileRef.current?.click()
   }, [])
@@ -163,7 +163,7 @@ export default function BlogEditor({
         showOnlyWhenEditable: true,
       }),
       // allowBase64 lets uploaded images persist inside the content JSON until
-      // R2 is connected — this fixes images vanishing on save/publish.
+      // R2 is connected: this fixes images vanishing on save/publish.
       ResizableImage.configure({ inline: false, allowBase64: true }),
       EmbedExtension,
       createSlashCommand(openImagePicker, openEmbedPrompt, openGifPicker),
@@ -204,7 +204,7 @@ export default function BlogEditor({
     }
   }, [editor, emitChange])
 
-  // A picked file opens the cropper first (every upload is croppable) — except
+  // A picked file opens the cropper first (every upload is croppable): except
   // GIFs, which the cropper would flatten to a single static frame (canvas crop
   // strips animation). GIFs upload verbatim so they keep looping.
   const handleImageFile = (
@@ -219,7 +219,7 @@ export default function BlogEditor({
       return
     }
     if (file.type === 'image/gif') {
-      // Skip the cropper so the animation survives — upload + place as-is.
+      // Skip the cropper so the animation survives, upload + place as-is.
       void uploadAndPlace(file, target, file.name)
       return
     }
@@ -501,7 +501,7 @@ export default function BlogEditor({
         </div>
       </header>
 
-      {/* Hidden file inputs — drive image uploads (upload only, no URL). */}
+      {/* Hidden file inputs: drive image uploads (upload only, no URL). */}
       <input
         ref={bodyFileRef}
         type="file"

@@ -104,7 +104,7 @@ export async function approveOwner(userId: string) {
   await db.update(users).set({ isApproved: true }).where(eq(users.id, userId))
   await logAudit({ category: 'owner', action: 'owner.approved', target: u?.name || u?.email || userId })
 
-  // Notify the owner (fail-soft — never block the approval on email failure)
+  // Notify the owner (fail-soft: never block the approval on email failure)
   const toEmail = o?.contactEmail || u?.email
   if (toEmail) {
     await sendOwnerApprovedEmail(toEmail, o?.firstName || u?.name || 'there')
@@ -133,8 +133,8 @@ export async function declineOwner(userId: string, reason: string) {
 
   // This will cascade delete from owners table due to FK
   await db.delete(users).where(eq(users.id, userId))
-  // Audit log keeps the reason — the only durable record once the user is gone
-  await logAudit({ category: 'owner', action: 'owner.declined', target: `${u?.name || u?.email || userId} — ${cleanReason}` })
+  // Audit log keeps the reason, the only durable record once the user is gone
+  await logAudit({ category: 'owner', action: 'owner.declined', target: `${u?.name || u?.email || userId}: ${cleanReason}` })
   revalidatePath('/admin')
   return { success: true }
 }
@@ -695,7 +695,7 @@ export async function getSidebarCounts() {
 // Degrades gracefully: if page_visits doesn't exist yet, returns empty data
 // instead of throwing, so the Tracker page always renders.
 
-// Type returned by getTrackerData — one consolidated payload for the dedicated Tracker page.
+// Type returned by getTrackerData, one consolidated payload for the dedicated Tracker page.
 export type TrackerData = {
   stats: { clicks: number; visitors: number; conversions: number; rate: number }
   series: { day: string; clicks: number }[]

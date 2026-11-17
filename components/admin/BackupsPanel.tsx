@@ -295,7 +295,7 @@ export default function BackupsPanel() {
                       className="px-4 py-3 text-right text-red-400/80 font-mono text-xs max-w-[200px] truncate"
                       title={run.errorMessage || ''}
                     >
-                      {run.errorMessage || '—'}
+                      {run.errorMessage || '-'}
                     </td>
                     <td className="px-4 py-3 text-right">
                       {run.status === 'success' ? (
@@ -322,7 +322,7 @@ export default function BackupsPanel() {
                           </span>
                         )
                       ) : (
-                        <span className="text-white/20 text-xs font-mono">—</span>
+                        <span className="text-white/20 text-xs font-mono">-</span>
                       )}
                     </td>
                   </tr>

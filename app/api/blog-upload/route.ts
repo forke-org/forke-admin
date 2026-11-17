@@ -22,7 +22,7 @@ import { isR2Configured, uploadToR2 } from '@/lib/r2'
 export const runtime = 'nodejs'
 
 const ALLOWED = new Set(['image/jpeg', 'image/png', 'image/webp', 'image/gif', 'image/avif'])
-const MAX_BYTES = 25 * 1024 * 1024 // generous — quality preserved, no recompression here
+const MAX_BYTES = 25 * 1024 * 1024 // generous, quality preserved, no recompression here
 
 const EXT: Record<string, string> = {
   'image/jpeg': 'jpg',

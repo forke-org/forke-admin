@@ -11,7 +11,7 @@
  */
 
 /**
- * Custom "Embed" block — paste any link and it renders stylishly based on type:
+ * Custom "Embed" block: paste any link and it renders stylishly based on type:
  *   • video  → YouTube / Vimeo iframe player
  *   • tweet  → X/Twitter post (loaded via the platform widget script)
  *   • iframe → generic site embedded in an iframe
@@ -182,7 +182,7 @@ function EmbedView({ node, updateAttributes, selected, editor, getPos }: NodeVie
         style={{ width: width ? `${width}px` : '100%' }}
       >
         {/* In the editor, embeds are completely inert: this layer swallows all
-            clicks/scroll so iframes don't capture focus and links don't open —
+            clicks/scroll so iframes don't capture focus and links don't open,
             you interact with the block (select/resize/align) instead. */}
         <div className={cn(editable && 'pointer-events-none')}>
         {/* ── renderers per type ── */}

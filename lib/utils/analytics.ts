@@ -10,7 +10,7 @@
 
 import { createHash } from 'node:crypto'
 
-// Server-side analytics helpers (Node runtime only — uses node:crypto).
+// Server-side analytics helpers (Node runtime only: uses node:crypto).
 // Two distinct concerns live here on purpose:
 //   1. Visit tracking  -> first-party marketing signal, NO IP (see lib/utils/attribution.ts).
 //   2. IP hashing       -> security/auth log only, one-way salted hash, never the raw IP.
@@ -21,7 +21,7 @@ export const SESSION_COOKIE = 'forke_session'
 const IP_SALT = process.env.ANALYTICS_IP_SALT || 'forke-default-rotate-me'
 
 /**
- * One-way, salted SHA-256 of an IP address. We store ONLY this — never the raw IP.
+ * One-way, salted SHA-256 of an IP address. We store ONLY this: never the raw IP.
  * Same IP always hashes to the same value (so we can still spot "many accounts, one IP"),
  * but the hash can't be reversed back to an address.
  */
@@ -52,7 +52,7 @@ export function getCountry(headers: Headers): string | null {
   )
 }
 
-// Conservative bot match — keeps obvious crawlers out of the human click charts without
+// Conservative bot match: keeps obvious crawlers out of the human click charts without
 // trying to be a full bot-detection system.
 //
 // Deliberately NOT matching bare "google" / "bing" / "preview": those appear in ordinary

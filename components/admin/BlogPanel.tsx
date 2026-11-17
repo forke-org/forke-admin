@@ -11,7 +11,7 @@
  */
 
 /**
- * Blog admin panel — list view + Medium-style editor view.
+ * Blog admin panel: list view + Medium-style editor view.
  *
  * Self-contained like the other admin panels (DatabaseConsole etc.): it owns its
  * own data fetching via blog-actions and switches between a posts table and the
@@ -58,7 +58,7 @@ import {
 } from 'lucide-react'
 import type { BlogEditorValue } from './blog/BlogEditor'
 
-// Editor is client-only + heavy (Tiptap) — load on demand.
+// Editor is client-only + heavy (Tiptap): load on demand.
 const BlogEditor = dynamic(() => import('./blog/BlogEditor'), {
   ssr: false,
   loading: () => (
@@ -359,7 +359,7 @@ function BlogList({
         />
       </div>
 
-      {/* Bulk action bar — appears when rows are selected */}
+      {/* Bulk action bar: appears when rows are selected */}
       {someSelected && (
         <div className="mb-3 flex flex-wrap items-center gap-2 rounded-lg border border-accent/25 bg-accent/[0.06] px-3 py-2">
           <span className="text-xs font-medium text-white">
@@ -472,7 +472,7 @@ function BlogList({
                   </td>
                   <td className="hidden px-2 py-2.5 lg:table-cell">
                     <span className="text-[12px] text-[var(--color-text-muted)]">
-                      {row.authorName || '—'}
+                      {row.authorName || '-'}
                     </span>
                   </td>
                   <td className="hidden px-2 py-2.5 sm:table-cell">
@@ -522,7 +522,7 @@ function BlogList({
         </table>
       </div>
 
-      {/* Pagination — 10 posts per page */}
+      {/* Pagination: 10 posts per page */}
       {!loading && filtered.length > PER_PAGE && (
         <div className="mt-4 flex items-center justify-between">
           <p className="text-[11px] font-mono text-[var(--color-text-muted)]">
@@ -620,7 +620,7 @@ function BlogEditorView({ id, onBack, onSaved }: { id: string | null; onBack: ()
 
   const [saving, setSaving] = useState(false)
   const [savedAt, setSavedAt] = useState<Date | null>(null)
-  // Reactive "unsaved changes" flag — drives the primary toolbar button label.
+  // Reactive "unsaved changes" flag: drives the primary toolbar button label.
   const [hasChanges, setHasChanges] = useState(false)
   // Latest editor value, kept in a ref so save doesn't re-render on every keystroke.
   const valueRef = useRef<BlogEditorValue | null>(null)
@@ -662,7 +662,7 @@ function BlogEditorView({ id, onBack, onSaved }: { id: string | null; onBack: ()
   const persist = useCallback(async (silent = false): Promise<string | null> => {
     const v = valueRef.current
     if (!v) return postIdRef.current
-    // Skip empty brand-new posts — don't litter the list with blank drafts.
+    // Skip empty brand-new posts, don't litter the list with blank drafts.
     const isEmpty =
       !postIdRef.current &&
       !v.title.trim() &&
@@ -681,8 +681,8 @@ function BlogEditorView({ id, onBack, onSaved }: { id: string | null; onBack: ()
         excerpt: deriveExcerpt(v.contentHtml),
         coverImage: v.coverImage,
         // Serialize the Tiptap JSON to a string before it crosses the server-
-        // action boundary. Passing the raw object is lossy in the prod build —
-        // node attrs (heading level, image src, embed type) get dropped — so we
+        // action boundary. Passing the raw object is lossy in the prod build,
+        // node attrs (heading level, image src, embed type) get dropped, so we
         // stringify here and JSON.parse it back in the action (normalizeContent).
         content: JSON.stringify(v.content ?? null),
         contentHtml: v.contentHtml,
@@ -780,13 +780,13 @@ function BlogEditorView({ id, onBack, onSaved }: { id: string | null; onBack: ()
   const handleSave = async () => {
     const savedId = await persist()
     if (!savedId) return
-    // "Save draft" always lands the post in draft state — if it was published,
+    // "Save draft" always lands the post in draft state, if it was published,
     // saving a draft unpublishes it.
     if (status === 'published') {
       const res = await setBlogStatus(savedId, 'draft')
       if (res.success) {
         setStatus('draft')
-        toast('Saved as draft — post unpublished.', 'success')
+        toast('Saved as draft: post unpublished.', 'success')
         return
       }
       toast(res.error || 'Saved, but failed to unpublish.', 'error')
@@ -842,7 +842,7 @@ function BlogEditorView({ id, onBack, onSaved }: { id: string | null; onBack: ()
           )}
           <StatusBadge status={status} />
 
-          {/* Secondary "Save draft" button — only meaningful for unpublished
+          {/* Secondary "Save draft" button: only meaningful for unpublished
               posts (for a published post, the primary Save handles it). */}
           {status !== 'published' && (
             <button

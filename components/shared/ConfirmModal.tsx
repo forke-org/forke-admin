@@ -21,7 +21,7 @@ export interface ConfirmOptions {
 }
 
 /**
- * Reusable in-app confirmation modal — replaces native window.confirm().
+ * Reusable in-app confirmation modal: replaces native window.confirm().
  * Render <ConfirmModal state={...} onClose={...} /> once per screen and drive it
  * with a single piece of state. Matches the admin glass-modal styling.
  */

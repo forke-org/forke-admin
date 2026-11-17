@@ -13,8 +13,8 @@
 /**
  * Free, hand-rolled replacement for Tiptap's paid Pro image extension.
  *
- * Extends the base @tiptap/extension-image with two persisted attributes —
- * `width` (px, rendered as a style) and `align` (left | center | right) — and
+ * Extends the base @tiptap/extension-image with two persisted attributes,
+ * `width` (px, rendered as a style) and `align` (left | center | right), and
  * a React NodeView that provides drag-to-resize handles plus an alignment
  * toolbar on selection. No Pro license required; the produced HTML is a plain
  * <img> with inline styles so it renders identically on the public reader.

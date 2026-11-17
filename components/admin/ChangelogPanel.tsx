@@ -68,7 +68,7 @@ function parseDate(iso: string | Date | null | undefined): Date | null {
 
 function formatLocalDateTime(iso: string | Date | null | undefined): string {
   const d = parseDate(iso)
-  if (!d) return '—'
+  if (!d) return '-'
   try {
     return new Intl.DateTimeFormat(undefined, {
       dateStyle: 'medium',
@@ -466,7 +466,7 @@ function ChangelogListView({
         />
       </div>
 
-      {/* Bulk action bar — appears when rows are selected */}
+      {/* Bulk action bar: appears when rows are selected */}
       {someSelected && (
         <div className="mb-3 flex flex-wrap items-center gap-2 rounded-lg border border-accent/25 bg-accent/[0.06] px-3 py-2">
           <span className="text-xs font-medium text-white">
@@ -626,7 +626,7 @@ function ChangelogListView({
         </table>
       </div>
 
-      {/* Pagination — 10 posts per page */}
+      {/* Pagination: 10 posts per page */}
       {!loading && filtered.length > PER_PAGE && (
         <div className="mt-4 flex items-center justify-between">
           <p className="text-[11px] font-mono text-[var(--color-text-muted)]">

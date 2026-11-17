@@ -20,7 +20,7 @@
  * served URL.
  *
  * Both paths use XMLHttpRequest (not fetch) so we can report real upload
- * progress — fetch doesn't expose upload progress events.
+ * progress: fetch doesn't expose upload progress events.
  */
 
 import { compressImage } from './compressImage'
@@ -109,7 +109,7 @@ export async function uploadImage(
   onProgress?: (percent: number) => void
 ): Promise<UploadResult> {
   // Compress in the browser first (downscale + WebP). GIFs and failures pass
-  // through untouched, so this never blocks an upload — it only ever shrinks it.
+  // through untouched, so this never blocks an upload, it only ever shrinks it.
   const { blob, contentType, filename: outName } = await compressImage(file, filename)
 
   // 1) Try the direct-to-R2 presigned path.

@@ -24,7 +24,7 @@
  */
 
 // ----------------------------------------------------------------------------
-// Brand tokens (inlined everywhere — email clients ignore <style>/variables)
+// Brand tokens (inlined everywhere: email clients ignore <style>/variables)
 // ----------------------------------------------------------------------------
 const BRAND = {
   accent: '#FF7A00',
@@ -145,7 +145,7 @@ function divider(mt = 8, mb = 24): string {
 }
 
 /**
- * The shared email shell — dark canvas, single hairline card, optional banner,
+ * The shared email shell: dark canvas, single hairline card, optional banner,
  * wordmark header bar, slot for body, and a consistent footer.
  */
 function emailShell(opts: {
@@ -158,7 +158,7 @@ function emailShell(opts: {
   headStyle?: string
   /** Optional HTML appended in the footer (e.g. an unsubscribe line for broadcasts). */
   footerExtra?: string
-  /** When true, the body cell carries no padding — bodyHtml manages its own edge
+  /** When true, the body cell carries no padding, bodyHtml manages its own edge
    *  spacing and full-bleed dividers (used by the newsletter layout). */
   fullBleedBody?: boolean
   /** Card max-width in px. Real sends use the email standard (600). The /email
@@ -285,7 +285,7 @@ function emailShell(opts: {
               <td class="email-pad" style="padding:20px 28px 0 28px;">
                 <p style="font-family:${BRAND.sans};font-size:12px;line-height:1.7;color:rgba(255,255,255,0.34);margin:0;">
                   The micro-task marketplace for developers &middot; <a href="mailto:support@forke.space" style="color:${BRAND.textMuted};text-decoration:none;">support@forke.space</a><br>
-                  &copy; 2026 forke &mdash; all rights reserved &nbsp;&middot;&nbsp; ${opts.footerLabel}
+                  &copy; 2026 forke &middot; all rights reserved &nbsp;&middot;&nbsp; ${opts.footerLabel}
                 </p>
                 ${opts.footerExtra ?? ''}
               </td>
@@ -347,7 +347,7 @@ function resolveMarketingUrl(): string {
  */
 /**
  * Low-level single send. Returns a structured result so callers can tell a
- * transient failure (429 / 5xx — worth retrying) from a permanent one.
+ * transient failure (429 / 5xx: worth retrying) from a permanent one.
  */
 async function sendMailResult(
   toEmail: string,
@@ -379,7 +379,7 @@ async function sendMailResult(
     if (!res.ok) {
       const errText = await res.text()
       console.error(`Failed to send ${label} email via Forke Mail (${res.status}):`, errText)
-      // 429 (rate limit) and 5xx are transient — safe to retry.
+      // 429 (rate limit) and 5xx are transient, safe to retry.
       const retryable = res.status === 429 || res.status >= 500
       const retryHeader = res.headers.get('retry-after')
       const retryAfterMs = retryHeader ? Number(retryHeader) * 1000 : undefined
@@ -407,7 +407,7 @@ async function sendMail(
 const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms))
 
 // ----------------------------------------------------------------------------
-// Email builders — exported so the /email preview page can render them too.
+// Email builders: exported so the /email preview page can render them too.
 // Each returns the full HTML string for one message.
 // ----------------------------------------------------------------------------
 
@@ -416,12 +416,12 @@ export function buildWelcomeEmail(recentPosts?: BlogEmailRecent[], maxWidth?: nu
     maxWidth,
     recentPosts,
     title: 'Welcome to the Forke Waitlist',
-    preheader: 'You’re on the list. Prepare your editor — something big is about to drop.',
+    preheader: 'You’re on the list. Prepare your editor: something big is about to drop.',
     banner: 'main-banner.png',
     footerLabel: 'Waitlist Confirmation',
     bodyHtml: `
       ${heading('You’re on the list.', 'Build the future.')}
-      ${p('Thanks for joining early. Forke is the micro-task marketplace where developers claim real bounties, ship real code, and get paid instantly over UPI — no fake projects, no proposals, no waiting.')}
+      ${p('Thanks for joining early. Forke is the micro-task marketplace where developers claim real bounties, ship real code, and get paid instantly over UPI: no fake projects, no proposals, no waiting.')}
       ${p('We’ll email you the moment your workspace is ready. Until then, prepare your editor.')}
       ${featurePills(['Real-world tasks', 'Verified contributions', 'Instant payouts'])}
       ${buttonPrimary('https://www.linkedin.com/company/forke/', 'Follow along on LinkedIn')}
@@ -435,7 +435,7 @@ export function buildAdminInvitationEmail(name: string, inviteLink: string, rece
   return emailShell({
     maxWidth,
     recentPosts,
-    title: 'Forke — Administrative Invitation',
+    title: 'Forke: Administrative Invitation',
     preheader: 'You’ve been invited to the Forke admin console. Set up your account to get started.',
     banner: 'admin-approval.png',
     footerLabel: 'Secure System Access',
@@ -454,7 +454,7 @@ export function buildAccountDeletionScheduledEmail(recentPosts?: BlogEmailRecent
   return emailShell({
     maxWidth,
     recentPosts,
-    title: 'Forke — Account Deletion Scheduled',
+    title: 'Forke: Account Deletion Scheduled',
     preheader: 'Your account is scheduled for deletion in 30 days. Sign back in to cancel.',
     banner: 'main-banner.png',
     footerLabel: 'Account Deletion Schedule',
@@ -462,7 +462,7 @@ export function buildAccountDeletionScheduledEmail(recentPosts?: BlogEmailRecent
       ${heading('Deletion scheduled.', '30 days remaining.')}
       ${p('Hello,')}
       ${p('We received a request to delete your Forke account. Per our security policy, it’s scheduled for permanent deletion in <strong style="color:' + BRAND.textHigh + ';font-weight:600;">30 days</strong>.')}
-      ${calloutBox('Changed your mind?', 'Simply sign back in with your usual credentials any time before the window closes — that automatically cancels the deletion.')}
+      ${calloutBox('Changed your mind?', 'Simply sign back in with your usual credentials any time before the window closes, that automatically cancels the deletion.')}
       ${p('No action is needed if you wish to proceed. Your data will be permanently erased after 30 days.', 0)}
     `,
   })
@@ -472,14 +472,14 @@ export function buildOwnerApprovedEmail(name: string, signInLink: string, recent
   return emailShell({
     maxWidth,
     recentPosts,
-    title: 'Forke — Your Owner Account is Approved',
+    title: 'Forke: Your Owner Account is Approved',
     preheader: 'Your owner application is approved. Your dashboard is ready.',
     banner: 'owner-approved.png',
     footerLabel: 'Owner Access Granted',
     bodyHtml: `
       ${heading('Application approved.', 'Welcome aboard.')}
       ${p(`Hello ${name},`)}
-      ${p('Great news — your owner application has been reviewed and <strong style="color:' + BRAND.textHigh + ';font-weight:600;">approved</strong>. You now have full access to the Forke owner dashboard, where you can post tasks, review submissions, and collaborate with developers.')}
+      ${p('Great news: your owner application has been reviewed and <strong style="color:' + BRAND.textHigh + ';font-weight:600;">approved</strong>. You now have full access to the Forke owner dashboard, where you can post tasks, review submissions, and collaborate with developers.')}
       ${buttonPrimary(signInLink, 'Enter owner dashboard')}
       ${fallbackLink(signInLink)}
     `,
@@ -491,7 +491,7 @@ export function buildOwnerDeclinedEmail(name: string, reason: string, applyLink:
   return emailShell({
     maxWidth,
     recentPosts,
-    title: 'Forke — Owner Application Update',
+    title: 'Forke: Owner Application Update',
     preheader: 'An update on your Forke owner application.',
     banner: 'owner-rejected.png',
     footerLabel: 'Owner Application Review',
@@ -500,7 +500,7 @@ export function buildOwnerDeclinedEmail(name: string, reason: string, applyLink:
       ${p(`Hello ${name},`)}
       ${p('Thank you for your interest in becoming an owner on Forke. After review, we weren’t able to approve your application at this time.')}
       ${calloutBox('Reason', safeReason)}
-      ${p('You’re welcome to address the above and re-apply whenever you’re ready — we’d be glad to take another look.')}
+      ${p('You’re welcome to address the above and re-apply whenever you’re ready, we’d be glad to take another look.')}
       ${buttonGhost(applyLink, 'Apply again')}
       ${fallbackLink(applyLink)}
     `,
@@ -511,7 +511,7 @@ export function buildBannedEmail(name: string, accountKind: 'owner' | 'developer
   return emailShell({
     maxWidth,
     recentPosts,
-    title: 'Forke — Account Suspended',
+    title: 'Forke: Account Suspended',
     preheader: 'Your account has been suspended. You can request a review.',
     banner: 'user-ban.png',
     footerLabel: 'Account Suspension Notice',
@@ -527,7 +527,7 @@ export function buildBannedEmail(name: string, accountKind: 'owner' | 'developer
 }
 
 /**
- * "Forke is live" announcement — broadcast to the waitlist when the site goes
+ * "Forke is live" announcement: broadcast to the waitlist when the site goes
  * public to browse (all pages viewable; the product itself still opens in waves).
  * Mirrors the LinkedIn launch post: open house before the doors open.
  */
@@ -544,14 +544,14 @@ export function buildSiteLiveEmail(opts?: { unsubscribe?: boolean; maxWidth?: nu
     maxWidth: opts?.maxWidth,
     recentPosts: opts?.recentPosts,
     title: 'Forke is live',
-    preheader: 'The site is live to explore. The product opens in waves — you’re on the list.',
+    preheader: 'The site is live to explore. The product opens in waves, you’re on the list.',
     banner: 'main-banner.png',
     footerLabel: 'Launch Announcement',
     footerExtra,
     bodyHtml: `
       ${heading('The site is live.', 'Come look around.')}
-      ${p('Big moment: you can now actually explore Forke. The landing, the blogs, how levels work, what we’re building — all of it is real and public. Go click around.')}
-      ${p('What’s <strong style="color:' + BRAND.textHigh + ';font-weight:600;">not</strong> open yet is the part that matters most: claiming bounties, shipping real work, getting paid. That’s still rolling out in waves — and as a waitlister, you’re first in line.')}
+      ${p('Big moment: you can now actually explore Forke. The landing, the blogs, how levels work, what we’re building: all of it is real and public. Go click around.')}
+      ${p('What’s <strong style="color:' + BRAND.textHigh + ';font-weight:600;">not</strong> open yet is the part that matters most: claiming bounties, shipping real work, getting paid. That’s still rolling out in waves, and as a waitlister, you’re first in line.')}
       ${calloutBox('Think of it as an open house', 'Doors aren’t fully open yet, but you’re welcome to walk through. Read the blogs, see the vision, and we’ll email you the moment your workspace is ready.')}
       ${buttonPrimary(siteUrl, 'Explore Forke')}
       ${p('Want to make sure you’re set for early access when functionality goes live? Confirm your spot:', 14)}
@@ -602,7 +602,7 @@ function formatBlogDate(value: Date | string | null | undefined): string | null 
 /**
  * Trim text to ~`max` characters on a word boundary and append a real ellipsis.
  * Email clients can't be trusted with CSS line-clamp, so the blog excerpt is
- * truncated here instead — mirroring the "show a few words then …" behaviour of
+ * truncated here instead: mirroring the "show a few words then …" behaviour of
  * the blog cards on the site.
  */
 function clampText(text: string, max = 140): string {
@@ -614,13 +614,13 @@ function clampText(text: string, max = 140): string {
 }
 
 /**
- * New-blog announcement — echoes the public blog page's featured card: a cover
+ * New-blog announcement: echoes the public blog page's featured card: a cover
  * hero, a mono meta row, a serif title, the excerpt, and a "Read more" button.
  *
  * Progressive fade-in: each block is wrapped in a `.fx` class that the <head>
  * <style> starts at opacity:0 and eases to 1 with a staggered delay, the button
  * (`.fx-cta`) revealing last. Clients that strip <style> (Gmail) ignore all of
- * it and render everything visible immediately — so nothing is ever hidden.
+ * it and render everything visible immediately, so nothing is ever hidden.
  */
 /** Hero/thumbnail image for a post (falls back to a serif "F" placeholder). */
 function blogImg(src: string | null | undefined, alt: string, href: string, radius = 14): string {
@@ -630,7 +630,7 @@ function blogImg(src: string | null | undefined, alt: string, href: string, radi
   return `<a href="${href}" target="_blank" style="text-decoration:none;display:block;line-height:0;"><table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="border-radius:${radius}px;border:1px solid ${BRAND.hairline};background:rgba(255,255,255,0.02);"><tr><td align="center" style="height:140px;font-family:${BRAND.serif};font-size:48px;color:rgba(255,255,255,0.10);">F</td></tr></table></a>`
 }
 
-/** One alternating "latest" row — image-then-text in source order (so it stacks
+/** One alternating "latest" row: image-then-text in source order (so it stacks
  *  photo-on-top on phones); `imgRight` only flips the visual side via dir=rtl. */
 function blogRecentRow(r: BlogEmailRecent, imgRight: boolean): string {
   const mins = r.readingMinutes && r.readingMinutes > 0 ? r.readingMinutes : 1
@@ -674,7 +674,7 @@ function blogSocials(): string {
 }
 
 /**
- * New-blog newsletter — Apple-Newsroom featured post (centered kicker, title,
+ * New-blog newsletter: Apple-Newsroom featured post (centered kicker, title,
  * hero, excerpt, Read more), then the latest 3 posts in alternating image/text
  * rows (stacking photo-on-top on phones), then a social row.
  */
@@ -860,15 +860,15 @@ export function buildChangelogEmail(data: ChangelogEmailData): string {
 }
 
 // ----------------------------------------------------------------------------
-// Public senders — signatures, subjects, and from-addresses unchanged.
+// Public senders: signatures, subjects, and from-addresses unchanged.
 // ----------------------------------------------------------------------------
 
 // ----------------------------------------------------------------------------
-// Forke Mail Broadcasts API — for BULK subscriber sends (e.g. blog announcements).
+// Forke Mail Broadcasts API, for BULK subscriber sends (e.g. blog announcements).
 // Unlike the per-recipient /emails endpoint (metered against the daily quota),
 // a broadcast goes to a whole audience in one operation, shows up under the
 // "Broadcasts" tab, and is the right tool for newsletters. Subscribers live in
-// our Postgres `subscribers` table — NOT in Forke Mail — so before sending we sync
+// our Postgres `subscribers` table, NOT in Forke Mail, so before sending we sync
 // the DB emails into a Forke Mail audience as contacts.
 // ----------------------------------------------------------------------------
 
@@ -949,7 +949,7 @@ async function ensureAudience(apiKey: string): Promise<string | null> {
   const existingId = await findAudienceByName('Forke Subscribers', apiKey)
   if (existingId) return existingId
 
-  // No id configured — create a default audience so the flow still works.
+  // No id configured: create a default audience so the flow still works.
   try {
     const res = await mailApiFetch('/audiences', {
       method: 'POST',
@@ -1022,7 +1022,7 @@ async function syncContactsToAudience(audienceId: string, emails: string[], apiK
             },
             apiKey
           )
-          // 200/201 = created; 409/422 = already a contact — both are fine.
+          // 200/201 = created; 409/422 = already a contact, both are fine.
           if (res.ok || res.status === 409 || res.status === 422) synced++
           else console.warn(`Contact sync for ${email} returned ${res.status}:`, await res.text())
         } catch (err) {
@@ -1041,7 +1041,7 @@ async function syncContactsToAudience(audienceId: string, emails: string[], apiK
 
 /**
  * Announce a newly-published blog to every subscriber via Forke Mail's Broadcasts
- * API (one audience send — does NOT burn the per-recipient daily quota). Fully
+ * API (one audience send: does NOT burn the per-recipient daily quota). Fully
  * fail-soft: a missing key/audience or a Forke Mail hiccup logs and returns a zero
  * result; it must never block or throw into the blog-publish action.
  *
@@ -1083,7 +1083,7 @@ export async function sendBlogPublishedBroadcast(blog: {
   const url = `${baseUrl}/blogs/${blog.slug}`
 
   // Latest 3 OTHER published posts, newest first, for the "Latest from the blog"
-  // section. Best-effort — a query failure just omits the section.
+  // section. Best-effort: a query failure just omits the section.
   const recentPosts = await getRecentPostsForEmail(blog.slug)
 
   const html = buildBlogEmail({
@@ -1121,7 +1121,7 @@ export async function sendBlogPublishedBroadcast(blog: {
     const broadcast = (await createRes.json()) as { id: string }
     const broadcastId = broadcast.id
 
-    // 4) Send it now — with retries.
+    // 4) Send it now, with retries.
     //
     // Forke Mail can return a transient error if /send is called in the same instant
     // the broadcast is created (e.g. status 400 "broadcast is still processing").
@@ -1248,7 +1248,7 @@ export async function sendChangelogPublishedBroadcast(changelog: {
     const broadcast = (await createRes.json()) as { id: string }
     const broadcastId = broadcast.id
 
-    // 4) Send it now — with retries.
+    // 4) Send it now, with retries.
     let lastError = ''
     for (let attempt = 1; attempt <= 4; attempt++) {
       const sendRes = await mailApiFetch(
@@ -1542,7 +1542,7 @@ export function buildDatabaseBackupEmail(
   return emailShell({
     maxWidth,
     recentPosts,
-    title: 'Forke — Database Backup',
+    title: 'Forke: Database Backup',
     preheader: 'Your database backup is ready. Link expires in 12 hours.',
     banner: 'main-banner.png',
     footerLabel: 'Automated Database Backup',
@@ -1629,7 +1629,7 @@ export function buildBackupReportEmail(
   const tierLabel = TIER_LABEL[tier] || tier
   return emailShell({
     maxWidth,
-    title: 'Forke — Database Backup',
+    title: 'Forke: Database Backup',
     preheader: `${tierLabel} production database backup is ready. Link expires in 12 hours.`,
     banner: 'main-banner.png',
     footerLabel: 'Automated Database Backup',
@@ -1698,14 +1698,14 @@ export async function sendBackupReportNotification(
 export function buildBackupFailureEmail(tier: string, errorMessage: string, maxWidth?: number): string {
   return emailShell({
     maxWidth,
-    title: 'Forke — Backup Failed',
+    title: 'Forke: Backup Failed',
     preheader: `The ${tier} production database backup failed.`,
     banner: 'main-banner.png',
     footerLabel: 'Automated Database Backup',
     bodyHtml: `
       ${heading('Backup failed.', 'Action needed.')}
       ${p(`The scheduled <strong>${tier}</strong> backup of the production database did not complete successfully.`)}
-      ${calloutBox('🚨 Error', errorMessage || 'Unknown error — check the OCI host logs.')}
+      ${calloutBox('🚨 Error', errorMessage || 'Unknown error: check the OCI host logs.')}
       ${p('No new backup was stored for this run. If this keeps happening, the retention chain will develop a gap.')}
     `,
   })

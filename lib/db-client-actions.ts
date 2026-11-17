@@ -173,7 +173,7 @@ export async function getTableDetails(tableName: string) {
     const validTable = await validateTableName(tableName)
 
     // Columns, primary keys, and foreign keys are three independent
-    // catalog reads for the same table — run them concurrently.
+    // catalog reads for the same table, run them concurrently.
     const [columnsResult, pkResult, fkResult]: [any, any, any] = await Promise.all([
       db.execute(sql`
         SELECT
@@ -514,7 +514,7 @@ export async function getDatabaseOverview() {
   await ensureAdmin()
   try {
     // Steps 1-5, 7 and 8 (below) are all independent single-value/list
-    // queries against different catalog views — run them concurrently
+    // queries against different catalog views, run them concurrently
     // instead of one round-trip at a time.
     const [dbNameRes, dbSizeRes, connRes, tablesCountRes, versionRes, tableSizes, rolesRes, dbListRes] =
       await Promise.all([
@@ -624,7 +624,7 @@ export async function getDatabaseOverview() {
     }
 
     // 10 & 11 are each independent, soft-failing (default on error) stats
-    // reads — run all three underlying queries concurrently.
+    // reads: run all three underlying queries concurrently.
     const [uptimeResult, { cacheHitRatio, commits }] = await Promise.all([
       // 10. Query server uptime
       (async () => {
@@ -1073,7 +1073,7 @@ export async function executeSQLQuery(query: string) {
 export async function getDatabaseMetrics() {
   await ensureAdmin()
   try {
-    // All 8 stat queries below are independent of one another — run them
+    // All 8 stat queries below are independent of one another, run them
     // concurrently instead of one round-trip at a time.
     const [connRes, maxConnRes, rowsRes, deadlocksRes, cacheRes, dbSizeRes, allDbsSizeRes, xactRes] =
       await Promise.all([
@@ -1253,7 +1253,7 @@ export async function getDatabaseAdvisors() {
   await ensureAdmin()
   try {
     // All 5 queries below are independent reads describing different facets
-    // of the schema — run them concurrently instead of one at a time.
+    // of the schema: run them concurrently instead of one at a time.
     const [tablesRes, indexesRes, columnsRes, rlsRes, activeConnsRes] = await Promise.all([
       // 1. Fetch all user tables in public schema
       client.unsafe(`

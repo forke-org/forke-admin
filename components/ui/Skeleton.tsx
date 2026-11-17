@@ -444,7 +444,7 @@ export function SupportSkeleton() {
   )
 }
 
-// I. Admin Panel Skeleton — matching the exact minimalist vibe and theme
+// I. Admin Panel Skeleton: matching the exact minimalist vibe and theme
 export function PanelSkeleton() {
   return (
     <div className="flex-grow flex flex-col space-y-5 h-full min-h-0 text-left pr-1 select-none font-sans">

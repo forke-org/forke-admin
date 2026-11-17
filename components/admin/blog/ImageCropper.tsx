@@ -18,7 +18,7 @@
  *   • drag a crop rectangle (free or fixed aspect) and export the crop.
  *
  * Quality policy (no visible quality drop):
- *   - "Use original" returns the untouched file bytes — pixel-perfect.
+ *   - "Use original" returns the untouched file bytes, pixel-perfect.
  *   - A crop is exported via canvas at quality 0.95 (visually lossless), at the
  *     crop's native source resolution (no upscaling).
  *   - If either source dimension exceeds MAX_DIM, we downscale once with high
@@ -29,7 +29,7 @@ import { useEffect, useRef, useState, useCallback } from 'react'
 import { Check, X, Crop as CropIcon, Image as ImageIcon } from 'lucide-react'
 import { cn } from '@/lib/utils/cn'
 
-const MAX_DIM = 4000 // px — downscale anything larger on export
+const MAX_DIM = 4000 // px, downscale anything larger on export
 
 type Aspect = 'free' | '16:9' | '4:3' | '1:1' | '3:1'
 const ASPECTS: { id: Aspect; label: string; ratio: number | null }[] = [

@@ -96,7 +96,7 @@ export default function BucketsPanel({ currentAdmin }: BucketsPanelProps) {
   const [pageSize, setPageSize] = useState<number>(10)
   const [currentPage, setCurrentPage] = useState<number>(0)
 
-  // Inline image preview accordion — only one row open at a time (FAQ-style).
+  // Inline image preview accordion, only one row open at a time (FAQ-style).
   const [expandedKey, setExpandedKey] = useState<string | null>(null)
 
   function toggleExpanded(key: string) {
@@ -136,7 +136,7 @@ export default function BucketsPanel({ currentAdmin }: BucketsPanelProps) {
   
   const fileInputRef = useRef<HTMLInputElement>(null)
 
-  // Fetch configuration and files — independent of each other, run concurrently.
+  // Fetch configuration and files, independent of each other, run concurrently.
   async function loadData() {
     setLoading(true)
     try {
@@ -383,10 +383,10 @@ export default function BucketsPanel({ currentAdmin }: BucketsPanelProps) {
   }
 
   function formatLocalDateTime(iso: string | null | undefined): string {
-    if (!iso) return '—'
+    if (!iso) return '-'
     try {
       const d = new Date(iso)
-      if (isNaN(d.getTime())) return '—'
+      if (isNaN(d.getTime())) return '-'
       return new Intl.DateTimeFormat(undefined, {
         month: 'short',
         day: 'numeric',
@@ -514,7 +514,7 @@ export default function BucketsPanel({ currentAdmin }: BucketsPanelProps) {
   const safePage = Math.min(currentPage, totalPages - 1)
   const pagedItems = filteredItems.slice(safePage * pageSize, safePage * pageSize + pageSize)
 
-  // Selection list logic — operate on the full filtered list, not just the page
+  // Selection list logic: operate on the full filtered list, not just the page
   const fileKeysInCurrentView = filteredItems.map(i => i.key)
   const allSelected = fileKeysInCurrentView.length > 0 && fileKeysInCurrentView.every(k => selectedKeys.includes(k))
 
@@ -907,7 +907,7 @@ export default function BucketsPanel({ currentAdmin }: BucketsPanelProps) {
 
                       </tr>
 
-                      {/* Inline image preview — expands downward, one open at a time */}
+                      {/* Inline image preview: expands downward, one open at a time */}
                       {isImage && isExpanded && (
                         <tr className="bg-black/20">
                           <td colSpan={7} className="px-4 py-4">

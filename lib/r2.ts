@@ -128,7 +128,7 @@ export async function listObjects(prefix?: string): Promise<R2ObjectSummary[]> {
   return parseListObjectsXmlFull(await res.text())
 }
 
-/** Uploads raw bytes to an exact key (no sanitization — used for known/already-valid keys). */
+/** Uploads raw bytes to an exact key (no sanitization: used for known/already-valid keys). */
 export async function putObject(key: string, body: Buffer | string, contentType: string): Promise<void> {
   const creds = getR2Credentials()
   const client = r2Client(creds)
@@ -229,7 +229,7 @@ export async function uploadToR2(
  * @param key         Destination key in the bucket (e.g. 'blogs/uuid.gif').
  * @param contentType MIME type the browser will send (must match on PUT).
  * @param expiresIn   URL lifetime in seconds (default 5 minutes).
- * @returns `{ uploadUrl, publicUrl }` — PUT to `uploadUrl`, serve `publicUrl`.
+ * @returns `{ uploadUrl, publicUrl }`: PUT to `uploadUrl`, serve `publicUrl`.
  */
 export async function presignUpload(
   key: string,
