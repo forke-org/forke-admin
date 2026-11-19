@@ -112,6 +112,7 @@ import DatabaseConsole from '@/components/admin/DatabaseConsole'
 import BlogPanel from '@/components/admin/BlogPanel'
 import VmOverviewPanel from '@/components/admin/VmOverviewPanel'
 import StatusPanel from '@/components/admin/StatusPanel'
+import MailUsersPanel from '@/components/admin/MailUsersPanel'
 import ActivityFeedPanel from '@/components/admin/ActivityFeedPanel'
 import BucketsPanel from '@/components/admin/BucketsPanel'
 import TrackerPanel from '@/components/admin/TrackerPanel'
@@ -175,7 +176,7 @@ export default function AdminDashboard() {
   
   // Navigation states
   const [activeTab, setActiveTab] = useState<
-    'dashboard' | 'owner-approval' | 'developer-ban' | 'enquiries' | 'admins' | 'subscribers' | 'tracker' | 'blogs' | 'changelog' | 'activity' | 'database' | 'buckets' | 'vm-overview' | 'sql-editor' | 'backups' | 'status' | null
+    'dashboard' | 'owner-approval' | 'developer-ban' | 'enquiries' | 'admins' | 'subscribers' | 'tracker' | 'blogs' | 'changelog' | 'activity' | 'database' | 'buckets' | 'vm-overview' | 'sql-editor' | 'backups' | 'status' | 'mail-users' | null
   >(null)
   const [mobileNavOpen, setMobileNavOpen] = useState(false)
   const [activityLive, setActivityLive] = useState(true)
@@ -210,7 +211,7 @@ export default function AdminDashboard() {
       }
       const validTabs = [
         'dashboard', 'owner-approval', 'developer-ban', 'enquiries',
-        'admins', 'subscribers', 'tracker', 'blogs', 'changelog', 'activity', 'database', 'vm-overview', 'sql-editor', 'buckets', 'backups', 'status'
+        'admins', 'subscribers', 'tracker', 'blogs', 'changelog', 'activity', 'database', 'vm-overview', 'sql-editor', 'buckets', 'backups', 'status', 'mail-users'
       ]
       if (tab === 'db-overview' || tab === 'db-monitoring') {
         setActiveTab('vm-overview')
@@ -2504,6 +2505,12 @@ export default function AdminDashboard() {
           {activeTab === 'status' && (
             <div className="flex-grow min-h-0 h-full flex flex-col">
               <StatusPanel />
+            </div>
+          )}
+
+          {activeTab === 'mail-users' && (
+            <div className="flex-grow min-h-0 h-full flex flex-col">
+              <MailUsersPanel />
             </div>
           )}
 

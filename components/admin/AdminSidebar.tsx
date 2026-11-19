@@ -2,14 +2,14 @@
 
 import React, { useEffect, useRef, useState } from 'react'
 import {
-  Activity, Archive, Briefcase, ChevronsUpDown, Code, HardDrive, History, KeyRound, LayoutDashboard,
+  Activity, Archive, AtSign, Briefcase, ChevronsUpDown, Code, HardDrive, History, KeyRound, LayoutDashboard,
   LineChart, LogOut, Mail, MessageSquare, PenSquare, Server, Shield, Table, Terminal, User, X, type LucideIcon,
 } from 'lucide-react'
 import { cn } from '@/lib/utils/cn'
 
 export type AdminTab =
   | 'dashboard' | 'owner-approval' | 'developer-ban' | 'enquiries' | 'admins' | 'subscribers' | 'tracker' | 'blogs'
-  | 'changelog' | 'activity' | 'database' | 'buckets' | 'vm-overview' | 'sql-editor' | 'backups' | 'status'
+  | 'changelog' | 'activity' | 'database' | 'buckets' | 'vm-overview' | 'sql-editor' | 'backups' | 'status' | 'mail-users'
 
 type Counts = {
   pendingOwners: number
@@ -40,6 +40,7 @@ export const ADMIN_TAB_META: Record<AdminTab, { group: string | null; label: str
   dashboard: { group: null, label: 'Overview' },
   'owner-approval': { group: 'Users', label: 'Owners' },
   'developer-ban': { group: 'Users', label: 'Developers' },
+  'mail-users': { group: 'Users', label: 'Mail users' },
   enquiries: { group: 'Content', label: 'Enquiries' },
   subscribers: { group: 'Content', label: 'Subscribers' },
   tracker: { group: 'Content', label: 'Tracker' },
@@ -213,6 +214,7 @@ export function AdminSidebar({
       items: [
         { tab: 'owner-approval', label: 'Owners', icon: Briefcase, alert: counts.pendingOwners || undefined, count: counts.owners },
         { tab: 'developer-ban', label: 'Developers', icon: Code, count: counts.developers },
+        { tab: 'mail-users', label: 'Mail users', icon: AtSign },
       ],
     },
     {
