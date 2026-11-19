@@ -2,14 +2,14 @@
 
 import React, { useEffect, useRef, useState } from 'react'
 import {
-  Archive, Briefcase, ChevronsUpDown, Code, HardDrive, History, KeyRound, LayoutDashboard,
+  Activity, Archive, Briefcase, ChevronsUpDown, Code, HardDrive, History, KeyRound, LayoutDashboard,
   LineChart, LogOut, Mail, MessageSquare, PenSquare, Server, Shield, Table, Terminal, User, X, type LucideIcon,
 } from 'lucide-react'
 import { cn } from '@/lib/utils/cn'
 
 export type AdminTab =
   | 'dashboard' | 'owner-approval' | 'developer-ban' | 'enquiries' | 'admins' | 'subscribers' | 'tracker' | 'blogs'
-  | 'changelog' | 'activity' | 'database' | 'buckets' | 'vm-overview' | 'sql-editor' | 'backups'
+  | 'changelog' | 'activity' | 'database' | 'buckets' | 'vm-overview' | 'sql-editor' | 'backups' | 'status'
 
 type Counts = {
   pendingOwners: number
@@ -46,6 +46,7 @@ export const ADMIN_TAB_META: Record<AdminTab, { group: string | null; label: str
   blogs: { group: 'Content', label: 'Blog' },
   changelog: { group: 'Content', label: 'Changelog' },
   activity: { group: 'Content', label: 'Activity' },
+  status: { group: 'Infrastructure', label: 'Status' },
   'vm-overview': { group: 'Infrastructure', label: 'VM Overview' },
   database: { group: 'Infrastructure', label: 'Tables' },
   buckets: { group: 'Infrastructure', label: 'Buckets' },
@@ -228,6 +229,7 @@ export function AdminSidebar({
     {
       label: 'Infrastructure',
       items: [
+        { tab: 'status', label: 'Status', icon: Activity },
         { tab: 'vm-overview', label: 'VM Overview', icon: Server },
         { tab: 'database', label: 'Tables', icon: Table, count: counts.tables },
         { tab: 'buckets', label: 'Buckets', icon: HardDrive },

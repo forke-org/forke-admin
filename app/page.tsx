@@ -111,6 +111,7 @@ import EmailSneakPeekModal from '@/components/shared/EmailSneakPeekModal'
 import DatabaseConsole from '@/components/admin/DatabaseConsole'
 import BlogPanel from '@/components/admin/BlogPanel'
 import VmOverviewPanel from '@/components/admin/VmOverviewPanel'
+import StatusPanel from '@/components/admin/StatusPanel'
 import ActivityFeedPanel from '@/components/admin/ActivityFeedPanel'
 import BucketsPanel from '@/components/admin/BucketsPanel'
 import TrackerPanel from '@/components/admin/TrackerPanel'
@@ -174,7 +175,7 @@ export default function AdminDashboard() {
   
   // Navigation states
   const [activeTab, setActiveTab] = useState<
-    'dashboard' | 'owner-approval' | 'developer-ban' | 'enquiries' | 'admins' | 'subscribers' | 'tracker' | 'blogs' | 'changelog' | 'activity' | 'database' | 'buckets' | 'vm-overview' | 'sql-editor' | 'backups' | null
+    'dashboard' | 'owner-approval' | 'developer-ban' | 'enquiries' | 'admins' | 'subscribers' | 'tracker' | 'blogs' | 'changelog' | 'activity' | 'database' | 'buckets' | 'vm-overview' | 'sql-editor' | 'backups' | 'status' | null
   >(null)
   const [mobileNavOpen, setMobileNavOpen] = useState(false)
   const [activityLive, setActivityLive] = useState(true)
@@ -209,7 +210,7 @@ export default function AdminDashboard() {
       }
       const validTabs = [
         'dashboard', 'owner-approval', 'developer-ban', 'enquiries',
-        'admins', 'subscribers', 'tracker', 'blogs', 'changelog', 'activity', 'database', 'vm-overview', 'sql-editor', 'buckets', 'backups'
+        'admins', 'subscribers', 'tracker', 'blogs', 'changelog', 'activity', 'database', 'vm-overview', 'sql-editor', 'buckets', 'backups', 'status'
       ]
       if (tab === 'db-overview' || tab === 'db-monitoring') {
         setActiveTab('vm-overview')
@@ -2496,6 +2497,13 @@ export default function AdminDashboard() {
           {activeTab === 'vm-overview' && (
             <div className="flex-grow min-h-0 h-full flex flex-col">
               <VmOverviewPanel />
+            </div>
+          )}
+
+          {/* ==================== PRIVATE STATUS PANEL ==================== */}
+          {activeTab === 'status' && (
+            <div className="flex-grow min-h-0 h-full flex flex-col">
+              <StatusPanel />
             </div>
           )}
 

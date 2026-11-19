@@ -12,6 +12,13 @@ import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
   output: "standalone",
+  async redirects() {
+    // Admin status is private: /status opens the Status section of the admin panel.
+    return [
+      { source: '/status', destination: '/?tab=status', permanent: false },
+      { source: '/status/:path*', destination: '/?tab=status', permanent: false },
+    ]
+  },
   eslint: {
     ignoreDuringBuilds: true,
   },
