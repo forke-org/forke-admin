@@ -183,6 +183,20 @@ export async function toggleDeveloperBan(userId: string, shouldBan: boolean) {
   return { success: true }
 }
 
+export async function deleteDeveloper(userId: string) {
+  await ensureAdmin()
+  const u = await db.query.users.findFirst({ where: eq(users.id, userId), columns: { name: true, username: true, email: true } })
+  if (!u) return { success: false, error: 'Developer not found' }
+  try {
+    await db.delete(users).where(eq(users.id, userId))
+  } catch (err) {
+    return { success: false, error: err instanceof Error ? err.message : 'Could not delete developer' }
+  }
+  await logAudit({ category: 'user', action: 'developer.deleted', target: u.username ? `@${u.username}` : u.name || u.email || userId })
+  revalidatePath('/admin')
+  return { success: true }
+}
+
 import {
   isWaitlistEnabled,
   setWaitlistEnabled,

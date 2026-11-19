@@ -20,6 +20,7 @@ import {
   declineOwner,
   toggleOwnerBan,
   toggleDeveloperBan,
+  deleteDeveloper,
   getWaitlistConfig,
   updateWaitlistConfig,
   getSubscribers,
@@ -1954,6 +1955,7 @@ export default function AdminDashboard() {
                             </td>
                             <td className="px-4 py-3 text-right">
                               {dev.userId ? (
+                                <div className="inline-flex items-center gap-2">
                                 <button 
                                   onClick={() => handleToggleBan(dev.userId, dev.isBanned)}
                                   className={`px-2.5 py-1 rounded-md text-xs font-medium border transition-colors ${
@@ -1964,6 +1966,22 @@ export default function AdminDashboard() {
                                 >
                                   {dev.isBanned ? 'Unban' : 'Ban'}
                                 </button>
+                                <button
+                                  onClick={() => requestConfirm({
+                                    title: 'Delete developer',
+                                    message: `Delete ${dev.name || dev.username || 'this developer'} and everything linked to their account? This cannot be undone.`,
+                                    confirmLabel: 'Delete',
+                                    tone: 'danger',
+                                    onConfirm: async () => {
+                                      const res = await deleteDeveloper(dev.userId)
+                                      if (res.success) { toast('Developer deleted', 'success'); fetchData(true) } else toast(res.error || 'Could not delete developer', 'error')
+                                    },
+                                  })}
+                                  className="px-2.5 py-1 rounded-md text-xs font-medium border transition-colors border-[var(--color-border)] text-[var(--color-text-muted)] hover:text-red-400 hover:border-red-500/30 hover:bg-red-500/10"
+                                >
+                                  Delete
+                                </button>
+                                </div>
                               ) : (
                                 <span className="text-xs text-white/20 font-mono">-</span>
                               )}

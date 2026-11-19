@@ -78,7 +78,7 @@ export default function ConfirmModal({
               className={`h-8 px-3 rounded-lg text-xs font-medium transition-colors flex items-center gap-1.5 disabled:opacity-50 disabled:cursor-not-allowed ${
                 current.tone === 'danger'
                   ? 'bg-red-500/10 border border-red-500/20 text-red-400 hover:bg-red-500 hover:text-white'
-                  : 'bg-accent text-black'
+                  : 'bg-accent text-black border border-accent'
               }`}
             >
               {isWorking ? (
