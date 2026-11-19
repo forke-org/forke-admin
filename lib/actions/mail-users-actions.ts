@@ -10,7 +10,7 @@
  * commercial license from Forke Inc. is strictly prohibited.
  */
 
-import { isAdminAuthenticated } from '@/lib/admin-actions'
+import { getCurrentAdmin, isAdminAuthenticated } from '@/lib/admin-actions'
 
 export type MailAccessStatus = 'pending' | 'approved' | 'expired' | 'rejected' | 'joined'
 
@@ -68,11 +68,15 @@ export async function decideMailAccessAction(id: string, decision: 'approve' | '
 }
 
 export interface MailMember {
+  id: string
   name: string
   email: string
   username: string | null
   role: 'super_admin' | 'admin'
   forke: boolean
+  projects: number
+  joined_at: string
+  last_login: string | null
 }
 
 export interface MailAccount {
@@ -84,6 +88,7 @@ export interface MailAccount {
   credits: number
   credits_used: number
   daily_limit: number
+  rate_limit_per_sec: number
   sent_30d: number
   sent_total: number
   contacts: number
@@ -94,11 +99,19 @@ export interface MailAccount {
   members: MailMember[]
 }
 
-export async function getMailAccountsAction(): Promise<{ success: boolean; data?: MailAccount[]; error?: string }> {
-  if (!(await isAdminAuthenticated())) return { success: false, error: 'Unauthorized' }
+async function requireSuperAdmin() {
+  const admin = await getCurrentAdmin()
+  return admin?.role === 'super_admin'
+}
+
+const superOnly = { success: false as const, error: 'Only super admins can do this' }
+
+export async function getMailAccountsAction(): Promise<{ success: boolean; data?: MailAccount[]; superAdmin?: boolean; error?: string }> {
+  const admin = await getCurrentAdmin()
+  if (!admin) return { success: false, error: 'Unauthorized' }
   try {
     const data = await platform('/api/platform/accounts')
-    return { success: true, data: data.accounts ?? [] }
+    return { success: true, data: data.accounts ?? [], superAdmin: admin.role === 'super_admin' }
   } catch (err) {
     return { success: false, error: err instanceof Error ? err.message : 'Could not load accounts' }
   }
@@ -129,7 +142,7 @@ export async function setMailAccountStatusAction(id: string, status: 'active' | 
 }
 
 export async function deleteMailAccountAction(id: string): Promise<{ success: boolean; error?: string }> {
-  if (!(await isAdminAuthenticated())) return { success: false, error: 'Unauthorized' }
+  if (!(await requireSuperAdmin())) return superOnly
   if (!validId(id)) return { success: false, error: 'Invalid account' }
   try {
     await platform(`/api/platform/accounts/${id}`, 'DELETE')
@@ -144,6 +157,39 @@ export async function deleteMailRequestAction(id: string): Promise<{ success: bo
   if (!validId(id)) return { success: false, error: 'Invalid request' }
   try {
     await platform(`/api/platform/access/${id}`, 'DELETE')
+    return { success: true }
+  } catch (err) {
+    return { success: false, error: err instanceof Error ? err.message : 'Failed' }
+  }
+}
+
+export async function setMailLimitsAction(id: string, limits: { plan: 'trial' | 'paid'; daily_limit: number; rate_limit_per_sec: number }): Promise<{ success: boolean; error?: string }> {
+  if (!(await requireSuperAdmin())) return superOnly
+  if (!validId(id)) return { success: false, error: 'Invalid account' }
+  try {
+    await platform(`/api/platform/accounts/${id}/limits`, 'POST', limits)
+    return { success: true }
+  } catch (err) {
+    return { success: false, error: err instanceof Error ? err.message : 'Failed' }
+  }
+}
+
+export async function removeMailMemberAction(workspaceId: string, userId: string): Promise<{ success: boolean; error?: string }> {
+  if (!(await requireSuperAdmin())) return superOnly
+  if (!validId(workspaceId) || !validId(userId)) return { success: false, error: 'Invalid member' }
+  try {
+    await platform(`/api/platform/accounts/${workspaceId}/members/${userId}`, 'DELETE')
+    return { success: true }
+  } catch (err) {
+    return { success: false, error: err instanceof Error ? err.message : 'Failed' }
+  }
+}
+
+export async function deleteMailUserAction(userId: string): Promise<{ success: boolean; error?: string }> {
+  if (!(await requireSuperAdmin())) return superOnly
+  if (!validId(userId)) return { success: false, error: 'Invalid user' }
+  try {
+    await platform(`/api/platform/users/${userId}`, 'DELETE')
     return { success: true }
   } catch (err) {
     return { success: false, error: err instanceof Error ? err.message : 'Failed' }
