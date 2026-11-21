@@ -89,6 +89,7 @@ export interface MailAccount {
   credits_used: number
   daily_limit: number
   rate_limit_per_sec: number
+  warmup_until: string | null
   sent_30d: number
   sent_total: number
   contacts: number
@@ -163,7 +164,7 @@ export async function deleteMailRequestAction(id: string): Promise<{ success: bo
   }
 }
 
-export async function setMailLimitsAction(id: string, limits: { plan: 'trial' | 'paid'; daily_limit: number; rate_limit_per_sec: number }): Promise<{ success: boolean; error?: string }> {
+export async function setMailLimitsAction(id: string, limits: { plan: 'trial' | 'paid'; daily_limit: number; rate_limit_per_sec: number; end_warmup?: boolean }): Promise<{ success: boolean; error?: string }> {
   if (!(await requireSuperAdmin())) return superOnly
   if (!validId(id)) return { success: false, error: 'Invalid account' }
   try {

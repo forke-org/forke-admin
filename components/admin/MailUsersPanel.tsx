@@ -122,12 +122,13 @@ function LimitsModal({ account, onClose, onDone }: { account: MailAccount; onClo
   const [plan, setPlan] = useState<'trial' | 'paid'>(account.plan)
   const [daily, setDaily] = useState(String(account.daily_limit))
   const [rate, setRate] = useState(String(account.rate_limit_per_sec))
+  const [endWarmup, setEndWarmup] = useState(false)
   const [busy, setBusy] = useState(false)
   const field = 'mt-1.5 w-full h-9 bg-white/[0.02] border border-[var(--color-border)] rounded-lg px-3 text-[13px] text-white font-mono focus:outline-none focus:border-accent'
   const submit = async (e: React.FormEvent) => {
     e.preventDefault()
     setBusy(true)
-    const res = await setMailLimitsAction(account.id, { plan, daily_limit: Number(daily), rate_limit_per_sec: Number(rate) })
+    const res = await setMailLimitsAction(account.id, { plan, daily_limit: Number(daily), rate_limit_per_sec: Number(rate), end_warmup: endWarmup })
     setBusy(false)
     if (!res.success) { toast(res.error || 'Could not save', 'error'); return }
     toast(`${account.name} updated`, 'success')
@@ -149,6 +150,12 @@ function LimitsModal({ account, onClose, onDone }: { account: MailAccount; onClo
           ))}
         </div>
         <label className="block"><span className="text-xs text-[var(--color-text-muted)]">Daily limit (0 means no daily limit)</span><input type="number" min={0} step={1} value={daily} onChange={(e) => setDaily(e.target.value)} className={field} /></label>
+        {account.warmup_until && (
+          <label className="flex items-center gap-2 text-xs text-[var(--color-text-muted)]">
+            <input type="checkbox" checked={endWarmup} onChange={(e) => setEndWarmup(e.target.checked)} className="accent-[#FF7A00]" />
+            End warm-up early (normally ends {new Date(account.warmup_until).toLocaleDateString()})
+          </label>
+        )}
         <label className="block"><span className="text-xs text-[var(--color-text-muted)]">Send rate per second</span><input type="number" min={1} max={1000} step={1} value={rate} onChange={(e) => setRate(e.target.value)} className={field} /></label>
         <div className="flex items-center justify-end gap-2 pt-2 border-t border-[var(--color-border)]">
           <button type="button" onClick={onClose} className="h-8 px-3 rounded-lg text-xs font-medium border border-[var(--color-border)] hover:bg-white/[0.05]">Cancel</button>
@@ -378,6 +385,7 @@ export default function MailUsersPanel() {
                       <div className="flex flex-col items-start gap-1">
                         {a.status === 'paused' ? <Pill tone="red">Suspended</Pill> : <Pill tone="green">Active</Pill>}
                         {a.sending_paused && <Pill tone="amber">Sending paused</Pill>}
+                        {a.warmup_until && <Pill tone="blue">Warming up</Pill>}
                       </div>
                     </td>
                   )
