@@ -89,7 +89,7 @@ export async function ensureBroadcastApprovalsTable() {
  * 1. It is not the latest item of its type (newer items exist in the database)
  * 2. It was already published in the past (historical publication, e.g. published > 5 minutes ago)
  */
-async function isContentOld(type: 'blog' | 'changelog', contentId: string, referenceTime: Date = new Date()): Promise<boolean> {
+async function isContentOld(type: 'blog' | 'changelog', contentId: string, referenceTime: Date = new Date(), ignoreAge = false): Promise<boolean> {
   // "Old" is judged relative to when the approval was requested, not to now,
   // so a pending approval does not silently expire 5 minutes after publishing.
   const ref = referenceTime.getTime()
@@ -115,7 +115,7 @@ async function isContentOld(type: 'blog' | 'changelog', contentId: string, refer
       if (!currentBlog) return true
 
       // If currentBlog was already published in the past (publishedAt is older than 5 minutes)
-      if (currentBlog.publishedAt) {
+      if (currentBlog.publishedAt && !ignoreAge) {
         const elapsed = ref - new Date(currentBlog.publishedAt).getTime()
         if (elapsed > 5 * 60 * 1000) {
           return true
@@ -144,7 +144,7 @@ async function isContentOld(type: 'blog' | 'changelog', contentId: string, refer
 
       // If created more than 5 minutes ago, it's an existing/historical changelog being toggled
       const elapsed = ref - new Date(currentChangelog.createdAt).getTime()
-      if (elapsed > 5 * 60 * 1000) {
+      if (elapsed > 5 * 60 * 1000 && !ignoreAge) {
         return true
       }
     }
@@ -353,8 +353,10 @@ export async function syncBroadcastApprovalOnUpdateAction(data: {
         return { success: true, status: record.status }
       }
 
-      // If content is an old item, do NOT transition to pending on republish/save
-      const isOld = await isContentOld(data.type, data.contentId)
+      // If content is an old item, do NOT transition to pending on republish/save.
+      // A record that is only parked in 'draft' was created while the item was fresh,
+      // so unpublish + republish must bring it back regardless of when it was first published.
+      const isOld = await isContentOld(data.type, data.contentId, new Date(), record.status === 'draft')
       if (isOld) {
         const nextStatus = record.status === 'pending' ? 'dismissed' : record.status
         await db
@@ -433,7 +435,7 @@ export async function setBroadcastApprovalPublishStateAction(params: {
       .limit(1)
 
     if (existing.length > 0 && existing[0].status !== 'approved' && existing[0].status !== 'dismissed') {
-      const isOld = await isContentOld(existing[0].type as any, params.contentId)
+      const isOld = await isContentOld(existing[0].type as any, params.contentId, new Date(), existing[0].status === 'draft')
       if (isOld) {
         return { success: true }
       }
