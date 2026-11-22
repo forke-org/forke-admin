@@ -148,6 +148,21 @@ function divider(mt = 8, mb = 24): string {
  * The shared email shell: dark canvas, single hairline card, optional banner,
  * wordmark header bar, slot for body, and a consistent footer.
  */
+function shellRule(): string {
+  return `<tr><td class="email-pad" style="padding:0 28px;"><div style="height:1px;line-height:1px;font-size:0;background:${BRAND.hairlineSoft};">&nbsp;</div></td></tr>`
+}
+
+function recentPostsBlock(posts?: BlogEmailRecent[]): string {
+  const recent = (posts || []).slice(0, 3)
+  return recent.length
+    ? `${shellRule()}
+      <tr><td class="email-pad" style="padding:30px 28px 10px 28px;">
+        <p style="font-family:${BRAND.sans};font-size:13px;color:${BRAND.textMuted};margin:0 0 18px 0;">Latest from the blog</p>
+        ${recent.map((r, i) => blogRecentRow(r, i % 2 === 1)).join('')}
+      </td></tr>`
+    : ''
+}
+
 function emailShell(opts: {
   title: string
   preheader?: string
@@ -169,6 +184,7 @@ function emailShell(opts: {
   /** When true, renders a subtle warning bar at the top indicating private draft status. */
   draftNotice?: boolean
 }): string {
+  const slots = exportSlots
   const cardW = opts.maxWidth ?? 600
   const draftRow = opts.draftNotice
     ? `<tr><td align="center" style="background:rgba(245,158,11,0.08);border-bottom:1px solid rgba(245,158,11,0.25);padding:10px 16px;">
@@ -189,17 +205,9 @@ function emailShell(opts: {
     ? `<div style="display:none;max-height:0;overflow:hidden;opacity:0;mso-hide:all;">${opts.preheader}&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;</div>`
     : ''
 
-  const today = new Date().toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric', timeZone: 'Asia/Kolkata' })
-  const rule = `<tr><td class="email-pad" style="padding:0 28px;"><div style="height:1px;line-height:1px;font-size:0;background:${BRAND.hairlineSoft};">&nbsp;</div></td></tr>`
-
-  const recent = (opts.recentPosts || []).slice(0, 3)
-  const recentRows = recent.length
-    ? `${rule}
-      <tr><td class="email-pad" style="padding:30px 28px 10px 28px;">
-        <p style="font-family:${BRAND.sans};font-size:13px;color:${BRAND.textMuted};margin:0 0 18px 0;">Latest from the blog</p>
-        ${recent.map((r, i) => blogRecentRow(r, i % 2 === 1)).join('')}
-      </td></tr>`
-    : ''
+  const today = slots?.date ?? new Date().toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric', timeZone: 'Asia/Kolkata' })
+  const rule = shellRule()
+  const recentRows = slots ? slots.recentPosts : recentPostsBlock(opts.recentPosts)
 
   const combinedStyle = `
     .social-icon-img { display: block !important; margin: 10px auto 0 auto !important; width: 16px !important; height: 16px !important; max-width: 16px !important; max-height: 16px !important; }
@@ -393,6 +401,59 @@ async function sendMailResult(
   }
 }
 
+async function sendTemplateEmail(
+  toEmail: string,
+  template: string,
+  data: Record<string, string>,
+  label: string,
+  fromEmail: string
+): Promise<boolean> {
+  const apiKey = resolveMailApiKey()
+  if (!apiKey) {
+    console.warn(`⚠️ FORKE_MAIL_API_KEY is not configured. Skipping ${label} email.`)
+    return false
+  }
+  try {
+    const res = await fetch(`${MAIL_API}/emails`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${apiKey}` },
+      body: JSON.stringify({ from: fromEmail, to: toEmail, reply_to: 'support@forke.space', template, data }),
+    })
+    if (!res.ok) {
+      console.error(`Failed to send ${label} email via Forke Mail (${res.status}):`, await res.text())
+      return false
+    }
+    return true
+  } catch (error) {
+    console.error(`Error dispatching ${label} email:`, error)
+    return false
+  }
+}
+
+async function trackForkeMailEvent(email: string, event: string, contact?: { first_name?: string; last_name?: string }): Promise<void> {
+  const apiKey = resolveMailApiKey()
+  if (!apiKey) return
+  try {
+    const res = await fetch(`${MAIL_API.replace(/\/api\/forke-mail$/, '')}/api/events`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${apiKey}` },
+      body: JSON.stringify({ email, event, contact: contact || {} }),
+    })
+    if (!res.ok) console.error(`Failed to record ${event} in Forke Mail (${res.status}):`, await res.text())
+  } catch (error) {
+    console.error(`Error recording ${event} in Forke Mail:`, error)
+  }
+}
+
+function resolveDashboardUrl(): string {
+  return (process.env.NEXT_PUBLIC_DASHBOARD_URL || 'https://dashboard.forke.space').replace(/^["']|["']$/g, '').replace(/\/$/, '')
+}
+
+function resolveBroadcastSegment(): string {
+  const value = process.env.FORKE_MAIL_BROADCAST_SEGMENT
+  return (value === undefined ? 'Engaged readers' : value).replace(/^["']|["']$/g, '').trim()
+}
+
 async function sendMail(
   toEmail: string,
   subject: string,
@@ -526,40 +587,96 @@ export function buildBannedEmail(name: string, accountKind: 'owner' | 'developer
   })
 }
 
-/**
- * "Forke is live" announcement: broadcast to the waitlist when the site goes
- * public to browse (all pages viewable; the product itself still opens in waves).
- * Mirrors the LinkedIn launch post: open house before the doors open.
- */
-export function buildSiteLiveEmail(opts?: { unsubscribe?: boolean; maxWidth?: number; recentPosts?: BlogEmailRecent[] }): string {
-  const siteUrl = 'https://www.forke.space/?source=email'
-  const waitlistUrl = 'https://www.forke.space/waitlist?source=email'
-  const footerExtra = opts?.unsubscribe
-    ? `<p style="font-family:${BRAND.sans};font-size:11px;line-height:1.6;color:${BRAND.textFaint};margin:14px 0 0 0;">
-         You're receiving this because you joined the Forke waitlist.
-         <a href="{{unsubscribe_url}}" style="color:${BRAND.textMuted};text-decoration:underline;">Unsubscribe</a>.
-       </p>`
-    : ''
+export function buildWaitlistFollowUpEmail(recentPosts?: BlogEmailRecent[], maxWidth?: number): string {
+  const site = resolveMarketingUrl()
   return emailShell({
-    maxWidth: opts?.maxWidth,
-    recentPosts: opts?.recentPosts,
-    title: 'Forke is live',
-    preheader: 'The site is live to explore. The product opens in waves, you’re on the list.',
+    maxWidth,
+    recentPosts,
+    title: 'What’s happening at Forke',
+    preheader: 'A quick look at what we’re building while you wait.',
     banner: 'main-banner.png',
-    footerLabel: 'Launch Announcement',
-    footerExtra,
+    footerLabel: 'Waitlist Update',
     bodyHtml: `
-      ${heading('The site is live.', 'Come look around.')}
-      ${p('Big moment: you can now actually explore Forke. The landing, the blogs, how levels work, what we’re building: all of it is real and public. Go click around.')}
-      ${p('What’s <strong style="color:' + BRAND.textHigh + ';font-weight:600;">not</strong> open yet is the part that matters most: claiming bounties, shipping real work, getting paid. That’s still rolling out in waves, and as a waitlister, you’re first in line.')}
-      ${calloutBox('Think of it as an open house', 'Doors aren’t fully open yet, but you’re welcome to walk through. Read the blogs, see the vision, and we’ll email you the moment your workspace is ready.')}
-      ${buttonPrimary(siteUrl, 'Explore Forke')}
-      ${p('Want to make sure you’re set for early access when functionality goes live? Confirm your spot:', 14)}
-      ${buttonGhost(waitlistUrl, 'Check your waitlist spot')}
-      ${divider(24, 20)}
-      ${p('Questions or feedback? Just reply to this email or reach us at <a href="mailto:support@forke.space" style="color:' + BRAND.accent + ';text-decoration:none;">support@forke.space</a>.', 0)}
+      ${heading('While you wait,', 'here’s what we’re shipping.')}
+      ${p('A few days ago you joined the Forke waitlist. Thanks again. Here’s where to follow along until your workspace opens:')}
+      ${p('<strong style="color:' + BRAND.textHigh + ';font-weight:600;">The changelog</strong> lists every feature as it ships, and <strong style="color:' + BRAND.textHigh + ';font-weight:600;">the blog</strong> covers how we’re building a marketplace where developers get paid for real tasks.')}
+      ${buttonPrimary(site + '/changelog', 'See what’s new')}
+      ${divider(24, 22)}
+      ${p('Know a developer or a team with tasks to hand off? Send them to <a href="' + site + '" style="color:' + BRAND.accent + ';text-decoration:none;">forke.space</a>.', 0)}
     `,
   })
+}
+
+export function buildAccountDeletionReminderEmail(recentPosts?: BlogEmailRecent[], maxWidth?: number): string {
+  const signIn = `${resolveBaseUrl()}/signin`
+  return emailShell({
+    maxWidth,
+    recentPosts,
+    title: 'Forke: Your account will be deleted tomorrow',
+    preheader: 'Last chance: sign in today to keep your Forke account.',
+    banner: 'main-banner.png',
+    footerLabel: 'Account Deletion Reminder',
+    bodyHtml: `
+      ${heading('Deleted tomorrow.', 'Last chance to stay.')}
+      ${p('Hello,')}
+      ${p('Your Forke account is scheduled for permanent deletion <strong style="color:' + BRAND.textHigh + ';font-weight:600;">tomorrow</strong>. After that, your profile, tasks and history can’t be recovered.')}
+      ${calloutBox('Want to keep it?', 'Sign in once before tomorrow and the deletion is cancelled automatically.')}
+      ${buttonPrimary(signIn, 'Sign in to keep my account')}
+      ${p('If you meant to leave, you don’t need to do anything.', 0)}
+    `,
+  })
+}
+
+export function buildOwnerFirstTaskEmail(name: string, recentPosts?: BlogEmailRecent[], maxWidth?: number): string {
+  const dashboard = `${resolveBaseUrl()}/signin`
+  return emailShell({
+    maxWidth,
+    recentPosts,
+    title: 'Forke: Post your first task',
+    preheader: 'Your owner account is ready. Here’s how to get your first task done.',
+    banner: 'owner-approved.png',
+    footerLabel: 'Owner Onboarding',
+    bodyHtml: `
+      ${heading('Your first task,', 'in three steps.')}
+      ${p(`Hello ${name},`)}
+      ${p('Your owner account has been ready for a couple of days, but you haven’t posted a task yet. Here’s the quickest way to start:')}
+      ${p('<strong style="color:' + BRAND.textHigh + ';font-weight:600;">1.</strong> Pick something small and well defined: a bug fix, a component, an integration.<br><strong style="color:' + BRAND.textHigh + ';font-weight:600;">2.</strong> Set a budget and a clear “done” checklist.<br><strong style="color:' + BRAND.textHigh + ';font-weight:600;">3.</strong> Publish it. Developers claim it and you review the submission before anyone is paid.')}
+      ${buttonPrimary(dashboard, 'Post your first task')}
+      ${p('Stuck on scoping? Reply to this email and we’ll help.', 0)}
+    `,
+  })
+}
+
+export interface ForkeMailTemplateSource {
+  name: string
+  subject: string
+  html: string
+}
+
+let exportSlots: { date: string; recentPosts: string } | undefined
+
+function templateHtml(build: () => string): string {
+  exportSlots = { date: '{{date}}', recentPosts: '{{{recent_posts}}}' }
+  try {
+    return build()
+  } finally {
+    exportSlots = undefined
+  }
+}
+
+export function forkeMailTemplateSources(): ForkeMailTemplateSource[] {
+  return [
+    { name: 'waitlist-welcome', subject: 'Welcome to the Forke Waitlist!', html: templateHtml(() => buildWelcomeEmail()) },
+    { name: 'waitlist-follow-up', subject: 'What’s happening at Forke', html: templateHtml(() => buildWaitlistFollowUpEmail()) },
+    { name: 'admin-invitation', subject: 'Action Required: Complete your Forke Admin Setup', html: templateHtml(() => buildAdminInvitationEmail('{{name}}', '{{invite_link}}')) },
+    { name: 'account-deletion-scheduled', subject: 'Forke: Your account deletion has been scheduled', html: templateHtml(() => buildAccountDeletionScheduledEmail()) },
+    { name: 'account-deletion-reminder', subject: 'Forke: Your account will be deleted tomorrow', html: templateHtml(() => buildAccountDeletionReminderEmail()) },
+    { name: 'owner-approved', subject: 'Your Forke owner account is approved', html: templateHtml(() => buildOwnerApprovedEmail('{{name}}', '{{sign_in_link}}')) },
+    { name: 'owner-declined', subject: 'Update on your Forke owner application', html: templateHtml(() => buildOwnerDeclinedEmail('{{name}}', '{{reason}}', '{{apply_link}}')) },
+    { name: 'owner-first-task', subject: 'Post your first task on Forke', html: templateHtml(() => buildOwnerFirstTaskEmail('{{name}}')) },
+    { name: 'owner-banned', subject: 'Your Forke account has been suspended', html: templateHtml(() => buildBannedEmail('{{name}}', 'owner', '{{review_link}}')) },
+    { name: 'developer-banned', subject: 'Your Forke account has been suspended', html: templateHtml(() => buildBannedEmail('{{name}}', 'developer', '{{review_link}}')) },
+  ]
 }
 
 export interface BlogEmailRecent {
@@ -1104,7 +1221,7 @@ export async function sendBlogPublishedBroadcast(blog: {
     const createRes = await mailApiFetch('/broadcasts', {
       method: 'POST',
       body: JSON.stringify({
-        audience_id: audienceId,
+        ...(resolveBroadcastSegment() ? { segment: resolveBroadcastSegment() } : { audience_id: audienceId }),
         topic: 'blog',
         from: 'Forke Blog <blog@forke.space>',
         reply_to: 'support@forke.space',
@@ -1229,7 +1346,7 @@ export async function sendChangelogPublishedBroadcast(changelog: {
       {
         method: 'POST',
         body: JSON.stringify({
-          audience_id: audienceId,
+          ...(resolveBroadcastSegment() ? { segment: resolveBroadcastSegment() } : { audience_id: audienceId }),
         topic: 'changelog',
           from: 'Forke Changelog <changelog@forke.space>',
           reply_to: 'support@forke.space',
@@ -1316,148 +1433,31 @@ export async function getRecentPostsForEmail(excludeSlug?: string): Promise<Blog
   }
 }
 
-export async function sendWelcomeEmail(toEmail: string): Promise<boolean> {
-  const recentPosts = await getRecentPostsForEmail()
-  return sendMail(
-    toEmail,
-    'Welcome to the Forke Waitlist!',
-    buildWelcomeEmail(recentPosts),
-    'welcome',
-    'Forke Waitlist <waitlist@forke.space>'
-  )
-}
-
-export async function sendSiteLiveBroadcast(): Promise<{ success: boolean; sentCount: number; broadcastId?: string }> {
-  const apiKey = resolveMailApiKey()
-  if (!apiKey) {
-    console.warn('⚠️ FORKE_MAIL_API_KEY is not configured. Skipping site-live broadcast.')
-    return { success: false, sentCount: 0 }
-  }
-
-  // Resolve recipients: active, not paused, and not opted out of this topic.
-  let emails: string[] = []
-  try {
-    emails = await loadBroadcastRecipients('product')
-  } catch (err) {
-    console.error('Failed to load subscribers for site-live broadcast:', err)
-    return { success: false, sentCount: 0 }
-  }
-  if (emails.length === 0) return { success: true, sentCount: 0 }
-
-  // 1) Ensure an audience and 2) sync our subscribers into it as contacts.
-  const audienceId = await ensureAudience(apiKey)
-  if (!audienceId) return { success: false, sentCount: 0 }
-  const synced = await syncContactsToAudience(audienceId, emails, apiKey)
-
-  // Fetch the 3 recent published blogs to include in the email
-  const recentPosts = await getRecentPostsForEmail()
-
-  const html = buildSiteLiveEmail({
-    unsubscribe: true, // Broadcasts API requires an unsubscribe link.
-    recentPosts,
-  })
-  const subject = 'Forke is live'
-
-  try {
-    // 3) Create the broadcast against the audience.
-    const createRes = await mailApiFetch('/broadcasts', {
-      method: 'POST',
-      body: JSON.stringify({
-        audience_id: audienceId,
-        topic: 'product',
-        from: 'Forke Waitlist <waitlist@forke.space>',
-        reply_to: 'support@forke.space',
-        subject,
-        html,
-        name: 'Forke is Live Broadcast',
-      }),
-    }, apiKey)
-    if (!createRes.ok) {
-      console.error('Failed to create Forke Mail broadcast:', await createRes.text())
-      return { success: false, sentCount: 0 }
-    }
-    const broadcast = (await createRes.json()) as { id: string }
-    const broadcastId = broadcast.id
-
-    // 4) Send it now.
-    const sendRes = await mailApiFetch(`/broadcasts/${broadcastId}/send`, {
-      method: 'POST',
-      body: JSON.stringify({}),
-    }, apiKey)
-    if (!sendRes.ok) {
-      console.error('Failed to send Forke Mail broadcast:', await sendRes.text())
-      return { success: false, sentCount: 0, broadcastId }
-    }
-
-    const queued = await queuedRecipients(sendRes, synced)
-    console.log(`Site-live broadcast queued for ${queued} recipients (${synced} contacts synced).`)
-    return { success: true, sentCount: queued, broadcastId }
-  } catch (err) {
-    console.error('Error dispatching site-live broadcast:', err)
-    return { success: false, sentCount: 0 }
-  }
-}
-
 export async function sendAdminInvitation(
   toEmail: string,
   name: string,
   inviteLink: string
 ): Promise<boolean> {
-  const recentPosts = await getRecentPostsForEmail()
-  return sendMail(
-    toEmail,
-    'Action Required: Complete your Forke Admin Setup',
-    buildAdminInvitationEmail(name, inviteLink, recentPosts),
-    'admin invitation',
-    'Forke Onboarding <onboarding@forke.space>'
-  )
-}
-
-export async function sendAccountDeletionScheduledEmail(toEmail: string): Promise<boolean> {
-  const recentPosts = await getRecentPostsForEmail()
-  return sendMail(
-    toEmail,
-    'Forke: Your account deletion has been scheduled',
-    buildAccountDeletionScheduledEmail(recentPosts),
-    'deletion scheduled',
-    'Forke Security <security@forke.space>'
-  )
+  const recent_posts = recentPostsBlock(await getRecentPostsForEmail())
+  return sendTemplateEmail(toEmail, 'admin-invitation', { name, invite_link: inviteLink, recent_posts }, 'admin invitation', 'Forke Onboarding <onboarding@forke.space>')
 }
 
 export async function sendOwnerApprovedEmail(toEmail: string, name: string): Promise<boolean> {
-  const signInLink = `${resolveBaseUrl()}/signin`
-  const recentPosts = await getRecentPostsForEmail()
-  return sendMail(
-    toEmail,
-    'Your Forke owner account is approved',
-    buildOwnerApprovedEmail(name, signInLink, recentPosts),
-    'owner approval',
-    'Forke Approvals <approvals@forke.space>'
-  )
+  const recent_posts = recentPostsBlock(await getRecentPostsForEmail())
+  const sent = await sendTemplateEmail(toEmail, 'owner-approved', { name, sign_in_link: `${resolveDashboardUrl()}/signin`, recent_posts }, 'owner approval', 'Forke Approvals <approvals@forke.space>')
+  await trackForkeMailEvent(toEmail, 'owner.approved', { first_name: name })
+  return sent
 }
 
 export async function sendOwnerDeclinedEmail(toEmail: string, name: string, reason: string): Promise<boolean> {
-  const applyLink = `${resolveBaseUrl()}/signin`
-  const recentPosts = await getRecentPostsForEmail()
-  return sendMail(
-    toEmail,
-    'Update on your Forke owner application',
-    buildOwnerDeclinedEmail(name, reason, applyLink, recentPosts),
-    'owner decline',
-    'Forke Approvals <approvals@forke.space>'
-  )
+  const recent_posts = recentPostsBlock(await getRecentPostsForEmail())
+  const safeReason = (reason || '').trim() || 'Your application did not meet our current onboarding criteria.'
+  return sendTemplateEmail(toEmail, 'owner-declined', { name, reason: safeReason, apply_link: `${resolveDashboardUrl()}/signin`, recent_posts }, 'owner decline', 'Forke Approvals <approvals@forke.space>')
 }
 
 async function sendBannedEmail(toEmail: string, name: string, accountKind: 'owner' | 'developer'): Promise<boolean> {
-  const reviewLink = `${resolveBaseUrl()}/auth-error?error=AccessDenied`
-  const recentPosts = await getRecentPostsForEmail()
-  return sendMail(
-    toEmail,
-    'Your Forke account has been suspended',
-    buildBannedEmail(name, accountKind, reviewLink, recentPosts),
-    `${accountKind} ban`,
-    'Forke Bans <bans@forke.space>'
-  )
+  const recent_posts = recentPostsBlock(await getRecentPostsForEmail())
+  return sendTemplateEmail(toEmail, `${accountKind}-banned`, { name, review_link: `${resolveDashboardUrl()}/auth-error?error=AccessDenied`, recent_posts }, `${accountKind} ban`, 'Forke Bans <bans@forke.space>')
 }
 
 export async function sendOwnerBannedEmail(toEmail: string, name: string): Promise<boolean> {
