@@ -76,14 +76,6 @@ export default function EmailSneakPeekModal({
           height: auto !important;
           display: block !important;
         }
-        .social-icon-img {
-          display: block !important;
-          margin: 0 auto !important;
-          width: 18px !important;
-          height: 18px !important;
-          max-width: 18px !important;
-          max-height: 18px !important;
-        }
         /* Constrain outer table & canvas cell */
         .email-outer-td,
         td[style*="padding:52px 16px"],
