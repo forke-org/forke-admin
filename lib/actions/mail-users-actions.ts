@@ -196,3 +196,33 @@ export async function deleteMailUserAction(userId: string): Promise<{ success: b
     return { success: false, error: err instanceof Error ? err.message : 'Failed' }
   }
 }
+
+export interface MailGuard {
+  active: boolean
+  reason: string
+  activated_at: string | null
+  cleared_at: string | null
+  checked_at: string | null
+  held_projects: number
+  windows: { window: string; sent: number; bounced: number; complained: number; bounce_rate: number; complaint_rate: number }[]
+}
+
+export async function getMailGuardAction(): Promise<{ success: boolean; data?: MailGuard; superAdmin?: boolean; error?: string }> {
+  const admin = await getCurrentAdmin()
+  if (!admin) return { success: false, error: 'Unauthorized' }
+  try {
+    return { success: true, data: await platform('/api/platform/guard'), superAdmin: admin.role === 'super_admin' }
+  } catch (err) {
+    return { success: false, error: err instanceof Error ? err.message : 'Could not load protection status' }
+  }
+}
+
+export async function clearMailGuardAction(): Promise<{ success: boolean; error?: string }> {
+  if (!(await requireSuperAdmin())) return superOnly
+  try {
+    await platform('/api/platform/guard/clear', 'POST')
+    return { success: true }
+  } catch (err) {
+    return { success: false, error: err instanceof Error ? err.message : 'Failed' }
+  }
+}

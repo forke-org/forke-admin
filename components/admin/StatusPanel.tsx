@@ -15,6 +15,7 @@ import { ExternalLink, RefreshCw } from 'lucide-react'
 import { getStatusOverviewAction, type CheckState, type StatusOverview } from '@/lib/actions/status-actions'
 import { PanelSkeleton } from '@/components/ui/Skeleton'
 import { cn } from '@/lib/utils/cn'
+import MailGuardCard from '@/components/admin/MailGuardCard'
 
 const STATE_STYLE: Record<CheckState, string> = {
   operational: 'bg-emerald-500/10 border-emerald-500/20 text-emerald-300',
@@ -112,6 +113,8 @@ export default function StatusPanel() {
       </div>
 
       {error && <p className="text-xs text-red-300">{error}</p>}
+
+      <MailGuardCard />
 
       <Card title="Servers and apps" subtitle={data ? `Checked ${ago(data.checkedAt)} over localhost` : undefined}>
         <div className="divide-y divide-[var(--color-border)]">
