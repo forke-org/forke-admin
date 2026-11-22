@@ -108,11 +108,14 @@ async function publicStatus() {
     const res = await fetch(`${PUBLIC_STATUS_JSON}?t=${Date.now()}`, { cache: 'no-store', signal: AbortSignal.timeout(5000) })
     if (!res.ok) return { services: null, updatedAt: null }
     const data = await res.json()
-    const services = ['website', 'dashboard', 'api', 'mail'].map((id) => data.services?.[id]).filter(Boolean).map((s: any) => {
-      let up = 0
+    const ids: string[] = (data.groups ?? []).flatMap((g: any) => g.components ?? [])
+    const cutoff = new Date(Date.now() - 90 * 86400000).toISOString().slice(0, 10)
+    const services = ids.map((id) => data.components?.[id]).filter((c: any) => c && c.status !== 'hidden').map((c: any) => {
+      let down = 0
       let checks = 0
-      for (const d of Object.values<any>(s.days ?? {})) { up += d.up; checks += d.checks }
-      return { id: s.id, name: s.name, status: s.status as CheckState, uptime90: checks ? up / checks : null, lastMs: s.lastCheck?.ms ?? null }
+      for (const [day, d] of Object.entries<any>(c.days ?? {})) if (day >= cutoff) { down += d.down; checks += d.checks }
+      const status: CheckState = ['operational', 'degraded', 'down'].includes(c.status) ? c.status : 'unknown'
+      return { id: c.id, name: c.name, status, uptime90: checks ? (checks - down) / checks : null, lastMs: c.lastCheck?.ms ?? null }
     })
     return { services, updatedAt: data.updatedAt ?? null }
   } catch {

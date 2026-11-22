@@ -97,7 +97,7 @@ export default function StatusPanel() {
             {data && <Pill state={worst} />}
           </div>
           <p className="mt-0.5 text-xs text-[var(--color-text-muted)]">
-            Private checks from this server, refreshed every 30 seconds. The public page shows only the Website, Dashboard, API and Forke Mail.
+            Private checks from this server, refreshed every 30 seconds. The public page shows Forke and Forke Mail components, measured from outside.
           </p>
         </div>
         <div className="flex items-center gap-2">
