@@ -693,23 +693,6 @@ export function buildStatusConfirmEmail(): string {
   })
 }
 
-export function buildAgentApprovalEmail(): string {
-  return emailShell({
-    title: 'An AI agent is waiting for your approval',
-    preheader: '{{requester}} wants to: {{summary}}',
-    banner: 'admin-approval.png',
-    footerLabel: 'Forke Mail',
-    bodyHtml: `
-      ${heading('Approval needed.', 'Nothing happens until you decide.')}
-      ${p('{{requester}} wants to do this in <strong style="color:' + BRAND.textHigh + ';font-weight:600;">{{project}}</strong>:')}
-      ${calloutBox('Requested action', '{{summary}}')}
-      ${p('The request expires in 30 minutes. If you did not ask an AI agent to do this, decline it and disconnect the app under Connectors.')}
-      ${buttonPrimary('{{review_link}}', 'Review request')}
-      ${fallbackLink('{{review_link}}')}
-    `,
-  })
-}
-
 function templateHtml(build: () => string): string {
   exportSlots = { date: '{{date}}', recentPosts: '{{{recent_posts}}}' }
   try {
@@ -756,7 +739,6 @@ export function forkeMailTemplateSources(): ForkeMailTemplateSource[] {
         })
       ),
     },
-    { name: 'agent-approval', subject: 'An AI agent is waiting for your approval in {{project}}', html: templateHtml(() => buildAgentApprovalEmail()) },
   ]
 }
 
