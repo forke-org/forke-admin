@@ -655,6 +655,59 @@ export interface ForkeMailTemplateSource {
 
 let exportSlots: { date: string; recentPosts: string } | undefined
 
+export function buildStatusIncidentEmail(): string {
+  return emailShell({
+    title: '{{subject}}',
+    preheader: '{{message}}',
+    banner: 'main-banner.png',
+    footerLabel: 'Forke Status',
+    footerExtra: `<p style="font-family:${BRAND.sans};font-size:11px;line-height:1.6;color:${BRAND.textFaint};margin:14px 0 0 0;">
+         You're receiving this because you subscribed to Forke status updates.
+         <a href="{{stop_url}}" style="color:${BRAND.textMuted};text-decoration:underline;">Stop status emails</a>.
+       </p>`,
+    bodyHtml: `
+      ${heading('{{heading}}', '{{subheading}}')}
+      ${calloutBox('{{label}}', '{{services}}')}
+      ${p('{{message}}')}
+      ${p('{{next_step}}')}
+      ${buttonPrimary('{{status_url}}', 'Open status page')}
+    `,
+  })
+}
+
+export function buildStatusConfirmEmail(): string {
+  return emailShell({
+    title: 'Confirm Forke status updates',
+    preheader: 'Confirm to get an email when a Forke service has a problem.',
+    banner: 'main-banner.png',
+    footerLabel: 'Forke Status',
+    bodyHtml: `
+      ${heading('Stay in the loop.', 'Confirm your subscription.')}
+      ${p('Someone asked to get an email whenever a Forke service has a problem, and again when it is fixed.')}
+      ${p('If that was you, confirm below. If not, ignore this email and nothing will be sent.')}
+      ${buttonPrimary('{{confirm_link}}', 'Confirm subscription')}
+      ${fallbackLink('{{confirm_link}}')}
+    `,
+  })
+}
+
+export function buildAgentApprovalEmail(): string {
+  return emailShell({
+    title: 'An AI agent is waiting for your approval',
+    preheader: '{{requester}} wants to: {{summary}}',
+    banner: 'admin-approval.png',
+    footerLabel: 'Forke Mail',
+    bodyHtml: `
+      ${heading('Approval needed.', 'Nothing happens until you decide.')}
+      ${p('{{requester}} wants to do this in <strong style="color:' + BRAND.textHigh + ';font-weight:600;">{{project}}</strong>:')}
+      ${calloutBox('Requested action', '{{summary}}')}
+      ${p('The request expires in 30 minutes. If you did not ask an AI agent to do this, decline it and disconnect the app under Connectors.')}
+      ${buttonPrimary('{{review_link}}', 'Review request')}
+      ${fallbackLink('{{review_link}}')}
+    `,
+  })
+}
+
 function templateHtml(build: () => string): string {
   exportSlots = { date: '{{date}}', recentPosts: '{{{recent_posts}}}' }
   try {
@@ -676,6 +729,9 @@ export function forkeMailTemplateSources(): ForkeMailTemplateSource[] {
     { name: 'owner-first-task', subject: 'Post your first task on Forke', html: templateHtml(() => buildOwnerFirstTaskEmail('{{name}}')) },
     { name: 'owner-banned', subject: 'Your Forke account has been suspended', html: templateHtml(() => buildBannedEmail('{{name}}', 'owner', '{{review_link}}')) },
     { name: 'developer-banned', subject: 'Your Forke account has been suspended', html: templateHtml(() => buildBannedEmail('{{name}}', 'developer', '{{review_link}}')) },
+    { name: 'status-incident', subject: '{{subject}}', html: templateHtml(() => buildStatusIncidentEmail()) },
+    { name: 'status-subscribe-confirm', subject: 'Confirm Forke status updates', html: templateHtml(() => buildStatusConfirmEmail()) },
+    { name: 'agent-approval', subject: 'An AI agent is waiting for your approval in {{project}}', html: templateHtml(() => buildAgentApprovalEmail()) },
   ]
 }
 
