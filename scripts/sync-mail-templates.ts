@@ -15,7 +15,7 @@ async function main() {
   const out = process.argv[2]
   const sources = forkeMailTemplateSources().map((t) => ({
     ...t,
-    kind: 'transactional',
+    kind: t.kind ?? 'transactional',
   }))
 
   if (out) {
@@ -36,7 +36,7 @@ async function main() {
     for (const t of sources) {
       const found = existing.get(t.name.toLowerCase())
       const id = found?.id
-      if (found) t.kind = found.kind
+      if (found) t.kind = found.kind as 'transactional' | 'marketing'
       const res = await fetch(`${base}/api/templates${id ? `/${id}` : ''}`, {
         method: id ? 'PUT' : 'POST',
         headers,
