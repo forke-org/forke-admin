@@ -651,6 +651,8 @@ export interface ForkeMailTemplateSource {
   name: string
   subject: string
   html: string
+  /** marketing templates skip unsubscribed contacts; transactional ones reach everyone. */
+  kind?: 'transactional' | 'marketing'
 }
 
 let exportSlots: { date: string; recentPosts: string } | undefined
@@ -731,6 +733,29 @@ export function forkeMailTemplateSources(): ForkeMailTemplateSource[] {
     { name: 'developer-banned', subject: 'Your Forke account has been suspended', html: templateHtml(() => buildBannedEmail('{{name}}', 'developer', '{{review_link}}')) },
     { name: 'status-incident', subject: '{{subject}}', html: templateHtml(() => buildStatusIncidentEmail()) },
     { name: 'status-subscribe-confirm', subject: 'Confirm Forke status updates', html: templateHtml(() => buildStatusConfirmEmail()) },
+    {
+      name: 'blog-post',
+      kind: 'marketing',
+      subject: 'New on the Forke blog: {{title}}',
+      html: templateHtml(() =>
+        buildBlogEmail({ title: '{{title}}', excerpt: '{{excerpt}}', coverImage: '{{cover_image}}', url: '{{url}}', meta: '{{meta}}', unsubscribe: true })
+      ),
+    },
+    {
+      name: 'changelog-update',
+      kind: 'marketing',
+      subject: 'New in Forke: {{title}}',
+      html: templateHtml(() =>
+        buildChangelogEmail({
+          title: '{{title}}',
+          slug: '',
+          description: '',
+          url: '{{url}}',
+          unsubscribe: true,
+          slots: { tag: '{{tag}}', date: '{{date_label}}', summary: '{{summary}}', description: '{{{description_html}}}', media: '{{{media_html}}}', highlights: '{{{highlights_html}}}' },
+        })
+      ),
+    },
     { name: 'agent-approval', subject: 'An AI agent is waiting for your approval in {{project}}', html: templateHtml(() => buildAgentApprovalEmail()) },
   ]
 }
@@ -755,6 +780,8 @@ export interface BlogEmailData {
   recentPosts?: BlogEmailRecent[]
   /** Card max-width override (preview only). Real sends use 600. */
   maxWidth?: number
+  /** Replaces the date and reading-time line (used to export the Forke Mail template). */
+  meta?: string
   /**
    * When true, append an unsubscribe footer. Forke Mail's Broadcasts API REQUIRES an
    * unsubscribe link and substitutes the {{unsubscribe_url}} token at
@@ -861,7 +888,7 @@ export function buildBlogEmail(data: BlogEmailData): string {
   const dateStr = formatBlogDate(data.publishedAt)
   const minutes = data.readingMinutes && data.readingMinutes > 0 ? data.readingMinutes : 1
 
-  const metaLine = [dateStr, `${minutes} min read`].filter(Boolean).join(' · ')
+  const metaLine = data.meta ?? [dateStr, `${minutes} min read`].filter(Boolean).join(' · ')
   const excerptLine = data.excerpt?.trim()
     ? `<p style="font-family:${BRAND.sans};font-size:15px;line-height:1.7;color:${BRAND.textBody};margin:0 0 12px;">${clampText(data.excerpt, 150)}</p>`
     : ''
@@ -916,6 +943,66 @@ export interface ChangelogEmailData {
   recentPosts?: BlogEmailRecent[]
   /** When true, flags this email as a preview of a private/draft changelog. */
   isDraft?: boolean
+  /** Replaces the computed pieces with Forke Mail template placeholders. */
+  slots?: { tag: string; date: string; summary: string } & ChangelogBlocks
+}
+
+export interface ChangelogBlocks {
+  description: string
+  media: string
+  highlights: string
+}
+
+/** The changelog's variable sections, shared by the live email and the Forke Mail template data. */
+export function changelogBlocks(data: Pick<ChangelogEmailData, 'title' | 'description' | 'improvements' | 'fixes' | 'mediaUrl'>, changelogUrl: string): ChangelogBlocks {
+  const improvementsList = (data.improvements || []).filter((s) => s.trim())
+  const fixesList = (data.fixes || []).filter((s) => s.trim())
+
+  let highlights = ''
+  if (improvementsList.length > 0 || fixesList.length > 0) {
+    const impSection =
+      improvementsList.length > 0
+        ? `<td class="email-highlights-col" style="vertical-align:top;padding:12px;width:50%;">
+            <p style="font-family:${BRAND.mono};font-size:10px;font-weight:600;letter-spacing:0.14em;text-transform:uppercase;color:${BRAND.accent};margin:0 0 10px;">IMPROVEMENTS</p>
+            <ul style="margin:0;padding-left:14px;color:${BRAND.textBody};font-family:${BRAND.sans};font-size:13px;line-height:1.6;">
+              ${improvementsList.map((item) => `<li style="margin-bottom:6px;">${item}</li>`).join('')}
+            </ul>
+          </td>`
+        : ''
+    const fixSection =
+      fixesList.length > 0
+        ? `<td class="email-highlights-col" style="vertical-align:top;padding:12px;width:50%;">
+            <p style="font-family:${BRAND.mono};font-size:10px;font-weight:600;letter-spacing:0.14em;text-transform:uppercase;color:#34D399;margin:0 0 10px;">FIXES</p>
+            <ul style="margin:0;padding-left:14px;color:${BRAND.textBody};font-family:${BRAND.sans};font-size:13px;line-height:1.6;">
+              ${fixesList.map((item) => `<li style="margin-bottom:6px;">${item}</li>`).join('')}
+            </ul>
+          </td>`
+        : ''
+    highlights = `
+      <table width="100%" cellpadding="0" cellspacing="0" border="0" style="margin:20px 0 16px;background:${BRAND.card};border:1px solid ${BRAND.hairlineSoft};border-radius:12px;">
+        <tr>${impSection}${fixSection}</tr>
+      </table>
+    `
+  }
+
+  const media = data.mediaUrl
+    ? `<tr><td class="email-media-td email-pad" style="padding:0 20px;line-height:0;font-size:0;"><div style="border-radius:12px;overflow:hidden;border:1px solid ${BRAND.hairlineSoft};">${blogImg(data.mediaUrl, data.title, changelogUrl, 12)}</div></td></tr>`
+    : ''
+
+  const paragraphs = (data.description || '')
+    .split(/\n\s*\n/)
+    .map((p) => p.trim())
+    .filter(Boolean)
+  const description = paragraphs
+    .map(
+      (para, idx) =>
+        `<p style="font-family:${BRAND.sans};font-size:15px;line-height:1.7;color:${BRAND.textBody};margin:0 0 ${
+          idx === paragraphs.length - 1 ? 16 : 14
+        }px 0;text-align:left;white-space:pre-line;">${para.replace(/\n/g, '<br />')}</p>`
+    )
+    .join('')
+
+  return { description, media, highlights }
 }
 
 /**
@@ -927,47 +1014,14 @@ export function buildChangelogEmail(data: ChangelogEmailData): string {
   if (changelogUrl.includes('admin.forke.space') || changelogUrl.includes('localhost')) {
     changelogUrl = changelogUrl.replace(/https?:\/\/(admin\.forke\.space|localhost:\d+)/, publicBase)
   }
-  const tagLabel = (data.tag || 'FEATURE').toUpperCase()
-  const dateStr = data.publishedAt
+  const tagLabel = data.slots?.tag ?? (data.tag || 'FEATURE').toUpperCase()
+  const dateStr = data.slots ? data.slots.date : data.publishedAt
     ? new Date(data.publishedAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })
     : new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })
 
-  const improvementsList = (data.improvements || []).filter((s) => s.trim())
-  const fixesList = (data.fixes || []).filter((s) => s.trim())
-
-  let highlightsHtml = ''
-  if (improvementsList.length > 0 || fixesList.length > 0) {
-    const impSection =
-      improvementsList.length > 0
-        ? `<td class="email-highlights-col" style="vertical-align:top;padding:12px;width:50%;">
-            <p style="font-family:${BRAND.mono};font-size:10px;font-weight:600;letter-spacing:0.14em;text-transform:uppercase;color:${BRAND.accent};margin:0 0 10px;">IMPROVEMENTS</p>
-            <ul style="margin:0;padding-left:14px;color:${BRAND.textBody};font-family:${BRAND.sans};font-size:13px;line-height:1.6;">
-              ${improvementsList.map((item) => `<li style="margin-bottom:6px;">${item}</li>`).join('')}
-            </ul>
-          </td>`
-        : ''
-
-    const fixSection =
-      fixesList.length > 0
-        ? `<td class="email-highlights-col" style="vertical-align:top;padding:12px;width:50%;">
-            <p style="font-family:${BRAND.mono};font-size:10px;font-weight:600;letter-spacing:0.14em;text-transform:uppercase;color:#34D399;margin:0 0 10px;">FIXES</p>
-            <ul style="margin:0;padding-left:14px;color:${BRAND.textBody};font-family:${BRAND.sans};font-size:13px;line-height:1.6;">
-              ${fixesList.map((item) => `<li style="margin-bottom:6px;">${item}</li>`).join('')}
-            </ul>
-          </td>`
-        : ''
-
-    highlightsHtml = `
-      <table width="100%" cellpadding="0" cellspacing="0" border="0" style="margin:20px 0 16px;background:${BRAND.card};border:1px solid ${BRAND.hairlineSoft};border-radius:12px;">
-        <tr>${impSection}${fixSection}</tr>
-      </table>
-    `
-  }
-
-  const mediaRow = data.mediaUrl
-    ? `<tr><td class="email-media-td email-pad" style="padding:0 20px;line-height:0;font-size:0;"><div style="border-radius:12px;overflow:hidden;border:1px solid ${BRAND.hairlineSoft};">${blogImg(data.mediaUrl, data.title, changelogUrl, 12)}</div></td></tr>`
-    : ''
-
+  const blocks = data.slots ?? changelogBlocks(data, changelogUrl)
+  const highlightsHtml = blocks.highlights
+  const mediaRow = blocks.media
   const footerExtra = data.unsubscribe
     ? `<p style="font-family:${BRAND.sans};font-size:11px;line-height:1.6;color:${BRAND.textFaint};margin:14px 0 0 0;">
          You're receiving this because you subscribed to Forke release updates.
@@ -975,28 +1029,12 @@ export function buildChangelogEmail(data: ChangelogEmailData): string {
        </p>`
     : ''
 
-  const paragraphs = (data.description || '')
-    .split(/\n\s*\n/)
-    .map((p) => p.trim())
-    .filter(Boolean)
-
-  const descriptionHtml =
-    paragraphs.length > 0
-      ? paragraphs
-          .map(
-            (para, idx) =>
-              `<p style="font-family:${BRAND.sans};font-size:15px;line-height:1.7;color:${BRAND.textBody};margin:0 0 ${
-                idx === paragraphs.length - 1 ? 16 : 14
-              }px 0;text-align:left;white-space:pre-line;">${para.replace(/\n/g, '<br />')}</p>`
-          )
-          .join('')
-      : ''
-
+  const descriptionHtml = blocks.description
   return emailShell({
     maxWidth: data.maxWidth,
     title: data.title,
     banner: 'main-banner.png',
-    preheader: (data.isDraft ? '[DRAFT PREVIEW] ' : '') + ((data.description || '').replace(/\s+/g, ' ').trim().slice(0, 140) || `New in Forke Changelog: ${data.title}`),
+    preheader: (data.isDraft ? '[DRAFT PREVIEW] ' : '') + (data.slots?.summary ?? ((data.description || '').replace(/\s+/g, ' ').trim().slice(0, 140) || `New in Forke Changelog: ${data.title}`)),
     footerLabel: 'Forke Release Notes',
     draftNotice: data.isDraft,
     footerExtra,
@@ -1259,17 +1297,15 @@ export async function sendBlogPublishedBroadcast(blog: {
   // section. Best-effort: a query failure just omits the section.
   const recentPosts = await getRecentPostsForEmail(blog.slug)
 
-  const html = buildBlogEmail({
+  const minutes = blog.readingMinutes && blog.readingMinutes > 0 ? blog.readingMinutes : 1
+  const templateData = {
     title: blog.title,
-    excerpt: blog.excerpt,
-    coverImage: blog.coverImage,
-    authorName: blog.authorName,
-    readingMinutes: blog.readingMinutes,
-    publishedAt: blog.publishedAt,
+    excerpt: blog.excerpt?.trim() ? clampText(blog.excerpt, 150) : '',
+    cover_image: blog.coverImage || `${BRAND.baseUrl}/forke-assets/email-banners/main-banner.png`,
     url,
-    recentPosts,
-    unsubscribe: true, // Broadcasts API requires an unsubscribe link.
-  })
+    meta: [formatBlogDate(blog.publishedAt), `${minutes} min read`].filter(Boolean).join(' · '),
+    recent_posts: recentPostsBlock(recentPosts),
+  }
   const subject = `New on the Forke blog: ${blog.title}`
 
   try {
@@ -1282,7 +1318,8 @@ export async function sendBlogPublishedBroadcast(blog: {
         from: 'Forke Blog <blog@forke.space>',
         reply_to: 'support@forke.space',
         subject,
-        html,
+        template: 'blog-post',
+        data: templateData,
         name: `Blog: ${blog.title}`.slice(0, 68),
       }),
     }, apiKey)
@@ -1379,20 +1416,21 @@ export async function sendChangelogPublishedBroadcast(changelog: {
   const changelogUrl = `${baseUrl}/changelog`
   const recentPosts = await getRecentPostsForEmail()
 
-  const html = buildChangelogEmail({
+  const blocks = changelogBlocks(
+    { title: changelog.title, description: changelog.description, improvements: changelog.improvements, fixes: changelog.fixes, mediaUrl: changelog.mediaUrl || undefined },
+    changelogUrl
+  )
+  const templateData = {
     title: changelog.title,
-    slug: changelog.slug || '',
-    tag: changelog.tag || 'FEATURE',
-    description: changelog.description,
-    improvements: changelog.improvements,
-    fixes: changelog.fixes,
-    mediaUrl: changelog.mediaUrl || undefined,
-    mediaType: changelog.mediaType || 'none',
-    publishedAt: changelog.publishedAt || undefined,
     url: changelogUrl,
-    recentPosts,
-    unsubscribe: true, // Broadcasts API requires an unsubscribe link.
-  })
+    tag: (changelog.tag || 'FEATURE').toUpperCase(),
+    date_label: new Date(changelog.publishedAt || Date.now()).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }),
+    summary: (changelog.description || '').replace(/\s+/g, ' ').trim().slice(0, 140) || `New in Forke Changelog: ${changelog.title}`,
+    description_html: blocks.description,
+    media_html: blocks.media,
+    highlights_html: blocks.highlights,
+    recent_posts: recentPostsBlock(recentPosts),
+  }
   const subject = `New in Forke: ${changelog.title}`
 
   try {
@@ -1407,7 +1445,8 @@ export async function sendChangelogPublishedBroadcast(changelog: {
           from: 'Forke Changelog <changelog@forke.space>',
           reply_to: 'support@forke.space',
           subject,
-          html,
+          template: 'changelog-update',
+          data: templateData,
           name: `Changelog: ${changelog.title}`.slice(0, 68),
         }),
       },
