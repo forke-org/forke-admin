@@ -824,5 +824,10 @@ input[type="checkbox"]:not(.appearance-none):focus {
   }
 }
 
-
-
+/* Horizontal scrollbars stay hidden until you hover or focus the area that scrolls */
+:where(*)::-webkit-scrollbar:horizontal { height: 6px; }
+:where(*)::-webkit-scrollbar-thumb:horizontal { background-color: transparent; transition: background-color 0.2s; }
+:where(*):hover::-webkit-scrollbar-thumb:horizontal,
+:where(*):focus-within::-webkit-scrollbar-thumb:horizontal { background-color: var(--color-accent); }
+:where(pre, .overflow-x-auto, .overflow-x-scroll, .table) { scrollbar-color: transparent transparent; }
+:where(pre, .overflow-x-auto, .overflow-x-scroll, .table):is(:hover, :focus-within) { scrollbar-color: var(--color-accent) transparent; }
