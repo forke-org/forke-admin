@@ -12,7 +12,7 @@
 
 import React, { useState, useEffect, useCallback, useRef } from 'react'
 import {
-  Plus, Search, Edit3, Pencil, Trash2, Globe, Eye, EyeOff, Sparkles,
+  Plus, Search, Edit3, Pencil, Trash2, Globe, Eye, EyeOff,
   CheckCircle2, Upload, Video, Image as ImageIcon, X, ExternalLink,
   Calendar, Tag, ArrowUpRight, RefreshCw, FileText, Check, Clock,
   ChevronLeft, ChevronRight, ArrowLeft, Loader2, CircleDot, Layers,

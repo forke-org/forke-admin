@@ -90,7 +90,6 @@ import {
   HardDrive,
   LineChart,
   Archive,
-  Sparkles,
   Trash2,
   Server,
   RefreshCw,

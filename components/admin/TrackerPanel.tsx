@@ -11,7 +11,7 @@
  */
 
 import React, { useCallback, useEffect, useState, useMemo } from 'react'
-import { MousePointerClick, Users, Target, FileText, ExternalLink, RefreshCw, ChevronLeft, ChevronRight, Bot, LineChart } from 'lucide-react'
+import { MousePointerClick, Users, Target, FileText, ExternalLink, RefreshCw, ChevronLeft, ChevronRight, Radar, LineChart } from 'lucide-react'
 import { getTrackerData, getSignupSourceBreakdown, type TrackerData } from '@/lib/admin-dashboard-actions'
 import { Skeleton } from '@/components/ui/Skeleton'
 import { cn } from '@/lib/utils/cn'
@@ -422,7 +422,7 @@ export default function TrackerPanel() {
                     : 'text-[var(--color-text-muted)] hover:text-white'
                 )}
               >
-                <Bot className="w-3.5 h-3.5" />
+                <Radar className="w-3.5 h-3.5" />
                 Bot Intelligence
               </button>
             </div>

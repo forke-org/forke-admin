@@ -14,7 +14,7 @@ const IMPORTED_UNTIL = '2026-09-19'
 
 import React, { useState, useEffect, useCallback, useMemo } from 'react'
 import {
-  Bot,
+  Radar,
   ShieldAlert,
   Search,
   Cpu,
@@ -71,7 +71,7 @@ function getCategoryBadge(category?: string | null) {
     default:
       return {
         label: category || 'Bot',
-        icon: Bot,
+        icon: Radar,
         style: 'bg-white/5 text-[var(--color-text-muted)] border-[var(--color-border-strong)]',
       }
   }
@@ -246,7 +246,7 @@ export default function CrawlerIntelligenceView({ days = 14 }: CrawlerIntelligen
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
         <div className="rounded-xl bg-[var(--color-surface)] border border-[var(--color-border)] px-4 py-3">
           <div className="flex items-center gap-2 text-[var(--color-text-muted)]">
-            <Bot className="w-3.5 h-3.5" />
+            <Radar className="w-3.5 h-3.5" />
             <span className="text-[11px] uppercase tracking-wide">
               Total Bot Traffic
             </span>
