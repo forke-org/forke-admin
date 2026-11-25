@@ -1,36 +1,32 @@
 name: Build, Verify & Deploy
 
+# Same shape in every Forke app: check every pull request, deploy main to the Oracle server.
 on:
   push:
-    branches: [ main ]
+    branches: [main]
   pull_request:
-    branches: [ main ]
+    branches: [main]
   workflow_dispatch:
 
-# Deploys build in one folder on the server, so they run one at a time instead of clashing.
-concurrency:
-  group: deploy-${{ github.repository }}
-  cancel-in-progress: false
-
 jobs:
-  verify-build:
+  verify:
     name: Build & Error Verification
     runs-on: ubuntu-latest
-
+    timeout-minutes: 20
     steps:
-      - name: Checkout Code
+      - name: Checkout code
         uses: actions/checkout@v4
 
       - name: Setup Node.js 22
         uses: actions/setup-node@v4
         with:
           node-version: 22
-          cache: 'npm'
+          cache: npm
 
-      - name: Install Dependencies
+      - name: Install dependencies
         run: npm ci
 
-      - name: Run Build Verification
+      - name: Build
         run: npm run build
         env:
           NEXT_TELEMETRY_DISABLED: '1'
@@ -41,12 +37,16 @@ jobs:
 
   deploy:
     name: Deploy to Oracle Cloud
-    needs: verify-build
-    if: github.ref == 'refs/heads/main' && (github.event_name == 'push' || github.event_name == 'workflow_dispatch')
+    needs: verify
+    if: github.ref == 'refs/heads/main' && github.event_name != 'pull_request'
     runs-on: ubuntu-latest
-
+    timeout-minutes: 20
+    # One deploy at a time per app, so two quick merges never clash on the server.
+    concurrency:
+      group: deploy-${{ github.repository }}
+      cancel-in-progress: false
     steps:
-      - name: Trigger Zero-Downtime Deployment on Oracle VM
+      - name: Build and restart on the server (zero downtime, with health check)
         uses: appleboy/ssh-action@v1.0.3
         with:
           host: ${{ secrets.ORACLE_HOST }}
