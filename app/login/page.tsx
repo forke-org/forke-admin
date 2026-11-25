@@ -60,8 +60,8 @@ export default function AdminLoginPage() {
   }
 
   return (
-    <div className="grid min-h-screen bg-[#151414] lg:grid-cols-[minmax(0,1fr)_minmax(0,1.1fr)]">
-      <div className="relative flex flex-col px-6 py-6 sm:px-10">
+    <div className="grid min-h-[100svh] overflow-x-hidden bg-[#151414] lg:h-[100svh] lg:grid-cols-[minmax(0,1fr)_minmax(0,1.1fr)] lg:overflow-hidden">
+      <div className="relative flex min-h-0 min-w-0 flex-col overflow-x-hidden px-6 py-6 sm:px-10 lg:overflow-y-auto">
         <span className="flex items-baseline gap-1.5 text-[18px] tracking-[-0.04em]">
           <span className="font-semibold text-[#f4f4f5]">forke<span className="text-accent">*</span></span>
           <span className="font-normal text-[#8e8e93]">admin</span>
